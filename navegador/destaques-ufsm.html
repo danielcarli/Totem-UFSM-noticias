@@ -524,8 +524,10 @@ function jsonp(url, ms = 20000){
   });
 }
 
-async function api(caminho){
-  const url = `${CONFIG.SITE}/wp-json/${caminho}${caminho.includes('?') ? '&' : '?'}_t=${Math.floor(Date.now() / 60000)}`;
+async function api(caminho, site = CONFIG.SITE){
+  // caminho "?_fields=…" = informações do próprio site (nome, descrição)
+  const raiz = caminho.startsWith('?') ? `${site}/wp-json${caminho}` : `${site}/wp-json/${caminho}`;
+  const url = `${raiz}${raiz.includes('?') ? '&' : '?'}_t=${Math.floor(Date.now() / 60000)}`;
   const modos = modoApi === 'jsonp' ? ['jsonp', 'cors'] : ['cors', 'jsonp'];
   let erro;
   for (const modo of modos){
@@ -590,6 +592,8 @@ async function imagemDestacada(link){
    1. Junta todos os links de matéria (/AAAA/MM/DD/slug) da página,
       agrupando pelo endereço — cada matéria costuma ter um link na
       foto e outro no título. A ordem é a da página.
+      Os banners do carrossel do topo entram mesmo quando apontam para
+      uma página ou um site (ex.: Descubra UFSM), e não para uma matéria.
    2. Foto: <img> dentro de um dos links ou no mesmo card. O card é
       o menor bloco ao redor do link que não contém outra matéria
       (assim nunca se pega a foto da notícia vizinha).
@@ -598,7 +602,9 @@ async function imagemDestacada(link){
       o título de seção mais próximo acima (JAI, Destaques,
       Divulga Ciência…).
    4. Título: texto do link sem imagem; se faltar, atributo title,
-      texto oculto do link ou alt da imagem.
+      texto oculto do link ou alt da imagem. Banner que não é matéria:
+      o nome tirado do texto alternativo ("Banner … do Descubra UFSM")
+      ou, depois, o nome do site / título da página no portal.
    5. Resumo: o texto alternativo do banner, quando é um subtítulo
       (descrições de foto, como "Foto colorida…", são ignoradas).
    6. Imagem: a menor versão do srcset que cubra o card nesta tela.
@@ -613,6 +619,30 @@ function enderecoMateria(a, base){
     const href = new URL(a.getAttribute('href'), base).href.replace(/[?#].*$/, '').replace(/\/$/, '');
     return RE_MATERIA.test(href) ? href : null;
   }catch(e){ return null; }
+}
+
+// banner do carrossel do topo que leva a uma página ou site, não a uma matéria
+function enderecoBanner(a, base){
+  if (!a.closest('.carousel-item, .swiper-slide, .slick-slide') || !a.querySelector('img')) return null;
+  try{
+    const u = new URL(a.getAttribute('href'), base);
+    if (!/^https?:$/.test(u.protocol)) return null;
+    const href = u.href.replace(/#.*$/, '').replace(/\/$/, '');
+    // fotos e arquivos (galerias que abrem a imagem ampliada) não são banners
+    if (/\/app\/uploads\/|\.(jpe?g|png|gif|webp|avif|svg|pdf|zip|mp4|mov)(\?|$)/i.test(href)) return null;
+    return href === base.replace(/\/$/, '') ? null : href;
+  }catch(e){ return null; }
+}
+
+// "Banner colorido horizontal do Descubra UFSM. A imagem…" → "Descubra UFSM"
+function nomeNoTextoDoBanner(alt){
+  const m = limpa(alt).match(/^(?:banner|card|arte|imagem)\b[^.]{0,60}?\b(?:do|da|de|dos|das)\s+([^.,;:]{3,60})/i);
+  return m ? limpa(m[1]) : '';
+}
+// último recurso: o fim do endereço ("…/prograd/descubra" → "Descubra")
+function nomeDoEndereco(link){
+  const ult = decodeURIComponent((link.match(/\/([^/?#]+)\/?$/) || [])[1] || '').replace(/[-_]+/g, ' ');
+  return limpa(ult.charAt(0).toUpperCase() + ult.slice(1));
 }
 
 function imagemValida(img){
@@ -632,7 +662,7 @@ function extraiNoticias(html, base){
   // 1. links de matéria agrupados por endereço
   const grupos = new Map();
   for (const a of doc.querySelectorAll('a[href]')){
-    const href = enderecoMateria(a, base);
+    const href = enderecoMateria(a, base) || enderecoBanner(a, base);
     if (!href) continue;
     if (!grupos.has(href)) grupos.set(href, []);
     grupos.get(href).push(a);
@@ -681,7 +711,14 @@ function extraiNoticias(html, base){
 
     const semImg = links.filter(a => !a.querySelector('img'));
     const comImg = links.filter(a => a.querySelector('img'));
-    const titulo =
+    const ehMateria = RE_MATERIA.test(link);
+    let titulo = ehMateria ? '' :
+      limpa(semImg.map(a => a.textContent).sort((x, y) => limpa(y).length - limpa(x).length)[0]) ||
+      limpa(links.map(a => a.getAttribute('title')).find(t => t && t.length < 120 && !RE_DESCRICAO_FOTO.test(t))) ||
+      nomeNoTextoDoBanner(img.getAttribute('alt'));
+    const tituloProvisorio = !ehMateria && !titulo;     // procura o nome da página no portal (completaTitulos)
+    if (tituloProvisorio) titulo = nomeDoEndereco(link);
+    titulo = titulo ||
       limpa(semImg.find(a => a.classList.contains('noticias-widget-title'))?.textContent) ||
       limpa(semImg.map(a => a.textContent).sort((x, y) => limpa(y).length - limpa(x).length)[0]) ||
       limpa(links.map(a => a.getAttribute('title')).find(t => t && t.length < 220 && !RE_DESCRICAO_FOTO.test(t))) ||
@@ -702,6 +739,7 @@ function extraiNoticias(html, base){
       resumo: decodifica(resumo),
       data: m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null,
       descricaoImagem: limpa(comImg[0]?.getAttribute('title')) || limpa(img.getAttribute('alt')),
+      tituloProvisorio,
       imagens: candidatosDaImagem(img, base),
       imagem: null,
     });
@@ -787,7 +825,7 @@ function htmlCard(it, i, total){
       </div>
       <h2>${esc(it.titulo)}</h2>
       <div class="rodape-card">
-        ${it.resumo ? `<p>${esc(it.resumo)}</p>` : '<p class="padrao">Aponte a câmera do celular para o código e leia a matéria completa no portal da UFSM.</p>'}
+        ${it.resumo ? `<p>${esc(it.resumo)}</p>` : `<p class="padrao">Aponte a câmera do celular para o código e ${RE_MATERIA.test(it.link) ? 'leia a matéria completa' : 'saiba mais'} no portal da UFSM.</p>`}
         ${qr ? `<div class="qr"><div class="caixa"><img src="${qr}" alt="QR code da matéria"></div><small><span class="q-tv">ufsm.br</span><span class="q-totem">Leia no celular</span></small></div>` : ''}
       </div>
     </div>
@@ -1006,6 +1044,42 @@ function rodape(){
 /* ---------------- carga / atualização ---------------- */
 let carregando = false, timerRetentativa = null;
 
+/* Nome de uma página ou site do portal, para banners que não são matérias.
+   1. o endereço é um site próprio (ex.: /pro-reitorias/prograd/descubra) → nome do site;
+   2. senão, página ou post com esse slug no site de cima. */
+const cacheTitulos = new Map();
+async function tituloDaPagina(link){
+  if (cacheTitulos.has(link)) return cacheTitulos.get(link);
+  let nome = '';
+  try{
+    const u = new URL(link);
+    if (/(^|\.)ufsm\.br$/.test(u.hostname)){
+      const caminho = u.pathname.replace(/\/+$/, '');
+      try{
+        const site = await api('?_fields=name', u.origin + caminho);
+        if (site && typeof site.name === 'string') nome = limpa(decodifica(site.name));
+      }catch(e){}
+      if (!nome){
+        const partes = caminho.split('/'); const slug = partes.pop();
+        for (const tipo of ['pages', 'posts']){
+          try{
+            const r = await api(`wp/v2/${tipo}?slug=${encodeURIComponent(slug)}&_fields=title`, u.origin + partes.join('/'));
+            if (r && r[0] && r[0].title){ nome = limpa(decodifica(r[0].title.rendered)); break; }
+          }catch(e){}
+        }
+      }
+    }
+  }catch(e){}
+  if (nome) cacheTitulos.set(link, nome);
+  return nome;
+}
+async function completaTitulos(lista, ms){
+  await comTempoLimite(Promise.all(lista.filter(it => it.tituloProvisorio).map(async it => {
+    const nome = await tituloDaPagina(it.link);
+    if (nome){ it.titulo = nome; it.tituloProvisorio = false; }
+  })), ms).catch(() => {});
+}
+
 async function preparaImagens(lista, ms){
   await comTempoLimite(Promise.all(lista.map(async it => { it.imagem = await resolveImagem(it.imagens); })), ms).catch(() => {});
 }
@@ -1018,7 +1092,7 @@ async function carrega(){
   try{
     const html = await htmlDaPaginaPrincipal();
     const novos = extraiNoticias(html, CONFIG.SITE + '/');
-    await preparaImagens(novos, 12000);
+    await Promise.all([preparaImagens(novos, 12000), completaTitulos(novos, 8000)]);
 
     try{ localStorage.setItem('noticiasUFSM:v3', JSON.stringify(novos)); }catch(e){}
     aplica(novos);
