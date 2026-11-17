@@ -10,7 +10,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const ler = p => fs.readFileSync(path.join(raiz, p), 'utf8');
+// quebras de linha do Windows (CRLF) viram LF, para o resultado ser o mesmo em qualquer sistema
+const ler = p => fs.readFileSync(path.join(raiz, p), 'utf8').replace(/\r\n/g, '\n');
 const marca = arq => 'data:image/png;base64,' + fs.readFileSync(path.join(raiz, 'painel/marcas', arq)).toString('base64');
 
 const MARCAS = {

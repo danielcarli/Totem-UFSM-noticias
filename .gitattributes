@@ -1,0 +1,12 @@
+# Texto sempre com quebras de linha LF (inclusive no checkout do Windows),
+# para o painel gerado ser idêntico em qualquer sistema.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binários
+*.png binary
+*.jpg binary
+*.ico binary
+*.bmp binary
+*.woff2 binary
