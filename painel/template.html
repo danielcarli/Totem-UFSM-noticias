@@ -1,0 +1,1200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notícias UFSM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
+<style>
+/* ============================================================
+   Identidade visual – Coordenadoria de Comunicação UFSM
+   ============================================================ */
+:root{
+  --azul:#115385;
+  --laranja:#E7640A;
+  --verde:#1AB2AF;
+  --lilas:#B47EB5;
+  --azul-claro:#5FA3D6;
+  --fundo:#06172A;
+  --texto:#F2F7FB;
+  --texto-2:rgba(242,247,251,.72);
+  --texto-3:rgba(242,247,251,.5);
+  --vidro:rgba(255,255,255,.07);
+  --vidro-borda:rgba(255,255,255,.16);
+  --vidro-brilho:rgba(255,255,255,.28);
+
+  --W: clamp(370px, 42.32vw, 1190px);          /* medida-base do card (a altura sai dela) */
+  --Wc: min(calc(var(--W) * 1.2), 94vw);       /* largura do card: 20% mais largo que a base */
+  /* faixa livre entre a barra superior e a pílula inferior */
+  --topo-fim: calc(1.8vh + clamp(48px,6.4vh,84px) + 1.4vh);
+  --base-ini: calc(3.4vh + clamp(56px,7.4vh,96px) + 1.4vh);
+  --H: min(calc(100vh - var(--topo-fim) - var(--base-ini)), calc(var(--W) * 1.2));  /* altura do card */
+  --raio: clamp(21px, 1.84vw, 39px);
+  --raio-card: clamp(13.65px, 1.196vw, 25.35px);   /* 35% menor que --raio */
+  --rot: 5000ms;                            /* sobrescrito pelo JS */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--fundo);
+  color:var(--texto);
+  font-family:"Barlow","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body.idle{cursor:none}
+
+/* ---------- ambiente (foto desfocada + brilhos da marca) ---------- */
+.ambiente{position:fixed;inset:0;z-index:0;overflow:hidden}
+.amb{
+  position:absolute;inset:-8%;
+  background-size:cover;background-position:center;
+  filter:blur(48px) saturate(1.25) brightness(.55);
+  opacity:0;transition:opacity 1.6s ease;
+  transform:scale(1.05);
+}
+.amb.on{opacity:1}
+.ambiente::before{ /* brilhos nas cores da marca */
+  content:"";position:absolute;inset:0;z-index:2;
+  background:
+    radial-gradient(42vw 36vh at 6% 4%, rgba(231,100,10,.28), transparent 70%),
+    radial-gradient(38vw 40vh at 98% 30%, rgba(26,178,175,.22), transparent 70%),
+    radial-gradient(48vw 42vh at 70% 108%, rgba(180,126,181,.26), transparent 70%),
+    radial-gradient(60vw 50vh at 20% 100%, rgba(17,83,133,.45), transparent 70%);
+}
+.ambiente::after{ /* véu escuro */
+  content:"";position:absolute;inset:0;z-index:1;
+  background:linear-gradient(180deg, rgba(6,23,42,.72) 0%, rgba(6,23,42,.55) 45%, rgba(6,23,42,.85) 100%);
+}
+
+/* ---------- vidro ---------- */
+.vidro{
+  background:linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.05));
+  border:1px solid var(--vidro-borda);
+  box-shadow:inset 0 1px 0 var(--vidro-brilho), 0 18px 50px rgba(0,0,0,.35);
+  -webkit-backdrop-filter:blur(22px) saturate(1.4);
+  backdrop-filter:blur(22px) saturate(1.4);
+}
+
+/* ---------- barra superior ---------- */
+.topo{
+  position:fixed;z-index:20;left:50%;top:1.8vh;transform:translateX(-50%);
+  width:min(92vw, 1500px);height:clamp(48px,6.4vh,84px);
+  border-radius:999px;display:flex;align-items:center;gap:1.4vw;
+  padding:0 clamp(14px,1.6vw,30px);
+  text-shadow:0 1px 10px rgba(0,0,0,.45);
+}
+.topo .logo{height:78%;width:auto;display:block;flex:none}   /* Brasão + Monograma UFSM (horizontal, cor p/ fundo escuro) */
+.topo .sep{width:1px;height:46%;background:var(--vidro-borda);flex:none}
+.endereco{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:.6em;
+  height:62%;border-radius:999px;background:rgba(0,0,0,.18);
+  font-size:clamp(13px,1.05vw,22px);color:var(--texto-2);letter-spacing:.01em;
+  min-width:0;white-space:nowrap;overflow:hidden;
+}
+.endereco svg{width:1em;height:1em;opacity:.8;flex:none}
+.endereco b{color:var(--texto);font-weight:600}
+.status{display:inline-flex;align-items:center;gap:.45em;color:var(--texto-3)}
+.status i{width:.55em;height:.55em;border-radius:50%;background:var(--verde);box-shadow:0 0 0 0 rgba(26,178,175,.6);animation:pulso 2.4s infinite}
+.status.erro i{background:var(--laranja);animation:none}
+.status.carregando i{background:var(--azul-claro)}
+.status.ok span:empty{display:none}   /* tudo certo: só o ponto verde no topo */
+.vertical .status.ok{display:none}
+@keyframes pulso{0%{box-shadow:0 0 0 0 rgba(26,178,175,.55)}70%{box-shadow:0 0 0 .7em rgba(26,178,175,0)}100%{box-shadow:0 0 0 0 rgba(26,178,175,0)}}
+.relogio{flex:none;text-align:right;line-height:1.05}
+.relogio strong{display:block;font-size:clamp(18px,1.7vw,36px);font-weight:700;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.relogio span{font-size:clamp(11px,.78vw,16px);color:var(--texto-2)}
+
+/* ---------- trilho lateral ---------- */
+.trilho{
+  position:fixed;z-index:20;left:1.6vw;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:6px;padding:6px;border-radius:999px;
+  transition:opacity .6s;
+}
+body.idle .trilho{opacity:.25}
+.trilho button,.pilula button{
+  appearance:none;border:0;cursor:pointer;color:var(--texto);
+  width:clamp(48px,3vw,64px);height:clamp(48px,3vw,64px);border-radius:50%;   /* tamanho bom para toque */
+  display:grid;place-items:center;background:transparent;transition:background .25s;
+}
+.trilho button:hover,.pilula button:hover{background:rgba(255,255,255,.12)}
+.trilho svg,.pilula svg{width:44%;height:44%}
+.trilho .girando svg{animation:gira 1s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+
+/* ---------- palco / carrossel ---------- */
+.palco{
+  position:fixed;z-index:10;left:0;right:0;top:var(--topo-fim);bottom:var(--base-ini);
+  perspective:1700px;perspective-origin:50% 45%;
+  transition:opacity .45s ease;
+}
+.palco.trocando{opacity:0}
+.pedestal{
+  position:absolute;left:50%;bottom:-3vh;transform:translateX(-50%);
+  width:calc(var(--W)*1.5);height:7vh;border-radius:50%;
+  background:radial-gradient(closest-side, rgba(0,0,0,.55), transparent);
+  filter:blur(6px);
+}
+.card{
+  position:absolute;left:50%;top:50%;
+  width:var(--Wc);height:var(--H);
+  border-radius:var(--raio-card);overflow:hidden;
+  background:#0b2238;
+  border:1px solid var(--vidro-borda);
+  box-shadow:inset 0 1px 0 var(--vidro-brilho), 0 30px 80px rgba(0,0,0,.55);
+  transform-style:preserve-3d;
+  transition:transform 1s cubic-bezier(.2,.75,.15,1), opacity .8s ease;
+  will-change:transform,opacity;
+  cursor:pointer;
+}
+.card.teleporte{transition:none!important}
+.card[data-off="0"] {transform:translate(-50%,-50%) translateZ(0) rotateY(0) scale(1);z-index:10;cursor:default}
+.card[data-off="1"] {transform:translate(-50%,-50%) translateX(calc(var(--W)*.721))  translateZ(-260px) rotateY(14deg) scale(.84);z-index:8}
+.card[data-off="-1"]{transform:translate(-50%,-50%) translateX(calc(var(--W)*-.721)) translateZ(-260px) rotateY(-14deg) scale(.84);z-index:8}
+.card[data-off="2"] {transform:translate(-50%,-50%) translateX(calc(var(--W)*1.077))  translateZ(-480px) rotateY(20deg) scale(.72);z-index:6}
+.card[data-off="-2"]{transform:translate(-50%,-50%) translateX(calc(var(--W)*-1.077)) translateZ(-480px) rotateY(-20deg) scale(.72);z-index:6}
+.card[data-off="3"] {transform:translate(-50%,-50%) translateX(calc(var(--W)*1.464))  translateZ(-620px) rotateY(24deg) scale(.6);opacity:0;pointer-events:none;z-index:4}
+.card[data-off="-3"]{transform:translate(-50%,-50%) translateX(calc(var(--W)*-1.464)) translateZ(-620px) rotateY(-24deg) scale(.6);opacity:0;pointer-events:none;z-index:4}
+.card[data-off="x"] {transform:translate(-50%,-50%) translateZ(-500px) scale(.5);opacity:0;pointer-events:none;z-index:1}
+
+/* camadas do card */
+.card .fundo-desfocado{
+  position:absolute;inset:-12%;width:124%;height:124%;object-fit:cover;
+  filter:blur(26px) saturate(1.3) brightness(.42);
+}
+.card .midia{
+  position:absolute;left:0;right:0;top:0;height:100%;
+  transition:height 1s cubic-bezier(.2,.75,.15,1);
+  -webkit-mask-image:linear-gradient(180deg,#000 78%,transparent 100%);
+  mask-image:linear-gradient(180deg,#000 78%,transparent 100%);
+}
+.card[data-off="0"] .midia{height:var(--altura-midia, 52%)}
+.card.larga .midia img{object-position:center center}
+.card .midia img{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.02);transition:transform 6s ease}
+.card[data-off="0"] .midia img{transform:scale(1.08)}
+.card.larga .midia{-webkit-mask-image:none;mask-image:none}
+.card.larga[data-off] .midia img{object-fit:contain;transform:none;transition:none;transform-origin:0 50%}
+.card .sombra{position:absolute;inset:0;background:#06172A;opacity:0;transition:opacity .8s;pointer-events:none;z-index:5}
+.card[data-off="1"] .sombra,.card[data-off="-1"] .sombra{opacity:.57}
+.card[data-off="2"] .sombra,.card[data-off="-2"] .sombra{opacity:.68}
+
+/* placeholder sem imagem: fundo nas cores da Coordenadoria e o símbolo só na área da imagem,
+   longe do título (o texto fica sobre um fundo mais escuro, com contraste) */
+.card .sem-foto{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(180deg, transparent 38%, rgba(6,23,42,.62) 72%, rgba(6,23,42,.8)),
+    radial-gradient(60% 60% at 20% 15%, rgba(231,100,10,.5), transparent 70%),
+    radial-gradient(60% 60% at 85% 30%, rgba(26,178,175,.42), transparent 70%),
+    radial-gradient(70% 60% at 60% 95%, rgba(180,126,181,.35), transparent 70%),
+    var(--azul);
+}
+.card .midia.simbolo{display:grid;place-items:center;-webkit-mask-image:none;mask-image:none}
+.card:not([data-off="0"]) .midia.simbolo{height:60%}
+.card .midia.simbolo img,.card[data-off="0"] .midia.simbolo img{
+  width:auto;height:46%;max-height:30vmin;object-fit:contain;transform:none;
+  filter:drop-shadow(0 10px 30px rgba(0,0,0,.35));
+}
+.titulo-acima .card .midia.simbolo{-webkit-mask-image:none;mask-image:none}
+
+/* legenda dos cards laterais */
+.legenda{
+  position:absolute;left:0;right:0;bottom:0;z-index:3;
+  padding:12% 7% 7%;
+  background:linear-gradient(180deg, transparent, rgba(6,23,42,.88) 60%);
+  transition:opacity .6s ease;
+}
+.legenda h3{font-size:clamp(18.4px,1.67vw,36.8px);font-weight:600;line-height:1.15;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.legenda span{display:block;margin-top:.6em;font-size:clamp(12.65px,.98vw,20.7px);color:var(--texto-2)}
+.card[data-off="0"] .legenda{opacity:0}
+
+
+/* detalhes do card central */
+.detalhes{
+  position:absolute;left:0;right:0;bottom:0;height:52%;z-index:3;
+  padding:0 6.5% 5.5%;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  opacity:0;transform:translateY(16px);
+  transition:opacity .55s ease, transform .7s cubic-bezier(.2,.75,.15,1);
+}
+.card[data-off="0"] .detalhes{opacity:1;transform:none;transition-delay:.3s}
+.meta{display:flex;align-items:center;gap:.8em;font-size:clamp(13.8px,1.035vw,21.85px);color:var(--texto-2);margin-bottom:.7em}
+.meta .chip{
+  background:var(--cor);color:#fff;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  padding:.28em .75em;border-radius:999px;font-size:.88em;
+}
+.meta .contagem{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--texto-3)}
+.detalhes h2{
+  flex:none;font-size:clamp(27.6px,2.688vw,63.48px);font-weight:700;line-height:1.08;letter-spacing:-.005em;   /* +20% (horizontal) */
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
+  text-wrap:balance;
+}
+.rodape-card{flex:none;display:flex;align-items:flex-end;gap:5%;margin-top:.8em}
+.meta{flex:none}
+.detalhes p{
+  flex:1;font-size:clamp(13.8px,1.035vw,23px);line-height:1.4;color:var(--texto-2);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.qr{flex:none;display:flex;flex-direction:column;align-items:center;gap:.35em}
+.qr .caixa{background:#fff;border-radius:14px;padding:8px;width:clamp(96px,7.8vw,190px);aspect-ratio:1}   /* maior: lê de mais longe */
+.qr .caixa img{width:100%;height:100%;display:block;image-rendering:pixelated}
+.qr small{font-size:clamp(12px,.85vw,19px);color:var(--texto-2);letter-spacing:.03em;white-space:nowrap}
+
+/* barra de progresso (gradiente com as 4 cores da marca) */
+.progresso{position:absolute;left:0;right:0;bottom:0;height:5px;z-index:6;background:rgba(255,255,255,.08);opacity:0;transition:opacity .4s}
+.progresso i{display:block;height:100%;width:100%;transform-origin:left;transform:scaleX(0);
+  background:linear-gradient(90deg,var(--laranja) 0 25%,var(--azul-claro) 25% 50%,var(--verde) 50% 75%,var(--lilas) 75%)}
+.card[data-off="0"] .progresso{opacity:1}
+.card[data-off="0"] .progresso.rodando i{animation:enche var(--rot) linear forwards}
+body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
+@keyframes enche{to{transform:scaleX(1)}}
+
+/* ---------- pílula inferior ---------- */
+.pilula{
+  position:fixed;z-index:20;left:50%;bottom:3.4vh;transform:translateX(-50%);
+  height:clamp(56px,7.4vh,96px);min-width:min(560px,90vw);
+  border-radius:999px;display:flex;align-items:center;gap:1vw;padding:0 .6vw;
+  text-shadow:0 1px 10px rgba(0,0,0,.45);
+}
+/* assinatura: Coordenadoria de Comunicação → Agência de Notícias, e a hora da última leitura */
+.pilula{gap:1.1vw}
+.pilula .coord{height:56%;width:auto;flex:none;display:block;margin-left:.3vw}
+.pilula .agencia{height:55.8%;width:auto;flex:none;display:block}
+.pilula .sep-c{width:1px;height:46%;background:rgba(255,255,255,.28);flex:none}
+.pilula .txt{flex:none;line-height:1.3;padding-right:.6vw}
+.pilula .txt span{display:block;font-size:clamp(12px,.9vw,19px);color:var(--texto-2);white-space:nowrap}
+.pontos{
+  position:fixed;z-index:20;left:50%;bottom:1.1vh;transform:translateX(-50%);
+  display:flex;gap:8px;
+}
+.pontos i{width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.3);transition:width .5s, background .5s;cursor:pointer}
+.pontos i.ativo{width:26px;background:#fff}
+
+/* ---------- mensagem (carregando / erro) ---------- */
+.aviso{
+  position:fixed;z-index:15;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(560px,86vw);padding:clamp(24px,3vw,48px);border-radius:var(--raio);
+  text-align:center;display:none;
+  background:transparent;border:1px solid var(--vidro-borda);   /* só a borda: o fundo da tela aparece */
+  text-shadow:0 1px 10px rgba(0,0,0,.45);
+}
+.aviso.on{display:block}
+.aviso img{width:clamp(48px,4vw,80px);margin-bottom:1.2em}
+.aviso h2{font-size:clamp(20px,1.7vw,34px);font-weight:700;margin-bottom:.4em}
+.aviso p{color:var(--texto-2);font-size:clamp(14px,1vw,20px);line-height:1.45}
+.aviso .barra{margin:1.4em auto 0;width:40%;height:4px;border-radius:9px;overflow:hidden;background:rgba(255,255,255,.12)}
+.aviso .barra i{display:block;height:100%;width:40%;border-radius:9px;
+  background:linear-gradient(90deg,var(--laranja),var(--verde),var(--lilas));animation:vai 1.3s ease-in-out infinite}
+@keyframes vai{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
+
+/* ---------- estudo de layout: título em cima, imagem embaixo (?layout=titulo-acima) ---------- */
+.card .midia{transition:height 1s cubic-bezier(.2,.75,.15,1), top 1s cubic-bezier(.2,.75,.15,1)}
+.titulo-acima .card[data-off="0"] .midia{
+  top:var(--inicio-midia, 42%);height:calc(100% - var(--inicio-midia, 42%));
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 7%);
+  mask-image:linear-gradient(180deg,transparent 0,#000 7%);
+}
+.titulo-acima .card.larga[data-off="0"] .midia{-webkit-mask-image:none;mask-image:none}
+.titulo-acima .detalhes{
+  top:0;bottom:auto;height:auto;justify-content:flex-start;
+  padding:6.5% 6.5% 3%;transform:translateY(-16px);
+}
+.titulo-acima .rodape-card{align-items:center}
+
+@media (max-aspect-ratio: 1/1){
+  :root{--W: min(92vw, 846px)}
+  .card[data-off="2"],.card[data-off="-2"]{opacity:0}
+  .trilho{display:none}
+}
+/* ==================================================================
+   TELA VERTICAL (totem em pé) — ativado sozinho quando a tela é mais
+   alta que larga; também por ?orientacao=vertical | horizontal
+   ================================================================== */
+:root.vertical{
+  --topo-fim: calc(1.6vh + 8.5vw + 1.2vh);
+  --base-ini: calc(2vh + 11vw + 1.4vh);
+  --Wc: 92vw;
+  --H: calc(100vh - var(--topo-fim) - var(--base-ini));
+  --raio-card: clamp(14px, 2.2vw, 48px);
+}
+.vertical .topo{top:1.6vh;width:92vw;height:8.5vw;padding:0 1vw;gap:3vw}
+.vertical .topo .sep{display:none}
+.vertical .endereco{background:none;justify-content:flex-end;font-size:2.1vw}
+.vertical .endereco>svg,.vertical .endereco>span:not(.status){display:none}   /* sem a "barra de navegador" */
+.vertical .relogio strong{font-size:5vw}
+.vertical .relogio span{font-size:2.2vw}
+.vertical .trilho,.vertical .pontos{display:none}
+
+/* o card ocupa a tela; os outros ficam fora dela e entram deslizando */
+.vertical .card[data-off="1"] {transform:translate(-50%,-50%) translateX(104vw)  translateZ(-260px) rotateY(14deg)  scale(.84)}
+.vertical .card[data-off="-1"]{transform:translate(-50%,-50%) translateX(-104vw) translateZ(-260px) rotateY(-14deg) scale(.84)}
+.vertical .card[data-off="2"],.vertical .card[data-off="-2"],.vertical .card[data-off="3"],.vertical .card[data-off="-3"]{opacity:0;pointer-events:none}
+
+.vertical .detalhes{padding:0 6% 6%}
+.vertical .titulo-acima .detalhes,.vertical.titulo-acima .detalhes{padding:6% 6% 3%}
+.vertical .meta{font-size:2.8vw}
+.vertical .detalhes h2{font-size:5.9vw;line-height:1.07;-webkit-line-clamp:5}   /* cabe uma linha a mais na tela em pé */
+.vertical .topo .logo{height:82%}
+.vertical .detalhes p{font-size:2.6vw;line-height:1.35}
+.vertical .detalhes p.padrao{display:none}          /* frase longa sai; o QR fica com "Leia no celular" */
+.vertical .rodape-card{justify-content:flex-end;margin-top:1.6vw}
+.vertical .qr .caixa{width:22vw;padding:1.2vw;border-radius:1.8vw}
+.vertical .qr small{font-size:2.4vw}
+.q-totem{display:none}
+.vertical .q-totem{display:inline}
+.vertical .q-tv{display:none}
+.vertical .progresso{height:8px}
+
+.vertical .pilula{bottom:2vh;height:11vw;min-width:84vw;gap:2.4vw;padding:0 1.6vw}
+.vertical .pilula button{width:9vw;height:9vw}
+.vertical .pilula .coord{height:54%}
+.vertical .pilula .agencia{height:54%}
+.vertical .pilula .txt span{font-size:2.3vw}
+
+.vertical .aviso{width:86vw;padding:7vw}
+.vertical .aviso img{width:12vw}
+.vertical .aviso h2{font-size:4.6vw}
+.vertical .aviso p{font-size:2.8vw}
+
+/* ---------- modo leve (?leve=1): sem desfoques, para computadores fracos ---------- */
+.leve .amb{display:none}
+.leve .card .fundo-desfocado{display:none}
+.leve .vidro{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(18,40,62,.92)}
+.leve .pedestal{display:none}
+
+/* ---------- horário noturno (?noite=23-6): tela preta ---------- */
+.noite{position:fixed;inset:0;z-index:100;background:#000;display:none;cursor:none}
+.noite.on{display:block}
+
+/* gestos: o navegador não rola nem dá zoom no palco */
+.palco{touch-action:none}
+
+@media (prefers-reduced-motion: reduce){
+  .card,.card .midia,.card .midia img{transition-duration:.01s!important}
+}
+</style>
+</head>
+<body>
+
+<div class="ambiente" aria-hidden="true"><div class="amb" id="ambA"></div><div class="amb" id="ambB"></div></div>
+
+<header class="topo">
+  <img class="logo" src="__UFSM__" alt="Universidade Federal de Santa Maria">
+  <span class="sep"></span>
+  <div class="endereco">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+    <span>ufsm.br / <b>Notícias</b></span>
+    <span class="status carregando" id="status"><i></i><span id="statusTxt">conectando…</span></span>
+  </div>
+  <span class="sep"></span>
+  <div class="relogio"><strong id="hora">--:--</strong><span id="data"></span></div>
+</header>
+
+<nav class="trilho vidro" aria-label="Controles">
+  <button id="btnAtualizar" title="Atualizar agora (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+  <button id="btnPausa" title="Pausar / continuar (espaço)"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+  <button id="btnTela" title="Tela cheia (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</nav>
+
+<div class="noite" id="noite" aria-hidden="true"></div>
+<main class="palco" id="palco"><div class="pedestal"></div></main>
+
+<section class="aviso on" id="aviso">
+  <img src="__SIMBOLO__" alt="">
+  <h2 id="avisoTitulo">Carregando notícias</h2>
+  <p id="avisoTexto">Lendo as notícias com foto da página principal da UFSM…</p>
+  <div class="barra" id="avisoBarra"><i></i></div>
+</section>
+
+<footer class="pilula">
+  <button id="btnAnt" title="Anterior (←)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <img class="coord" src="__LOGO_H__" alt="Coordenadoria de Comunicação UFSM">
+  <span class="sep-c"></span>
+  <img class="agencia" src="__AGENCIA_H__" alt="Agência de Notícias UFSM">
+  <span class="sep-c"></span>
+  <div class="txt"><span id="rodapeTxt">Atualizando…</span></div>
+  <button id="btnProx" title="Próxima (→)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+</footer>
+<div class="pontos" id="pontos"></div>
+
+<script>
+/* ==================================================================
+   CONFIGURAÇÃO — o painel roda só no navegador (HTML + JS), sem servidor.
+   Tudo aqui pode ser sobrescrito pela URL, ex.:
+   destaques-ufsm.html?intervalo=8&atualizacao=10&max=12
+   ================================================================== */
+const params = new URLSearchParams(location.search);
+const CONFIG = {
+  SITE: 'https://www.ufsm.br',
+  // A página principal é a página 1833 do WordPress do portal. Se o número mudar,
+  // o painel procura a nova página inicial sozinho.
+  PAGINA_ID: parseInt(params.get('pagina')) || 1833,
+  // Por padrão entram TODAS as notícias com foto da página principal.
+  // Para limitar a algumas áreas:  ?secoes=Destaques,JAI   |   para tirar áreas:  ?ignorar=Divulga Ciência
+  SECOES:  params.get('secoes')  ? params.get('secoes').split(',')  : null,
+  IGNORAR: params.get('ignorar') ? params.get('ignorar').split(',') : [],
+  NOME_CARROSSEL: 'Em destaque',   // nome usado para o carrossel de banners do topo
+  INTERVALO_MS:   (parseFloat(params.get('intervalo'))   || 7)  * 1000,       // troca de notícia: 7 s
+  ATUALIZACAO_MS: (parseFloat(params.get('atualizacao')) || 15) * 60 * 1000,  // releitura da página: 15 min
+  MAX_ITENS:      parseInt(params.get('max')) || 30,
+  BUSCAR_IMAGEM_DESTACADA: true,  // destaque sem foto: busca a imagem destacada da matéria
+  CORES: ['var(--laranja)', 'var(--verde)', 'var(--lilas)', 'var(--azul)'],
+  FUSO: 'America/Sao_Paulo',
+  // layout: ?layout=… na URL; senão, o último escolhido com ↑/↓ neste navegador
+  LAYOUT: (() => {
+    const p = params.get('layout');
+    if (p === 'titulo-acima' || p === 'imagem-acima') return p;
+    try{ return localStorage.getItem('noticiasUFSM:layout') === 'titulo-acima' ? 'titulo-acima' : 'imagem-acima'; }
+    catch(e){ return 'imagem-acima'; }
+  })(),
+};
+document.documentElement.style.setProperty('--rot', CONFIG.INTERVALO_MS + 'ms');
+document.documentElement.classList.toggle('titulo-acima', CONFIG.LAYOUT === 'titulo-acima');
+
+/* orientação: vertical (totem em pé) ou horizontal — automática, ou ?orientacao=vertical|horizontal */
+CONFIG.ORIENTACAO = ['vertical', 'horizontal'].includes(params.get('orientacao')) ? params.get('orientacao') : 'auto';
+CONFIG.LEVE = params.get('leve') === '1';
+document.documentElement.classList.toggle('leve', CONFIG.LEVE);
+function aplicaOrientacao(){
+  const vertical = CONFIG.ORIENTACAO === 'vertical' || (CONFIG.ORIENTACAO === 'auto' && innerHeight > innerWidth);
+  const mudou = document.documentElement.classList.contains('vertical') !== vertical;
+  document.documentElement.classList.toggle('vertical', vertical);
+  return mudou;
+}
+aplicaOrientacao();
+
+/* ---------------- estado ---------------- */
+let itens = [];          // notícias atuais
+let atual = 0;           // índice da notícia em foco
+let assinatura = '';     // para detectar mudanças
+let timerRot = null;
+let pausado = false;
+let modoApi = null;      // 'cors' ou 'jsonp' — o que funcionou por último
+let paginaId = CONFIG.PAGINA_ID;
+let ultimaAtualizacao = null;
+const cacheImg = new Map();
+const proporcaoImg = new Map();   // largura ÷ altura de cada imagem carregada
+const $ = s => document.querySelector(s);
+const palco = $('#palco');
+
+/* ---------------- utilidades ---------------- */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function decodifica(s){ const t = document.createElement('textarea'); t.innerHTML = s || ''; return t.value; }
+const limpa = s => (s || '').replace(/\s+/g, ' ').trim();
+const normaliza = s => limpa(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const fmtData = d => d ? new Intl.DateTimeFormat('pt-BR', {day:'2-digit', month:'long', year:'numeric', timeZone:'UTC'}).format(d) : '';
+const fmtCurta = d => d ? new Intl.DateTimeFormat('pt-BR', {day:'2-digit', month:'short', timeZone:'UTC'}).format(d).replace('.', '') : '';
+const fmtHora = d => new Intl.DateTimeFormat('pt-BR', {hour:'2-digit', minute:'2-digit', timeZone:CONFIG.FUSO}).format(d);
+
+function comTempoLimite(promise, ms){
+  return Promise.race([promise, new Promise((_, r) => setTimeout(() => r(new Error('tempo esgotado')), ms))]);
+}
+
+/* ==================================================================
+   ACESSO AOS DADOS SÓ PELO NAVEGADOR
+   ------------------------------------------------------------------
+   O navegador não deixa outra página ler o HTML de www.ufsm.br (CORS).
+   Mas a API do WordPress do portal (/wp-json/) permite leitura de
+   qualquer origem e devolve a página principal JÁ MONTADA, com a área
+   "Destaques" idêntica à do site. Duas formas de chamar a API:
+     • fetch com CORS — o normal, quando o painel é aberto por http(s);
+     • JSONP (tag <script>) — funciona até abrindo o arquivo direto
+       do computador (file://), onde o fetch costuma ser recusado.
+   ================================================================== */
+function jsonp(url, ms = 20000){
+  return new Promise((resolve, reject) => {
+    const cb = '__ufsm_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    const tag = document.createElement('script');
+    let feito = false;
+    const fim = (fn, v) => {
+      if (feito) return; feito = true;
+      clearTimeout(timer); tag.remove();
+      window[cb] = () => {};               // ignora resposta tardia
+      fn(v);
+    };
+    window[cb] = dados => fim(resolve, dados);
+    tag.onerror = () => fim(reject, new Error('JSONP recusado'));
+    const timer = setTimeout(() => fim(reject, new Error('tempo esgotado')), ms);
+    tag.src = url + (url.includes('?') ? '&' : '?') + '_jsonp=' + cb;
+    document.head.appendChild(tag);
+  });
+}
+
+async function api(caminho){
+  const url = `${CONFIG.SITE}/wp-json/${caminho}${caminho.includes('?') ? '&' : '?'}_t=${Math.floor(Date.now() / 60000)}`;
+  const modos = modoApi === 'jsonp' ? ['jsonp', 'cors'] : ['cors', 'jsonp'];
+  let erro;
+  for (const modo of modos){
+    try{
+      const dados = modo === 'cors'
+        ? await comTempoLimite(fetch(url, {cache:'no-store', credentials:'omit'}).then(r => {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+          }), 20000)
+        : await jsonp(url);
+      if (dados && dados.code && dados.data && dados.data.status >= 400) throw new Error(dados.message || dados.code);
+      modoApi = modo;
+      return dados;
+    }catch(e){ erro = e; }
+  }
+  throw erro || new Error('API indisponível');
+}
+
+const mesmoEndereco = (a, b) => (a || '').replace(/^https?:\/\//, '').replace(/\/+$/, '') === (b || '').replace(/^https?:\/\//, '').replace(/\/+$/, '');
+
+/* HTML renderizado da página principal */
+async function htmlDaPaginaPrincipal(){
+  let erro;
+  try{
+    const p = await api(`wp/v2/pages/${paginaId}?_fields=link,content`);
+    if (p && p.content && p.content.rendered && mesmoEndereco(p.link, CONFIG.SITE)) return p.content.rendered;
+  }catch(e){ erro = e; }
+
+  // a página inicial mudou de número? procura pelo endereço
+  try{
+    const lista = await api('wp/v2/pages?search=' + encodeURIComponent('inicial') + '&per_page=50&_fields=id,link');
+    const home = (lista || []).find(p => mesmoEndereco(p.link, CONFIG.SITE));
+    if (home){
+      paginaId = home.id;
+      const p = await api(`wp/v2/pages/${home.id}?_fields=link,content`);
+      if (p && p.content && p.content.rendered) return p.content.rendered;
+    }
+  }catch(e){ erro = erro || e; }
+
+  // último recurso: a própria página (só funciona se o painel estiver hospedado em ufsm.br)
+  try{
+    const r = await comTempoLimite(fetch(CONFIG.SITE + '/', {cache:'no-store'}), 20000);
+    if (r.ok) return await r.text();
+  }catch(e){}
+  throw erro || new Error('não foi possível ler a página principal');
+}
+
+/* Imagem destacada de uma matéria (para destaques que vierem sem foto) */
+async function imagemDestacada(link){
+  const slug = (link.match(/\/([^/]+)\/?$/) || [])[1];
+  if (!slug) return [];
+  const posts = await api(`wp/v2/posts?slug=${encodeURIComponent(slug)}&_embed=wp:featuredmedia&_fields=_links,_embedded`);
+  const m = posts && posts[0] && posts[0]._embedded && posts[0]._embedded['wp:featuredmedia'] && posts[0]._embedded['wp:featuredmedia'][0];
+  if (!m) return [];
+  const t = (m.media_details && m.media_details.sizes) || {};
+  return [t.large, t['1536x1536'], t.full, t.medium_large].filter(Boolean).map(x => x.source_url).concat(m.source_url || []);
+}
+
+/* ==================================================================
+   ALGORITMO: todas as notícias COM FOTO da página principal da UFSM
+   ------------------------------------------------------------------
+   1. Junta todos os links de matéria (/AAAA/MM/DD/slug) da página,
+      agrupando pelo endereço — cada matéria costuma ter um link na
+      foto e outro no título. A ordem é a da página.
+   2. Foto: <img> dentro de um dos links ou no mesmo card. O card é
+      o menor bloco ao redor do link que não contém outra matéria
+      (assim nunca se pega a foto da notícia vizinha).
+      Matérias sem foto (ex.: "Últimas Notícias") ficam de fora.
+   3. Área: carrossel de banners do topo = "Em destaque"; nas demais,
+      o título de seção mais próximo acima (JAI, Destaques,
+      Divulga Ciência…).
+   4. Título: texto do link sem imagem; se faltar, atributo title,
+      texto oculto do link ou alt da imagem.
+   5. Resumo: o texto alternativo do banner, quando é um subtítulo
+      (descrições de foto, como "Foto colorida…", são ignoradas).
+   6. Imagem: a menor versão do srcset que cubra o card nesta tela.
+   7. Data: tirada do próprio endereço da matéria.
+   Uma notícia que aparece em duas áreas entra uma vez só.
+   ================================================================== */
+const RE_MATERIA = /\/(\d{4})\/(\d{2})\/(\d{2})\/[^/?#]+/;
+const RE_DESCRICAO_FOTO = /^(foto|fotografia|imagem|ilustra|arte |card |banner|print|captura|montagem|v[ií]deo)/i;
+
+function enderecoMateria(a, base){
+  try{
+    const href = new URL(a.getAttribute('href'), base).href.replace(/[?#].*$/, '').replace(/\/$/, '');
+    return RE_MATERIA.test(href) ? href : null;
+  }catch(e){ return null; }
+}
+
+function imagemValida(img){
+  if (!img) return false;
+  const src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || '';
+  const srcset = img.getAttribute('srcset') || img.getAttribute('data-srcset') || img.getAttribute('data-lazy-srcset') || '';
+  const url = srcset || src;
+  if (!url || /^data:/.test(src) && !srcset) return false;
+  if (/\.(svg|gif)(\?|\s|$)/i.test(url) || /emoji|icone|icon|logo/i.test(url)) return false;
+  const w = parseInt(img.getAttribute('width') || '0');
+  return !(w && w < 150);
+}
+
+function extraiNoticias(html, base){
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+
+  // 1. links de matéria agrupados por endereço
+  const grupos = new Map();
+  for (const a of doc.querySelectorAll('a[href]')){
+    const href = enderecoMateria(a, base);
+    if (!href) continue;
+    if (!grupos.has(href)) grupos.set(href, []);
+    grupos.get(href).push(a);
+  }
+
+  // títulos de seção, para saber em que área cada matéria está
+  let titulosSecao = [...doc.querySelectorAll('.titulo-conteudos')];
+  if (!titulosSecao.length) titulosSecao = [...doc.querySelectorAll('h2,h3,h4,h5')];
+  const secaoDe = el => {
+    if (el.closest('.carousel, .carousel-item, .swiper, .swiper-slide, .slick-slider, [class*="banner"]')) return CONFIG.NOME_CARROSSEL;
+    let s = null;
+    for (const h of titulosSecao){
+      if (h.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) s = limpa(h.textContent);
+      else break;
+    }
+    return s || CONFIG.NOME_CARROSSEL;
+  };
+
+  // 2. foto do card
+  const fotoDe = (href, links) => {
+    for (const a of links){ const img = a.querySelector('img'); if (imagemValida(img)) return img; }
+    for (const a of links){
+      let el = a.parentElement;
+      for (let nivel = 0; nivel < 5 && el && el !== doc.body; nivel++, el = el.parentElement){
+        const outra = [...el.querySelectorAll('a[href]')].some(x => { const h = enderecoMateria(x, base); return h && h !== href; });
+        if (outra) break;                      // o bloco já inclui outra notícia
+        const img = [...el.querySelectorAll('img')].find(imagemValida);
+        if (img) return img;
+      }
+    }
+    return null;
+  };
+
+  const querSecao = s => {
+    const n = normaliza(s);
+    if (CONFIG.IGNORAR.some(x => normaliza(x) === n)) return false;
+    return !CONFIG.SECOES || CONFIG.SECOES.some(x => normaliza(x) === n);
+  };
+
+  const lista = [];
+  for (const [link, links] of grupos){
+    const img = fotoDe(link, links);
+    if (!img) continue;                        // sem foto: fica de fora
+    const secao = secaoDe(links[0]);
+    if (!querSecao(secao)) continue;
+
+    const semImg = links.filter(a => !a.querySelector('img'));
+    const comImg = links.filter(a => a.querySelector('img'));
+    const titulo =
+      limpa(semImg.find(a => a.classList.contains('noticias-widget-title'))?.textContent) ||
+      limpa(semImg.map(a => a.textContent).sort((x, y) => limpa(y).length - limpa(x).length)[0]) ||
+      limpa(links.map(a => a.getAttribute('title')).find(t => t && t.length < 220 && !RE_DESCRICAO_FOTO.test(t))) ||
+      limpa(comImg[0]?.querySelector('.visually-hidden, .sr-only')?.textContent) ||
+      limpa(img.getAttribute('alt'));
+    if (!titulo) continue;
+
+    const candidatosResumo = [img.getAttribute('alt'), comImg[0]?.getAttribute('title')].map(limpa);
+    const resumo = candidatosResumo.find(r => r && r.length >= 20 && r.length <= 260 &&
+                     !RE_DESCRICAO_FOTO.test(r) && normaliza(r) !== normaliza(titulo)) || '';
+
+    const m = link.match(RE_MATERIA);
+    lista.push({
+      titulo: decodifica(titulo),
+      link,
+      guid: link,
+      secao,
+      resumo: decodifica(resumo),
+      data: m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null,
+      descricaoImagem: limpa(comImg[0]?.getAttribute('title')) || limpa(img.getAttribute('alt')),
+      imagens: candidatosDaImagem(img, base),
+      imagem: null,
+    });
+    if (lista.length >= CONFIG.MAX_ITENS) break;
+  }
+  if (!lista.length) throw new Error('nenhuma notícia com foto encontrada na página principal');
+  return lista;
+}
+
+/* Escolhe a melhor resolução do srcset para o tamanho do card nesta tela */
+function candidatosDaImagem(img, base){
+  if (!img) return [];
+  const abs = u => { try{ return new URL(u.trim(), base).href.replace(/^http:\/\//, 'https://'); }catch(e){ return null; } };
+  const src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || '';
+  const srcset = img.getAttribute('srcset') || img.getAttribute('data-srcset') || img.getAttribute('data-lazy-srcset') || '';
+
+  const opcoes = srcset.split(',').map(s => {
+    const [u, w] = s.trim().split(/\s+/);
+    return {u: abs(u || ''), w: parseInt(w) || 0};
+  }).filter(o => o.u && o.w).sort((a, b) => a.w - b.w);
+
+  // largura do card central × densidade da tela × folga para o zoom suave
+  const necessario = Math.min(2000, Math.max(800, innerWidth * 0.36 * (devicePixelRatio || 1) * 1.15));
+  const out = [];
+  const ideal = opcoes.find(o => o.w >= necessario);
+  if (ideal) out.push(ideal.u);
+  if (opcoes.length) out.push(opcoes[opcoes.length - 1].u);   // a maior disponível
+  if (src && !src.startsWith('data:')) out.push(abs(src));
+  return [...new Set(out.filter(Boolean))];
+}
+
+/* Testa os candidatos em ordem e devolve o primeiro que carrega */
+function resolveImagem(cands){
+  const chave = cands.join('|');
+  if (!cands.length) return Promise.resolve(null);
+  if (cacheImg.has(chave)) return cacheImg.get(chave);
+  const p = new Promise(resolve => {
+    let i = 0;
+    const tenta = () => {
+      if (i >= cands.length) return resolve(null);
+      const img = new Image();
+      img.referrerPolicy = 'no-referrer';
+      img.onload = () => {
+        if (img.naturalWidth <= 80){ i++; return tenta(); }
+        proporcaoImg.set(cands[i], img.naturalWidth / img.naturalHeight);
+        resolve(cands[i]);
+      };
+      img.onerror = () => { i++; tenta(); };
+      img.src = cands[i];
+    };
+    tenta();
+  });
+  cacheImg.set(chave, p);
+  return p;
+}
+
+/* ---------------- desenho dos cards ---------------- */
+const SIMBOLO = '__SIMBOLO__';
+
+function qrDataURL(texto){
+  try{
+    if (typeof qrcode !== 'function') return '';
+    const q = qrcode(0, 'M'); q.addData(texto); q.make();
+    return q.createDataURL(6, 0);
+  }catch(e){ return ''; }
+}
+
+function htmlCard(it, i, total){
+  const qr = qrDataURL(it.link);
+  const alt = esc(it.descricaoImagem || '');
+  const midia = it.imagem
+    ? `<img class="fundo-desfocado" src="${esc(it.imagem)}" alt="" referrerpolicy="no-referrer">
+       <div class="midia"><img src="${esc(it.imagem)}" alt="${alt}" referrerpolicy="no-referrer"></div>`
+    : `<div class="sem-foto"></div><div class="midia simbolo"><img src="${SIMBOLO}" alt=""></div>`;
+  return `
+    ${midia}
+    <div class="legenda"><h3>${esc(it.titulo)}</h3><span>${esc(fmtCurta(it.data))}</span></div>
+    <div class="detalhes">
+      <div class="meta">
+        <span class="chip">${esc(it.secao || 'Notícia')}</span>
+        <time>${esc(fmtData(it.data))}</time>
+        <span class="contagem">${i + 1} / ${total}</span>
+      </div>
+      <h2>${esc(it.titulo)}</h2>
+      <div class="rodape-card">
+        ${it.resumo ? `<p>${esc(it.resumo)}</p>` : '<p class="padrao">Aponte a câmera do celular para o código e leia a matéria completa no portal da UFSM.</p>'}
+        ${qr ? `<div class="qr"><div class="caixa"><img src="${qr}" alt="QR code da matéria"></div><small><span class="q-tv">ufsm.br</span><span class="q-totem">Leia no celular</span></small></div>` : ''}
+      </div>
+    </div>
+    <div class="sombra"></div>
+    <div class="progresso"><i></i></div>`;
+}
+
+function montaCards(){
+  palco.querySelectorAll('.card').forEach(c => c.remove());
+  itens.forEach((it, i) => {
+    const c = document.createElement('article');
+    c.className = 'card teleporte';
+    c.dataset.i = i;
+    c.style.setProperty('--cor', CONFIG.CORES[i % CONFIG.CORES.length]);
+    c.innerHTML = htmlCard(it, i, itens.length);
+    c.classList.toggle('larga', (proporcaoImg.get(it.imagem) || 0) > 2.1);   // banners: imagem inteira
+    c.addEventListener('click', () => { if (!acabouDeDeslizar && i !== atual) vaiPara(i); });
+    palco.appendChild(c);
+  });
+  $('#pontos').innerHTML = itens.map((_, i) => `<i data-i="${i}"></i>`).join('');
+  $('#pontos').querySelectorAll('i').forEach(p => p.addEventListener('click', () => vaiPara(+p.dataset.i)));
+  ajustaAreasDeImagem();
+  posiciona(true);
+  requestAnimationFrame(() => requestAnimationFrame(() =>
+    palco.querySelectorAll('.card').forEach(c => c.classList.remove('teleporte'))));
+}
+
+/* A área da imagem do card em foco vai do topo do card até onde o texto
+   começa (o texto fica alinhado embaixo e sua altura muda com o título).
+   Assim a imagem fica centralizada no espaço que realmente sobra para ela. */
+function ajustaAreaDeImagem(card){
+  const det = card.querySelector('.detalhes'), meta = det && det.querySelector('.meta');
+  if (!meta || !card.clientHeight) return;
+  const h = card.clientHeight;
+  if (CONFIG.LAYOUT === 'titulo-acima'){
+    // a imagem começa logo abaixo do bloco de texto e vai até o fim do card
+    const fimTexto = det.offsetTop + det.offsetHeight;
+    const inicio = Math.min(h * 0.6, fimTexto + h * 0.01);
+    card.style.setProperty('--inicio-midia', (inicio / h * 100).toFixed(2) + '%');
+    return;
+  }
+  const inicioTexto = det.offsetTop + meta.offsetTop;
+  const altura = Math.max(h * 0.35, inicioTexto - h * 0.025);   // pequeno respiro antes do texto
+  card.style.setProperty('--altura-midia', (altura / h * 100).toFixed(2) + '%');
+}
+function ajustaAreasDeImagem(){ palco.querySelectorAll('.card').forEach(ajustaAreaDeImagem); }
+addEventListener('resize', () => requestAnimationFrame(() => { aplicaOrientacao(); ajustaAreasDeImagem(); reiniciaBanner(); }));
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajustaAreasDeImagem);
+
+function deslocamento(i){
+  const n = itens.length;
+  let d = ((i - atual) % n + n) % n;
+  if (d > n / 2) d -= n;
+  if (n % 2 === 0 && d === n / 2) return 'x';
+  if (Math.abs(d) > 3) return 'x';
+  return String(d);
+}
+
+function posiciona(inicial){
+  palco.querySelectorAll('.card').forEach(c => {
+    const novo = deslocamento(+c.dataset.i);
+    const antigo = c.dataset.off;
+    // card que "dá a volta" reaparece escondido do lado certo antes de entrar
+    if (!inicial && antigo !== undefined && antigo !== 'x' && novo !== 'x' && Math.abs(+novo - +antigo) > 1){
+      c.classList.add('teleporte');
+      c.dataset.off = String(Math.sign(+novo) * 3);
+      void c.offsetWidth;
+      c.classList.remove('teleporte');
+    }
+    c.dataset.off = novo;
+  });
+  palco.querySelectorAll('.progresso').forEach(p => p.classList.remove('rodando'));
+  const central = palco.querySelector(`.card[data-i="${atual}"] .progresso`);
+  if (central){ void central.offsetWidth; if (!pausado) central.classList.add('rodando'); }
+  $('#pontos').querySelectorAll('i').forEach((p, i) => p.classList.toggle('ativo', i === atual));
+  trocaAmbiente(itens[atual]?.imagem);
+  iniciaBanner();
+}
+
+/* ==================================================================
+   BANNERS LARGOS (imagens bem mais largas que altas)
+   1. o card chega e o banner aparece inteiro;
+   2. zoom até o banner ficar com a altura da caixa, preso no lado esquerdo;
+   3. desliza da esquerda para a direita, mostrando o banner todo;
+   4. termina 1 segundo antes da troca de card e fica parado no lado direito.
+   ================================================================== */
+const BANNER = { INTEIRO_ATE_MS: 1500, VOLTA_MS: 700, INTEIRO_MS: 400, ZOOM_MS: 900, FOLGA_FINAL_MS: 1000 };
+let animBanner = null, cardBanner = null, fimBanner = 0;
+
+const cardEmFoco = () => palco.querySelector(`.card[data-i="${atual}"]`);
+
+/* tamanho FINAL da área da imagem (a área ainda pode estar animando a altura) */
+function caixaFinal(card){
+  const W = card.clientWidth, h = card.clientHeight;
+  if (CONFIG.LAYOUT === 'titulo-acima'){
+    const ini = parseFloat(card.style.getPropertyValue('--inicio-midia')) || 42;
+    return { W, H: h * (1 - ini / 100) };
+  }
+  const alt = parseFloat(card.style.getPropertyValue('--altura-midia')) || 52;
+  return { W, H: h * alt / 100 };
+}
+
+/* card que sai de foco: volta ao banner inteiro com suavidade */
+function soltaBanner(){
+  if (!animBanner) return;
+  const img = animBanner.effect && animBanner.effect.target;
+  const atualT = img ? getComputedStyle(img).transform : 'none';
+  animBanner.cancel();
+  if (img && atualT !== 'none') img.animate([{ transform: atualT }, { transform: 'none' }], { duration: 800, easing: 'ease' });
+  animBanner = null; cardBanner = null;
+}
+
+/* chamado a cada troca de card e na pausa */
+function iniciaBanner(){
+  const card = cardEmFoco();
+  if (pausado && animBanner && cardBanner === card){ animBanner.pause(); return; }   // pausa: congela onde está
+  if (cardBanner !== card) soltaBanner();
+  if (pausado || dormindo || !card || !card.classList.contains('larga') || itens.length < 2){ soltaBanner(); return; }
+  fimBanner = performance.now() + CONFIG.INTERVALO_MS - BANNER.FOLGA_FINAL_MS;   // termina 1 s antes da troca
+  animaBanner(card, cardBanner === card);   // mesmo card (voltou da pausa): recomeça a partir de onde parou
+}
+
+/* ↑/↓ ou janela redimensionada: refaz o movimento no tempo que resta */
+function reiniciaBanner(){
+  const card = cardBanner;
+  if (!card || pausado || card !== cardEmFoco()) return;
+  animaBanner(card, true);
+}
+
+function animaBanner(card, continua){
+  const img = card.querySelector('.midia img');
+  if (!img) return;
+  const k = proporcaoImg.get(itens[atual].imagem) || (img.naturalWidth / img.naturalHeight);
+  const { W, H } = caixaFinal(card);
+  if (!k || !W || !H) return;
+  const escala = (H * k) / W;            // banner inteiro (largura W) → altura da caixa (H)
+  const desloca = W - H * k;             // quanto andar para mostrar o lado direito
+
+  const de = continua ? getComputedStyle(img).transform : 'none';
+  if (animBanner){ animBanner.cancel(); animBanner = null; }
+  cardBanner = card;
+
+  const agora = performance.now();
+  const total = fimBanner - agora;
+  // momento em que começa o zoom (antes disso o banner aparece inteiro)
+  const inicioZoom = continua ? BANNER.VOLTA_MS + BANNER.INTEIRO_MS : BANNER.INTEIRO_ATE_MS;
+  const quadros = [{ transform: de === 'none' ? 'translateX(0px) scale(1)' : de, offset: 0 }];
+  const inteiro = 'translateX(0px) scale(1)';
+  if (escala < 1.08 || total < inicioZoom + BANNER.ZOOM_MS + 800){
+    // pouco tempo ou o banner já quase preenche a caixa: fica inteiro
+    if (de !== 'none') animBanner = img.animate([{ transform: de }, { transform: inteiro }], { duration: BANNER.VOLTA_MS, easing: 'ease', fill: 'forwards' });
+    return;
+  }
+  if (continua) quadros.push({ transform: inteiro, offset: BANNER.VOLTA_MS / total });
+  quadros.push({ transform: inteiro, offset: inicioZoom / total, easing: 'cubic-bezier(.45,0,.25,1)' });
+  quadros.push({ transform: `translateX(0px) scale(${escala})`, offset: (inicioZoom + BANNER.ZOOM_MS) / total, easing: 'cubic-bezier(.42,0,.58,1)' });
+  quadros.push({ transform: `translateX(${desloca}px) scale(${escala})`, offset: 1 });
+  quadros[0].easing = 'ease';
+  animBanner = img.animate(quadros, { duration: total, fill: 'forwards' });
+  animBanner.startTime = document.timeline.currentTime;   // começa agora, sem esperar o próximo quadro
+}
+
+
+let ambLigado = 'A';
+function trocaAmbiente(src){
+  const a = $('#ambA'), b = $('#ambB');
+  const [vai, sai] = ambLigado === 'A' ? [b, a] : [a, b];
+  vai.style.backgroundImage = src ? `url("${src.replace(/"/g, '%22')}")` : 'none';
+  vai.classList.add('on'); sai.classList.remove('on');
+  ambLigado = ambLigado === 'A' ? 'B' : 'A';
+}
+
+/* ---------------- rotação ---------------- */
+function vaiPara(i){
+  if (!itens.length) return;
+  atual = ((i % itens.length) + itens.length) % itens.length;
+  posiciona(false);
+  agendaRotacao();
+}
+const proxima = () => vaiPara(atual + 1);
+const anterior = () => vaiPara(atual - 1);
+
+function agendaRotacao(){
+  clearTimeout(timerRot);
+  if (pausado || dormindo || itens.length < 2) return;
+  timerRot = setTimeout(proxima, CONFIG.INTERVALO_MS);
+}
+function alternaPausa(){
+  pausado = !pausado;
+  document.body.classList.toggle('pausado', pausado);
+  $('#btnPausa').innerHTML = pausado
+    ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+  posiciona(false);
+  agendaRotacao();
+}
+
+/* ---------------- status / avisos ---------------- */
+function status(tipo, texto){
+  $('#status').className = 'status ' + tipo;
+  $('#statusTxt').textContent = texto;
+  $('#btnAtualizar').classList.toggle('girando', tipo === 'carregando');
+}
+function aviso(mostrar, titulo, texto, carregando){
+  $('#aviso').classList.toggle('on', mostrar);
+  if (titulo) $('#avisoTitulo').textContent = titulo;
+  if (texto) $('#avisoTexto').textContent = texto;
+  $('#avisoBarra').style.display = carregando ? '' : 'none';
+}
+function rodape(){
+  $('#rodapeTxt').textContent = ultimaAtualizacao
+    ? `Atualizado - ${fmtHora(ultimaAtualizacao)}`
+    : 'Atualizando…';
+}
+
+/* ---------------- carga / atualização ---------------- */
+let carregando = false, timerRetentativa = null;
+
+async function preparaImagens(lista, ms){
+  await comTempoLimite(Promise.all(lista.map(async it => { it.imagem = await resolveImagem(it.imagens); })), ms).catch(() => {});
+}
+
+async function carrega(){
+  if (carregando) return;
+  carregando = true;
+  clearTimeout(timerRetentativa);
+  status('carregando', 'atualizando…');
+  try{
+    const html = await htmlDaPaginaPrincipal();
+    const novos = extraiNoticias(html, CONFIG.SITE + '/');
+    await preparaImagens(novos, 12000);
+
+    try{ localStorage.setItem('noticiasUFSM:v3', JSON.stringify(novos)); }catch(e){}
+    aplica(novos);
+    ultimaAtualizacao = new Date();
+    status('ok', '');   // a hora da última atualização fica só no rodapé
+    rodape();
+    completaImagensFaltantes();
+  }catch(e){
+    console.warn('[Destaques] falha na atualização:', e);
+    if (!itens.length){
+      // usa os últimos destaques bons salvos neste navegador
+      try{
+        const salvos = JSON.parse(localStorage.getItem('noticiasUFSM:v3') || '[]')
+          .map(i => ({...i, data: i.data ? new Date(i.data) : null}));
+        if (salvos.length){ await preparaImagens(salvos, 8000); aplica(salvos); }
+      }catch(_){}
+    }
+    if (!itens.length){
+      aviso(true, 'Sem conexão com o portal', 'Não foi possível ler a página principal da UFSM agora. Nova tentativa em 1 minuto.', false);
+    }
+    status('erro', 'sem conexão · nova tentativa em 1 min');
+    timerRetentativa = setTimeout(carrega, 60000);
+  }finally{
+    carregando = false;
+  }
+}
+
+function aplica(novos){
+  const nova = novos.map(i => i.link + '|' + i.titulo + '|' + (i.imagem || '')).join('§');
+  if (nova === assinatura) return;           // nada mudou
+  const linkAtual = itens[atual]?.link;
+  const primeira = !itens.length;
+  assinatura = nova;
+
+  const troca = () => {
+    itens = novos;
+    const idx = itens.findIndex(i => i.link === linkAtual);
+    atual = idx >= 0 ? idx : 0;
+    montaCards();
+    aviso(false);
+    palco.classList.remove('trocando');
+    agendaRotacao();
+  };
+  if (primeira) troca();
+  else { palco.classList.add('trocando'); setTimeout(troca, 450); }
+}
+
+/* Destaque sem foto: usa a imagem destacada da matéria (pela API) */
+async function completaImagensFaltantes(){
+  if (!CONFIG.BUSCAR_IMAGEM_DESTACADA) return;
+  for (const it of itens.filter(i => !i.imagem).slice(0, 6)){
+    try{
+      const src = await resolveImagem(await imagemDestacada(it.link));
+      if (!src) continue;
+      it.imagem = src;
+      const i = itens.indexOf(it);
+      const card = palco.querySelector(`.card[data-i="${i}"]`);
+      if (card){
+        const off = card.dataset.off;
+        card.innerHTML = htmlCard(it, i, itens.length);
+        card.classList.toggle('larga', (proporcaoImg.get(src) || 0) > 2.1);
+        card.dataset.off = off;
+        ajustaAreaDeImagem(card);
+        if (i === atual) posiciona(false);
+      }
+    }catch(e){ /* segue sem imagem */ }
+  }
+}
+
+/* ---------------- relógio ---------------- */
+function relogio(){
+  const d = new Date();
+  $('#hora').textContent = fmtHora(d);
+  $('#data').textContent = new Intl.DateTimeFormat('pt-BR', {weekday:'long', day:'2-digit', month:'short', timeZone:CONFIG.FUSO})
+    .format(d).replace('.', '').replace(/^./, c => c.toUpperCase());
+}
+
+/* ---------------- interação ---------------- */
+$('#btnProx').onclick = () => proxima();
+$('#btnAnt').onclick = () => anterior();
+$('#btnPausa').onclick = alternaPausa;
+$('#btnAtualizar').onclick = carrega;
+$('#btnTela').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+/* ↑ título em cima / ↓ título embaixo (imagem em cima) */
+function mudaLayout(layout){
+  if (CONFIG.LAYOUT === layout) return;
+  CONFIG.LAYOUT = layout;
+  document.documentElement.classList.toggle('titulo-acima', layout === 'titulo-acima');
+  try{ localStorage.setItem('noticiasUFSM:layout', layout); }catch(e){}
+  requestAnimationFrame(() => { ajustaAreasDeImagem(); reiniciaBanner(); });
+}
+
+addEventListener('keydown', e => {
+  if (e.key === 'ArrowUp'){ e.preventDefault(); mudaLayout('titulo-acima'); }
+  else if (e.key === 'ArrowDown'){ e.preventDefault(); mudaLayout('imagem-acima'); }
+  else if (e.key === 'ArrowRight') proxima();
+  else if (e.key === 'ArrowLeft') anterior();
+  else if (e.key === ' ') { e.preventDefault(); alternaPausa(); }
+  else if (e.key.toLowerCase() === 'f') $('#btnTela').click();
+  else if (e.key.toLowerCase() === 'r') carrega();
+});
+/* ---------- deslizar o dedo (tela de toque) ---------- */
+let toque = null, acabouDeDeslizar = false;
+palco.addEventListener('pointerdown', e => { toque = { x: e.clientX, y: e.clientY, t: Date.now() }; });
+palco.addEventListener('pointerup', e => {
+  if (!toque) return;
+  const dx = e.clientX - toque.x, dy = e.clientY - toque.y, rapido = Date.now() - toque.t < 900;
+  toque = null;
+  if (rapido && Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.3){
+    acabouDeDeslizar = true; setTimeout(() => acabouDeDeslizar = false, 400);
+    dx < 0 ? proxima() : anterior();
+  }
+});
+palco.addEventListener('pointercancel', () => { toque = null; });
+
+/* ---------- tela sempre acesa ---------- */
+let travaTela = null;
+async function mantemTelaAcesa(){
+  try{
+    if (!('wakeLock' in navigator) || document.hidden || (travaTela && !travaTela.released)) return;
+    travaTela = await navigator.wakeLock.request('screen');
+  }catch(e){ /* navegador sem suporte ou sem permissão: segue normalmente */ }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) mantemTelaAcesa(); });
+
+/* ---------- recarga diária de madrugada (?recarga=4 = às 4h; ?recarga=nao desliga) ---------- */
+function agendaRecargaDiaria(){
+  const p = params.get('recarga');
+  if (p === 'nao') return;
+  const hora = Math.min(23, Math.max(0, parseInt(p) || 4));
+  const agora = new Date(), alvo = new Date(agora);
+  alvo.setHours(hora, 0, 0, 0);
+  if (alvo <= agora) alvo.setDate(alvo.getDate() + 1);
+  setTimeout(function tenta(){
+    // só recarrega se o portal respondeu há pouco (senão a página poderia abrir sem conteúdo)
+    if (ultimaAtualizacao && Date.now() - ultimaAtualizacao < 30 * 60 * 1000) location.reload();
+    else setTimeout(tenta, 30 * 60 * 1000);
+  }, alvo - agora);
+}
+
+/* ---------- horário noturno (?noite=23-6): tela preta e carrossel parado ---------- */
+let dormindo = false;
+function verificaNoite(){
+  const m = (params.get('noite') || '').match(/^(\d{1,2})-(\d{1,2})$/);
+  if (!m) return;
+  const ini = +m[1], fim = +m[2], h = new Date().getHours();
+  const deveDormir = ini > fim ? (h >= ini || h < fim) : (h >= ini && h < fim);
+  if (deveDormir === dormindo) return;
+  dormindo = deveDormir;
+  $('#noite').classList.toggle('on', dormindo);
+  if (dormindo){ clearTimeout(timerRot); soltaBanner(); }
+  else if (itens.length) vaiPara(atual);
+}
+
+let timerOcioso;
+addEventListener('mousemove', () => {
+  document.body.classList.remove('idle');
+  clearTimeout(timerOcioso);
+  timerOcioso = setTimeout(() => document.body.classList.add('idle'), 3000);
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && ultimaAtualizacao && Date.now() - ultimaAtualizacao > CONFIG.ATUALIZACAO_MS) carrega();
+});
+
+/* ---------------- início ---------------- */
+relogio(); setInterval(relogio, 10000);
+verificaNoite(); setInterval(verificaNoite, 60000);
+mantemTelaAcesa();
+agendaRecargaDiaria();
+document.body.classList.add('idle');
+window.addEventListener('load', () => {
+  carrega();
+  setInterval(carrega, CONFIG.ATUALIZACAO_MS);   // relê a página principal a cada 15 minutos
+});
+</script>
+
+
+</body>
+</html>

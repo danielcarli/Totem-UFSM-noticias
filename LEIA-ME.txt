@@ -1,0 +1,102 @@
+DESTAQUES UFSM — painel de notícias para TVs e totens
+Agência de Notícias / Coordenadoria de Comunicação UFSM
+=====================================================
+
+O QUE É
+  Solução para totens e TVs que mostra, em tela cheia, as notícias e
+  informações do site da Universidade Federal de Santa Maria (www.ufsm.br).
+  Todas as notícias com foto da página principal aparecem em carrossel, uma a
+  cada 7 segundos, e o conteúdo é relido do portal a cada 15 minutos.
+  Precisa apenas de internet; não depende de navegador instalado.
+
+  Idealizado por Daniel Michelon De Carli, com a finalidade de trazer uma
+  visualização mais moderna para as notícias e os destaques institucionais
+  da UFSM.
+
+BAIXAR
+  Versão mais recente: https://github.com/danielcarli/Totem-UFSM-noticias/releases/latest
+  Código-fonte e documentação: https://github.com/danielcarli/Totem-UFSM-noticias
+
+INSTALAR
+  Windows 10/11 (64 bits)
+    Dê dois cliques em Destaques-UFSM-Setup.exe e siga o assistente
+    (não precisa de administrador). Na última tela, marque "Abrir sozinho ao
+    entrar no Windows (TV ou totem)" se o computador for de uma TV ou totem.
+    Na primeira vez, o Windows pode mostrar "O Windows protegeu o computador"
+    (o programa não tem assinatura digital): clique em "Mais informações" e
+    depois em "Executar assim mesmo".
+    Sem instalar: descompacte o .zip e abra DestaquesUFSM.exe.
+    Desinstalar: Configurações > Aplicativos > Destaques UFSM.
+
+  Debian, Ubuntu, Linux Mint
+    sudo apt install ./destaques-ufsm_amd64.deb
+  Fedora, RHEL, openSUSE
+    sudo dnf install ./destaques-ufsm.x86_64.rpm
+  Qualquer Linux, sem instalar
+    chmod +x Destaques-UFSM-x86_64.AppImage  e abra o arquivo.
+  Depois de instalado, abra pelo menu de aplicativos ("Destaques UFSM") ou
+  pelo terminal: destaques-ufsm
+  Desinstalar: sudo apt remove destaques-ufsm   (ou sudo dnf remove destaques-ufsm)
+
+ATALHOS
+  ← / → ....... notícia anterior / próxima
+  ↑ ........... título em cima, imagem embaixo
+  ↓ ........... imagem em cima, título embaixo (padrão)
+  Espaço ...... pausa / continua
+  R ........... busca as notícias agora
+  1 / 2 / 3 ... leva o painel para o monitor 1, 2 ou 3 (da esquerda para a
+                direita) e lembra a escolha nas próximas vezes
+  F11 ......... entra / sai da tela cheia
+  Esc ......... sai da tela cheia
+  Ctrl+R ...... recarrega o painel
+  Ctrl+Q ...... fecha o aplicativo
+  Em telas de toque: deslize o dedo para os lados para trocar de notícia.
+
+OPÇÕES
+  Windows: crie um atalho de DestaquesUFSM.exe e acrescente as opções no
+  campo "Destino". Linux: escreva depois do comando destaques-ufsm.
+
+  --monitor=2              abre no segundo monitor só desta vez (para fixar,
+                           use as teclas 1, 2, 3 com o painel aberto)
+  --intervalo=10           segundos por notícia (padrão 7)
+  --atualizacao=10         minutos entre as leituras do portal (padrão 15)
+  --max=30                 número máximo de notícias
+  --secoes=Destaques,JAI   mostra só estas áreas da página principal
+  --ignorar="Em destaque"  tira áreas (ex.: "Em destaque" = banners do topo)
+  --layout=titulo-acima    título em cima e imagem embaixo
+  --orientacao=vertical    força o layout de totem em pé (normalmente é
+                           automático: tela mais alta que larga = vertical)
+  --leve=1                 sem efeitos de desfoque (computadores fracos)
+  --noite=23-6             tela preta das 23h às 6h (o carrossel para)
+  --iniciar-com-sistema    abre sozinho sempre que o usuário entrar no
+                           computador (guarda as outras opções usadas junto)
+  --nao-iniciar-com-sistema  desfaz a opção acima
+
+  Exemplo no Windows (campo "Destino" do atalho):
+  "%LOCALAPPDATA%\Programs\DestaquesUFSM\DestaquesUFSM.exe" --monitor=2 --intervalo=8
+  Exemplo no Linux:
+  destaques-ufsm --iniciar-com-sistema --password-store=basic --monitor=2
+
+TV OU TOTEM FUNCIONANDO SOZINHO
+  1. Abrir sozinho: Windows, marque a opção na última tela do instalador.
+     Linux, rode uma vez (sem sudo), como o usuário que fica logado:
+       destaques-ufsm --iniciar-com-sistema --password-store=basic
+     (--password-store=basic evita a janela "Desbloquear chaveiro" quando o
+     login é automático)
+  2. Login automático do usuário, sem pedir senha.
+     Linux Mint/Ubuntu: Menu > Administração > Janela de início de sessão >
+     Usuários > Login automático. Windows: netplwiz.
+  3. Tela que não apaga: o painel já impede o descanso de tela, mas desligue
+     também a proteção de tela e o bloqueio nas configurações de energia.
+  4. Volta após falta de luz: na BIOS, "Restore on AC Power Loss" = Power On.
+
+COMPORTAMENTO
+  - Se a internet cair, continua mostrando os últimos destaques e tenta de
+    novo a cada minuto.
+  - O painel se recarrega sozinho uma vez por dia e se recupera de travamentos.
+  - Só lê o portal da UFSM; não envia nenhum dado sobre o computador.
+
+LICENÇA
+  Software livre sob a GNU GPL versão 3 ou posterior (arquivo LICENSE.txt).
+  As marcas da UFSM, da Coordenadoria de Comunicação e da Agência de Notícias
+  não são cobertas pela licença e pertencem à UFSM.
