@@ -4,7 +4,7 @@
 
 **Painel de notícias para TVs e totens da Universidade Federal de Santa Maria**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.4.3-0b5394)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.4.4-0b5394)
 ![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-e7640a)
 ![Plataformas](https://img.shields.io/badge/plataformas-Windows%20%7C%20Linux-1ab2af)
 ![Electron](https://img.shields.io/badge/Electron-45-47848f)
@@ -268,7 +268,7 @@ LEIA-ME.txt            instruções que acompanham os instaladores
 ### Publicar uma versão
 
 1. Atualize `"version"` no `package.json` e a tabela de [Versões](#versões).
-2. Crie e envie a tag da versão: `git tag v1.4.3 && git push origin v1.4.3`.
+2. Crie e envie a tag da versão: `git tag v1.4.4 && git push origin v1.4.4`.
 3. O GitHub Actions ([`.github/workflows/release.yml`](.github/workflows/release.yml)) gera os
    instaladores de Windows e Linux e os publica na release da tag. Os links de
    [Download](#download) passam a apontar para ela.
@@ -281,6 +281,7 @@ de `dist/` e o `navegador/destaques-ufsm.html`, com os mesmos nomes.
 
 | Versão | Novidades |
 |---|---|
+| **1.4.4** | Notícias com GIF animado como imagem de destaque (ex.: "Lembre bem") também aparecem, com a animação no card; nesses casos o fundo desfocado não usa o GIF, para não pesar na placa de vídeo. |
 | **1.4.3** | Corrige imagens piscando nas transições depois de várias trocas seguidas pelo teclado: o fundo desfocado troca sem piscar, os cards fora da tela deixam de ocupar a placa de vídeo (cerca de 1/3 menos área desenhada) e o card que chega ao centro só passa à frente quando cruza o anterior. |
 | **1.4.2** | O título da matéria fica sempre embaixo da imagem: saiu a troca de posição com as setas ↑/↓ (e a opção `--layout`). |
 | **1.4.1** | Banners do carrossel do topo que levam a uma página ou site (ex.: Descubra UFSM), e não a uma matéria, também entram no painel; correção da geração automática no Windows (GitHub Actions). |

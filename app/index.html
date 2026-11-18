@@ -599,7 +599,7 @@ async function imagemDestacada(link){
    Uma notícia que aparece em duas áreas entra uma vez só.
    ================================================================== */
 const RE_MATERIA = /\/(\d{4})\/(\d{2})\/(\d{2})\/[^/?#]+/;
-const RE_DESCRICAO_FOTO = /^(foto|fotografia|imagem|ilustra|arte |card |banner|print|captura|montagem|v[ií]deo)/i;
+const RE_DESCRICAO_FOTO = /^(foto|fotografia|imagem|ilustra|arte |card |banner|print|captura|montagem|v[ií]deo|anima[çc][ãa]o|gif)/i;
 
 function enderecoMateria(a, base){
   try{
@@ -638,7 +638,10 @@ function imagemValida(img){
   const srcset = img.getAttribute('srcset') || img.getAttribute('data-srcset') || img.getAttribute('data-lazy-srcset') || '';
   const url = srcset || src;
   if (!url || /^data:/.test(src) && !srcset) return false;
-  if (/\.(svg|gif)(\?|\s|$)/i.test(url) || /emoji|icone|icon|logo/i.test(url)) return false;
+  if (/\.svg(\?|\s|$)/i.test(url) || /emoji|icone|icon|logo/i.test(url)) return false;
+  // GIF: vale quando é imagem enviada para a matéria (ex.: destaque animado);
+  // os outros costumam ser ícones e espaçadores
+  if (/\.gif(\?|\s|$)/i.test(url) && !/\/(app|wp-content)\/uploads\//i.test(url)) return false;
   const w = parseInt(img.getAttribute('width') || '0');
   return !(w && w < 150);
 }
@@ -794,11 +797,14 @@ function qrDataURL(texto){
   }catch(e){ return ''; }
 }
 
+// GIF animado: os fundos desfocados não usam a imagem (desfocar uma animação a cada quadro pesa na placa de vídeo)
+const ehGif = src => /\.gif(\?|#|$)/i.test(src || '');
+
 function htmlCard(it, i, total){
   const qr = qrDataURL(it.link);
   const alt = esc(it.descricaoImagem || '');
   const midia = it.imagem
-    ? `<img class="fundo-desfocado" src="${esc(it.imagem)}" alt="" referrerpolicy="no-referrer">
+    ? `${ehGif(it.imagem) ? '' : `<img class="fundo-desfocado" src="${esc(it.imagem)}" alt="" referrerpolicy="no-referrer">`}
        <div class="midia"><img src="${esc(it.imagem)}" alt="${alt}" referrerpolicy="no-referrer"></div>`
     : `<div class="sem-foto"></div><div class="midia simbolo"><img src="${SIMBOLO}" alt=""></div>`;
   return `
@@ -881,7 +887,8 @@ function posiciona(inicial){
   const central = palco.querySelector(`.card[data-i="${atual}"] .progresso`);
   if (central){ void central.offsetWidth; if (!pausado) central.classList.add('rodando'); }
   $('#pontos').querySelectorAll('i').forEach((p, i) => p.classList.toggle('ativo', i === atual));
-  trocaAmbiente(itens[atual]?.imagem);
+  const img = itens[atual]?.imagem;
+  trocaAmbiente(ehGif(img) ? null : img);
   iniciaBanner();
 }
 
