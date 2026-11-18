@@ -146,7 +146,8 @@ body.idle .trilho{opacity:.25}
   border:1px solid var(--vidro-borda);
   box-shadow:inset 0 1px 0 var(--vidro-brilho), 0 30px 80px rgba(0,0,0,.55);
   transform-style:preserve-3d;
-  transition:transform 1s cubic-bezier(.2,.75,.15,1), opacity .8s ease;
+  transition:transform 1s cubic-bezier(.2,.75,.15,1), opacity .8s ease,
+             z-index 0s linear .14s;   /* troca a ordem só quando os cards se cruzam (metade do movimento), sem "pular" na frente */
   will-change:transform,opacity;
   cursor:pointer;
 }
@@ -159,6 +160,13 @@ body.idle .trilho{opacity:.25}
 .card[data-off="3"] {transform:translate(-50%,-50%) translateX(calc(var(--W)*1.464))  translateZ(-620px) rotateY(24deg) scale(.6);opacity:0;pointer-events:none;z-index:4}
 .card[data-off="-3"]{transform:translate(-50%,-50%) translateX(calc(var(--W)*-1.464)) translateZ(-620px) rotateY(-24deg) scale(.6);opacity:0;pointer-events:none;z-index:4}
 .card[data-off="x"] {transform:translate(-50%,-50%) translateZ(-500px) scale(.5);opacity:0;pointer-events:none;z-index:1}
+/* cards fora da tela não ocupam a placa de vídeo (com muitas trocas seguidas, o excesso de camadas
+   desfocadas fazia as imagens piscarem em alguns computadores) */
+.card[data-off="x"]{
+  visibility:hidden;will-change:auto;
+  transition:transform 1s cubic-bezier(.2,.75,.15,1), opacity .8s ease, z-index 0s linear .14s, visibility 0s linear .8s;
+}
+.card[data-off="x"] .fundo-desfocado,.card[data-off="3"] .fundo-desfocado,.card[data-off="-3"] .fundo-desfocado{display:none}
 
 /* camadas do card */
 .card .fundo-desfocado{
@@ -179,6 +187,7 @@ body.idle .trilho{opacity:.25}
 .card.larga[data-off] .midia img{object-fit:contain;transform:none;transition:none;transform-origin:0 50%}
 .card .sombra{position:absolute;inset:0;background:#06172A;opacity:0;transition:opacity .8s;pointer-events:none;z-index:5}
 .card[data-off="1"] .sombra,.card[data-off="-1"] .sombra{opacity:.57}
+.card[data-off="0"] .sombra{transition-duration:.3s}   /* o card que chega ao centro clareia logo */
 .card[data-off="2"] .sombra,.card[data-off="-2"] .sombra{opacity:.68}
 
 /* placeholder sem imagem: fundo nas cores da Coordenadoria e o símbolo só na área da imagem,
@@ -367,7 +376,7 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
 </head>
 <body>
 
-<div class="ambiente" aria-hidden="true"><div class="amb" id="ambA"></div><div class="amb" id="ambB"></div></div>
+<div class="ambiente" aria-hidden="true" id="ambiente"></div>
 
 <header class="topo">
   <img class="logo" src="__UFSM__" alt="Universidade Federal de Santa Maria">
@@ -903,7 +912,10 @@ function soltaBanner(){
   const img = animBanner.effect && animBanner.effect.target;
   const atualT = img ? getComputedStyle(img).transform : 'none';
   animBanner.cancel();
-  if (img && atualT !== 'none') img.animate([{ transform: atualT }, { transform: 'none' }], { duration: 800, easing: 'ease' });
+  if (img && atualT !== 'none'){
+    if (img._volta) img._volta.cancel();
+    img._volta = img.animate([{ transform: atualT }, { transform: 'none' }], { duration: 800, easing: 'ease' });
+  }
   animBanner = null; cardBanner = null;
 }
 
@@ -933,7 +945,10 @@ function animaBanner(card, continua){
   const escala = (H * k) / W;            // banner inteiro (largura W) → altura da caixa (H)
   const desloca = W - H * k;             // quanto andar para mostrar o lado direito
 
-  const de = continua ? getComputedStyle(img).transform : 'none';
+  // se o banner ainda está voltando (o card saiu e voltou rápido), parte de onde ele está
+  const voltando = img._volta && img._volta.playState === 'running';
+  const de = (continua || voltando) ? getComputedStyle(img).transform : 'none';
+  if (img._volta){ img._volta.cancel(); img._volta = null; }
   if (animBanner){ animBanner.cancel(); animBanner = null; }
   cardBanner = card;
 
@@ -958,13 +973,30 @@ function animaBanner(card, continua){
 }
 
 
-let ambLigado = 'A';
+/* Fundo desfocado da tela. Cada troca cria uma camada nova, que só aparece depois de a imagem
+   estar pronta e entra por cima da anterior; as de baixo saem quando ela termina de aparecer.
+   Assim, trocar de notícia várias vezes seguidas nunca troca a imagem de uma camada visível. */
+let ambSeq = 0;
 function trocaAmbiente(src){
-  const a = $('#ambA'), b = $('#ambB');
-  const [vai, sai] = ambLigado === 'A' ? [b, a] : [a, b];
-  vai.style.backgroundImage = src ? `url("${src.replace(/"/g, '%22')}")` : 'none';
-  vai.classList.add('on'); sai.classList.remove('on');
-  ambLigado = ambLigado === 'A' ? 'B' : 'A';
+  const caixa = $('#ambiente'), seq = ++ambSeq;
+  const mostra = () => {
+    if (seq !== ambSeq) return;                         // já pediram outra imagem
+    const camada = document.createElement('div');
+    camada.className = 'amb';
+    if (src) camada.style.backgroundImage = `url("${src.replace(/"/g, '%22')}")`;
+    caixa.appendChild(camada);
+    void camada.offsetWidth;
+    camada.classList.add('on');
+    const limpa = () => { if (camada.parentNode) while (caixa.firstChild !== camada) caixa.firstChild.remove(); };
+    camada.addEventListener('transitionend', limpa, { once: true });
+    setTimeout(limpa, 2000);
+    // no máximo 3 camadas, mesmo trocando muito rápido
+    while (caixa.children.length > 3) caixa.firstChild.remove();
+  };
+  if (!src) return mostra();
+  const img = new Image();
+  img.src = src;
+  (img.decode ? img.decode() : Promise.resolve()).then(mostra, mostra);
 }
 
 /* ---------------- rotação ---------------- */
