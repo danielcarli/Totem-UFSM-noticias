@@ -4,7 +4,7 @@
 
 **Painel de notícias para TVs e totens da Universidade Federal de Santa Maria**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.4.1-0b5394)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.4.2-0b5394)
 ![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-e7640a)
 ![Plataformas](https://img.shields.io/badge/plataformas-Windows%20%7C%20Linux-1ab2af)
 ![Electron](https://img.shields.io/badge/Electron-45-47848f)
@@ -82,11 +82,11 @@ inteira, com textos e QR code maiores ("Leia no celular").
 
 <table>
   <tr>
-    <th>Título em cima (tecla ↑)</th>
+    <th>Banner do topo do portal</th>
     <th>Notícia sem foto</th>
   </tr>
   <tr>
-    <td><img src="docs/tela-titulo-acima.jpg" alt="Layout com o título em cima" width="430"></td>
+    <td><img src="docs/tela-banner.jpg" alt="Banner do Descubra UFSM no painel" width="430"></td>
     <td><img src="docs/tela-sem-foto.jpg" alt="Card de notícia sem foto" width="430"></td>
   </tr>
 </table>
@@ -169,7 +169,6 @@ e no menu Iniciar; para remover, use **Configurações › Aplicativos › Desta
 | Tecla | Ação |
 |---|---|
 | ← / → | notícia anterior / próxima |
-| ↑ / ↓ | título em cima / imagem em cima (padrão) |
 | Espaço | pausa / continua |
 | R | busca as notícias agora |
 | 1 / 2 / 3 | leva o painel para o monitor 1, 2 ou 3 (da esquerda para a direita) e lembra a escolha |
@@ -192,7 +191,6 @@ Acrescente ao atalho (Windows, campo "Destino") ou ao comando (Linux):
 | `--secoes=Destaques,JAI` | mostra só estas áreas da página principal |
 | `--ignorar="Em destaque"` | tira áreas (ex.: os banners do topo) |
 | `--orientacao=vertical` | força o layout de totem (normalmente é automático) |
-| `--layout=titulo-acima` | título em cima e imagem embaixo |
 | `--leve=1` | sem efeitos de desfoque, para computadores mais fracos |
 | `--noite=23-6` | tela preta das 23h às 6h |
 | `--iniciar-com-sistema` | passa a abrir sozinho ao entrar no computador (guarda as outras opções) |
@@ -270,7 +268,7 @@ LEIA-ME.txt            instruções que acompanham os instaladores
 ### Publicar uma versão
 
 1. Atualize `"version"` no `package.json` e a tabela de [Versões](#versões).
-2. Crie e envie a tag da versão: `git tag v1.4.1 && git push origin v1.4.1`.
+2. Crie e envie a tag da versão: `git tag v1.4.2 && git push origin v1.4.2`.
 3. O GitHub Actions ([`.github/workflows/release.yml`](.github/workflows/release.yml)) gera os
    instaladores de Windows e Linux e os publica na release da tag. Os links de
    [Download](#download) passam a apontar para ela.
@@ -283,6 +281,7 @@ de `dist/` e o `navegador/destaques-ufsm.html`, com os mesmos nomes.
 
 | Versão | Novidades |
 |---|---|
+| **1.4.2** | O título da matéria fica sempre embaixo da imagem: saiu a troca de posição com as setas ↑/↓ (e a opção `--layout`). |
 | **1.4.1** | Banners do carrossel do topo que levam a uma página ou site (ex.: Descubra UFSM), e não a uma matéria, também entram no painel; correção da geração automática no Windows (GitHub Actions). |
 | **1.4.0** | Instalador assistido para Windows (com opção de abrir ao iniciar) e pacotes `.deb`, `.rpm` e AppImage para Linux; teclas 1, 2 e 3 para trocar de monitor, com memória da escolha; hora da última atualização só no rodapé; licença GNU GPL 3. |
 | **1.3.0** | Marca da UFSM no topo; Coordenadoria de Comunicação e Agência de Notícias no rodapé; card de notícia sem foto com mais contraste. |

@@ -198,7 +198,6 @@ body.idle .trilho{opacity:.25}
   width:auto;height:46%;max-height:30vmin;object-fit:contain;transform:none;
   filter:drop-shadow(0 10px 30px rgba(0,0,0,.35));
 }
-.titulo-acima .card .midia.simbolo{-webkit-mask-image:none;mask-image:none}
 
 /* legenda dos cards laterais */
 .legenda{
@@ -291,19 +290,8 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
   background:linear-gradient(90deg,var(--laranja),var(--verde),var(--lilas));animation:vai 1.3s ease-in-out infinite}
 @keyframes vai{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
 
-/* ---------- estudo de layout: título em cima, imagem embaixo (?layout=titulo-acima) ---------- */
+/* a área da imagem acompanha o tamanho do título (animação suave) */
 .card .midia{transition:height 1s cubic-bezier(.2,.75,.15,1), top 1s cubic-bezier(.2,.75,.15,1)}
-.titulo-acima .card[data-off="0"] .midia{
-  top:var(--inicio-midia, 42%);height:calc(100% - var(--inicio-midia, 42%));
-  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 7%);
-  mask-image:linear-gradient(180deg,transparent 0,#000 7%);
-}
-.titulo-acima .card.larga[data-off="0"] .midia{-webkit-mask-image:none;mask-image:none}
-.titulo-acima .detalhes{
-  top:0;bottom:auto;height:auto;justify-content:flex-start;
-  padding:6.5% 6.5% 3%;transform:translateY(-16px);
-}
-.titulo-acima .rodape-card{align-items:center}
 
 @media (max-aspect-ratio: 1/1){
   :root{--W: min(92vw, 846px)}
@@ -335,7 +323,6 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
 .vertical .card[data-off="2"],.vertical .card[data-off="-2"],.vertical .card[data-off="3"],.vertical .card[data-off="-3"]{opacity:0;pointer-events:none}
 
 .vertical .detalhes{padding:0 6% 6%}
-.vertical .titulo-acima .detalhes,.vertical.titulo-acima .detalhes{padding:6% 6% 3%}
 .vertical .meta{font-size:2.8vw}
 .vertical .detalhes h2{font-size:5.9vw;line-height:1.07;-webkit-line-clamp:5}   /* cabe uma linha a mais na tela em pé */
 .vertical .topo .logo{height:82%}
@@ -444,16 +431,9 @@ const CONFIG = {
   BUSCAR_IMAGEM_DESTACADA: true,  // destaque sem foto: busca a imagem destacada da matéria
   CORES: ['var(--laranja)', 'var(--verde)', 'var(--lilas)', 'var(--azul)'],
   FUSO: 'America/Sao_Paulo',
-  // layout: ?layout=… na URL; senão, o último escolhido com ↑/↓ neste navegador
-  LAYOUT: (() => {
-    const p = params.get('layout');
-    if (p === 'titulo-acima' || p === 'imagem-acima') return p;
-    try{ return localStorage.getItem('noticiasUFSM:layout') === 'titulo-acima' ? 'titulo-acima' : 'imagem-acima'; }
-    catch(e){ return 'imagem-acima'; }
-  })(),
 };
 document.documentElement.style.setProperty('--rot', CONFIG.INTERVALO_MS + 'ms');
-document.documentElement.classList.toggle('titulo-acima', CONFIG.LAYOUT === 'titulo-acima');
+try{ localStorage.removeItem('noticiasUFSM:layout'); }catch(e){}   // escolha de layout de versões antigas (o título fica sempre embaixo)
 
 /* orientação: vertical (totem em pé) ou horizontal — automática, ou ?orientacao=vertical|horizontal */
 CONFIG.ORIENTACAO = ['vertical', 'horizontal'].includes(params.get('orientacao')) ? params.get('orientacao') : 'auto';
@@ -860,13 +840,6 @@ function ajustaAreaDeImagem(card){
   const det = card.querySelector('.detalhes'), meta = det && det.querySelector('.meta');
   if (!meta || !card.clientHeight) return;
   const h = card.clientHeight;
-  if (CONFIG.LAYOUT === 'titulo-acima'){
-    // a imagem começa logo abaixo do bloco de texto e vai até o fim do card
-    const fimTexto = det.offsetTop + det.offsetHeight;
-    const inicio = Math.min(h * 0.6, fimTexto + h * 0.01);
-    card.style.setProperty('--inicio-midia', (inicio / h * 100).toFixed(2) + '%');
-    return;
-  }
   const inicioTexto = det.offsetTop + meta.offsetTop;
   const altura = Math.max(h * 0.35, inicioTexto - h * 0.025);   // pequeno respiro antes do texto
   card.style.setProperty('--altura-midia', (altura / h * 100).toFixed(2) + '%');
@@ -920,10 +893,6 @@ const cardEmFoco = () => palco.querySelector(`.card[data-i="${atual}"]`);
 /* tamanho FINAL da área da imagem (a área ainda pode estar animando a altura) */
 function caixaFinal(card){
   const W = card.clientWidth, h = card.clientHeight;
-  if (CONFIG.LAYOUT === 'titulo-acima'){
-    const ini = parseFloat(card.style.getPropertyValue('--inicio-midia')) || 42;
-    return { W, H: h * (1 - ini / 100) };
-  }
   const alt = parseFloat(card.style.getPropertyValue('--altura-midia')) || 52;
   return { W, H: h * alt / 100 };
 }
@@ -948,7 +917,7 @@ function iniciaBanner(){
   animaBanner(card, cardBanner === card);   // mesmo card (voltou da pausa): recomeça a partir de onde parou
 }
 
-/* ↑/↓ ou janela redimensionada: refaz o movimento no tempo que resta */
+/* janela redimensionada: refaz o movimento no tempo que resta */
 function reiniciaBanner(){
   const card = cardBanner;
   if (!card || pausado || card !== cardEmFoco()) return;
@@ -1176,19 +1145,8 @@ $('#btnAnt').onclick = () => anterior();
 $('#btnPausa').onclick = alternaPausa;
 $('#btnAtualizar').onclick = carrega;
 $('#btnTela').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
-/* ↑ título em cima / ↓ título embaixo (imagem em cima) */
-function mudaLayout(layout){
-  if (CONFIG.LAYOUT === layout) return;
-  CONFIG.LAYOUT = layout;
-  document.documentElement.classList.toggle('titulo-acima', layout === 'titulo-acima');
-  try{ localStorage.setItem('noticiasUFSM:layout', layout); }catch(e){}
-  requestAnimationFrame(() => { ajustaAreasDeImagem(); reiniciaBanner(); });
-}
-
 addEventListener('keydown', e => {
-  if (e.key === 'ArrowUp'){ e.preventDefault(); mudaLayout('titulo-acima'); }
-  else if (e.key === 'ArrowDown'){ e.preventDefault(); mudaLayout('imagem-acima'); }
-  else if (e.key === 'ArrowRight') proxima();
+  if (e.key === 'ArrowRight') proxima();
   else if (e.key === 'ArrowLeft') anterior();
   else if (e.key === ' ') { e.preventDefault(); alternaPausa(); }
   else if (e.key.toLowerCase() === 'f') $('#btnTela').click();

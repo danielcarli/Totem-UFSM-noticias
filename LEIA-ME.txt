@@ -40,8 +40,6 @@ INSTALAR
 
 ATALHOS
   ← / → ....... notícia anterior / próxima
-  ↑ ........... título em cima, imagem embaixo
-  ↓ ........... imagem em cima, título embaixo (padrão)
   Espaço ...... pausa / continua
   R ........... busca as notícias agora
   1 / 2 / 3 ... leva o painel para o monitor 1, 2 ou 3 (da esquerda para a
@@ -63,7 +61,6 @@ OPÇÕES
   --max=30                 número máximo de notícias
   --secoes=Destaques,JAI   mostra só estas áreas da página principal
   --ignorar="Em destaque"  tira áreas (ex.: "Em destaque" = banners do topo)
-  --layout=titulo-acima    título em cima e imagem embaixo
   --orientacao=vertical    força o layout de totem em pé (normalmente é
                            automático: tela mais alta que larga = vertical)
   --leve=1                 sem efeitos de desfoque (computadores fracos)

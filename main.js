@@ -21,7 +21,6 @@
      --max=30               número máximo de notícias
      --secoes=Destaques,JAI só estas áreas da página principal
      --ignorar="Em destaque"  tira áreas (ex.: os banners do topo)
-     --layout=titulo-acima  estudo: título em cima e imagem embaixo
      --orientacao=vertical  força o layout de totem em pé (normalmente é automático)
      --leve=1               sem efeitos de desfoque (computadores fracos)
      --noite=23-6           tela preta das 23h às 6h
@@ -141,7 +140,7 @@ function trocaMonitor(numero){
 
 function parametrosDoPainel(){
   const q = {};
-  for (const nome of ['intervalo', 'atualizacao', 'max', 'secoes', 'ignorar', 'layout', 'orientacao', 'leve', 'noite', 'recarga']){
+  for (const nome of ['intervalo', 'atualizacao', 'max', 'secoes', 'ignorar', 'orientacao', 'leve', 'noite', 'recarga']){
     const v = arg(nome);
     if (v && v !== true) q[nome] = String(v);
   }
