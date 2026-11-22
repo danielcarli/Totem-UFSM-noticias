@@ -6,7 +6,7 @@ O QUE É
   Solução para totens e TVs que mostra, em tela cheia, as notícias e
   informações do site da Universidade Federal de Santa Maria (www.ufsm.br).
   Todas as notícias com foto da página principal aparecem em carrossel, uma a
-  cada 7 segundos, e o conteúdo é relido do portal a cada 15 minutos.
+  cada 7 segundos (ajustável), e o conteúdo é relido do portal a cada 15 minutos.
   Precisa apenas de internet; não depende de navegador instalado.
 
   Idealizado por Daniel Michelon De Carli, com a finalidade de trazer uma
@@ -38,10 +38,27 @@ INSTALAR
   pelo terminal: destaques-ufsm
   Desinstalar: sudo apt remove destaques-ufsm   (ou sudo dnf remove destaques-ufsm)
 
+CONFIGURAÇÕES
+  A engrenagem ao lado do relógio (ou a tecla C) abre a tela de configurações:
+  - de onde vêm as notícias: o portal da UFSM (marcado, 12 notícias) e, se
+    quiser, o Gabinete da Reitoria, as pró-reitorias, as diretorias (DTI e DRI),
+    as unidades de ensino e os campi de Cachoeira do Sul, Frederico Westphalen e Palmeira das Missões,
+    com a quantidade de matérias de cada um (só entram matérias dos últimos 30 dias);
+  - o nome ou local desta TV (para as estatísticas do QR code);
+  - o monitor em que o painel aparece, quando há mais de um (o número do
+    monitor atual aparece no topo da tela de configurações);
+  - o tempo de cada notícia na tela, de 4 a 60 segundos (padrão 7).
+  Enquanto ela está aberta, o carrossel para; Esc ou Cancelar fecham sem mudar
+  nada. "Salvar e aplicar" guarda e já busca as notícias de novo; "Restaurar
+  padrão" volta ao portal com 12 notícias.
+  A configuração fica guardada neste computador. Mais detalhes, com imagens, no
+  README do projeto: https://github.com/danielcarli/Totem-UFSM-noticias
+
 ATALHOS
   ← / → ....... notícia anterior / próxima
   Espaço ...... pausa / continua
   R ........... busca as notícias agora
+  C ........... tela de configurações (também pela engrenagem ao lado do relógio)
   1 / 2 / 3 ... leva o painel para o monitor 1, 2 ou 3 (da esquerda para a
                 direita) e lembra a escolha nas próximas vezes
   F11 ......... entra / sai da tela cheia
@@ -56,10 +73,14 @@ OPÇÕES
 
   --monitor=2              abre no segundo monitor só desta vez (para fixar,
                            use as teclas 1, 2, 3 com o painel aberto)
-  --intervalo=10           segundos por notícia (padrão 7)
+  --intervalo=10           segundos por notícia (padrão 7; também na tela de
+                           configurações)
   --atualizacao=10         minutos entre as leituras do portal (padrão 15)
-  --quantidade=30          notícias no carrossel (padrão 30): se a página principal
+  --quantidade=12          notícias do portal (padrão 12): se a página principal
                            tiver menos, completa com as últimas matérias do portal
+  --sites=unidades-universitarias/ct,pro-reitorias/prograd
+                           inclui as últimas matérias desses subsites do portal
+                           (5 de cada; --porsite=10 muda) — ou marque na tela de configurações
   --max=30                 número máximo de notícias
   --secoes=Destaques,JAI   mostra só estas áreas da página principal
   --ignorar="Em destaque"  tira áreas (ex.: "Em destaque" = banners do topo)
@@ -67,6 +88,7 @@ OPÇÕES
                            automático: tela mais alta que larga = vertical)
   --leve=1                 sem efeitos de desfoque (computadores fracos)
   --noite=23-6             tela preta das 23h às 6h (o carrossel para)
+  --dias=30                idade máxima das matérias, em dias (padrão 30)
   --local=ct               nome do local do painel (ex.: ct, biblioteca, ru), para
                            medir no Google Analytics do portal as leituras do QR code
   --sem-atualizacao        não procura versões novas
@@ -97,6 +119,9 @@ COMPORTAMENTO
     No Windows e no AppImage, baixa e instala às 4h30 da manhã, e volta a abrir
     com as mesmas opções. Nos pacotes .deb e .rpm, mostra um aviso no canto da
     tela; para atualizar, baixe e instale o pacote novo.
+  - Abaixo do título aparece o site de origem com o símbolo da unidade
+    (Agência de Notícias, centros e colégios; brasão da UFSM em linhas para
+    reitoria, pró-reitorias, diretorias, campi e demais sites).
   - Se o layout da página principal da UFSM mudar, completa com as últimas
     matérias com foto do portal.
   - Se a internet cair, continua mostrando os últimos destaques e tenta de

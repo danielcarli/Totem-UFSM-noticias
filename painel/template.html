@@ -105,6 +105,67 @@ body.idle{cursor:none}
 .vertical .status.ok{display:none}
 @keyframes pulso{0%{box-shadow:0 0 0 0 rgba(26,178,175,.55)}70%{box-shadow:0 0 0 .7em rgba(26,178,175,0)}100%{box-shadow:0 0 0 0 rgba(26,178,175,0)}}
 .relogio{flex:none;text-align:right;line-height:1.05}
+/* engrenagem das configurações, discreta ao lado do relógio */
+.engrenagem{
+  flex:none;background:none;border:0;padding:0;color:var(--texto);opacity:.5;cursor:pointer;
+  width:clamp(22px,1.6vw,34px);height:clamp(22px,1.6vw,34px);transition:opacity .2s, transform .4s;
+}
+.engrenagem svg{width:100%;height:100%;display:block}
+.engrenagem:hover,.engrenagem:focus-visible{opacity:.9;transform:rotate(45deg);outline:none}
+.vertical .engrenagem{width:4.2vw;height:4.2vw}
+
+/* ---------- tela de configurações ---------- */
+.config{
+  position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:3vh 3vw;
+  background:rgba(4,14,26,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+}
+.config[hidden],.config [hidden]{display:none !important}
+.config-caixa{
+  width:min(1100px,100%);max-height:100%;display:flex;flex-direction:column;
+  background:#0c2238;border:1px solid var(--vidro-borda);border-radius:var(--raio-card);
+  box-shadow:0 30px 90px rgba(0,0,0,.6);overflow:hidden;font-size:clamp(14px,.95vw,19px);
+}
+.config-caixa > header{display:flex;align-items:center;gap:1em;padding:1.1em 1.5em;border-bottom:1px solid var(--vidro-borda)}
+.config-caixa h2{font-size:1.45em;font-weight:700;flex:1}
+.cfg-tela{display:flex;align-items:center;gap:.55em;color:var(--texto-2);font-size:.95em;white-space:nowrap}
+.cfg-tela b{display:grid;place-items:center;width:2.1em;height:2.1em;border-radius:.45em;background:var(--laranja);color:#fff;font-size:1.15em;font-weight:700;line-height:1}
+.cfg-tela small{display:block;color:var(--texto-3);font-size:.8em}
+.config-caixa .fechar{background:none;border:0;color:var(--texto-2);font-size:1.8em;line-height:1;cursor:pointer;padding:0 .2em}
+.config-corpo{overflow:auto;padding:1.2em 1.5em;display:grid;gap:1.4em}
+.config-corpo h3{font-size:.8em;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--azul-claro);margin-bottom:.6em}
+.config-corpo .ajuda{color:var(--texto-3);font-size:.88em;margin-top:.35em}
+.config .campos{display:flex;flex-wrap:wrap;gap:1em 2em}
+.config .campo{display:flex;flex-direction:column;gap:.35em;color:var(--texto-2);flex:1 1 320px}
+.config .com-unidade{display:flex;align-items:center;gap:.6em;color:var(--texto-2)}
+.config .com-unidade input{width:6em;text-align:center}
+.config .com-unidade input:disabled{opacity:.45}
+.config input[type=text],.config select,.config input[type=number]{
+  font:inherit;color:var(--texto);background:rgba(255,255,255,.06);border:1px solid var(--vidro-borda);
+  border-radius:8px;padding:.5em .7em;
+}
+.config input:focus-visible,.config select:focus-visible,.config button:focus-visible{outline:2px solid var(--azul-claro);outline-offset:2px}
+.config select option{background:#0c2238}
+.grupo-fontes{margin-bottom:1.1em}
+.grupo-fontes h4{font-size:.95em;font-weight:600;color:var(--texto-2);margin:.2em 0 .5em}
+.lista-fontes{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:.45em .9em}
+.fonte{display:flex;align-items:center;gap:.7em;padding:.45em .7em;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid transparent}
+.fonte.ativa{background:rgba(95,163,214,.14);border-color:rgba(95,163,214,.45)}
+.fonte label{flex:1;display:flex;align-items:center;gap:.6em;cursor:pointer;min-width:0}
+.fonte input[type=checkbox]{width:1.15em;height:1.15em;accent-color:var(--laranja);flex:none}
+.fonte .nome{min-width:0;line-height:1.2}
+.fonte .marca-origem{color:var(--texto-2);font-size:1.05em}
+.fonte .nome b{font-weight:700;margin-right:.35em}
+.fonte .nome small{color:var(--texto-3);font-size:.85em}
+.fonte input[type=number]{width:4.2em;text-align:center;padding:.3em .3em}
+.fonte input[type=number]:disabled{opacity:.35}
+.config-caixa > footer{display:flex;align-items:center;gap:.8em;padding:1em 1.5em;border-top:1px solid var(--vidro-borda);flex-wrap:wrap}
+.config-caixa > footer .total{flex:1;color:var(--texto-2)}
+.config-caixa > footer .total small{display:block;color:var(--texto-3);font-size:.8em}
+.config button.sec,.config button.pri{font:inherit;font-weight:600;border-radius:999px;padding:.6em 1.3em;cursor:pointer;border:1px solid var(--vidro-borda)}
+.config button.sec{background:transparent;color:var(--texto)}
+.config button.pri{background:var(--laranja);border-color:var(--laranja);color:#fff}
+.vertical .config-caixa{font-size:2.3vw}
+.vertical .lista-fontes{grid-template-columns:1fr 1fr}
 .relogio strong{display:block;font-size:clamp(18px,1.7vw,36px);font-weight:700;letter-spacing:.02em;font-variant-numeric:tabular-nums}
 .relogio span{font-size:clamp(11px,.78vw,16px);color:var(--texto-2)}
 
@@ -244,9 +305,19 @@ body.idle .trilho{opacity:.25}
 /* site de onde vem a matéria (o portal da UFSM é formado por muitos subsites) */
 .detalhes .origem{
   flex:none;margin-top:.55em;font-size:clamp(13.8px,1.035vw,23px);line-height:1.3;font-weight:500;
-  color:var(--texto-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:var(--texto-2);display:flex;align-items:center;gap:.55em;min-width:0;
 }
 .detalhes .origem:empty{display:none}
+.detalhes .origem span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* marca da unidade ao lado do site de origem: monocromática, na cor do texto (discreta),
+   no tamanho do texto — as marcas largas ficam mais baixas para todas terem o mesmo peso */
+.marca-origem{
+  flex:none;display:block;width:calc(var(--w,1.5) * 1em);height:calc(var(--h,1.5) * 1em);
+  background:currentColor;opacity:.9;
+  -webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat;
+}
+.marca-origem:not([data-m]){display:none}
+/*__MARCAS_ORIGEM_CSS__*/
 .rodape-card{flex:none;display:flex;align-items:flex-end;gap:5%;margin-top:.8em}
 .meta{flex:none}
 .detalhes p{
@@ -281,6 +352,8 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
 .pilula .sep-c{width:1px;height:46%;background:rgba(255,255,255,.28);flex:none}
 .pilula .txt{flex:none;line-height:1.3;padding-right:.6vw}
 .pilula .txt span{display:block;font-size:clamp(12px,.9vw,19px);color:var(--texto-2);white-space:nowrap}
+/* versão do painel: bem discreta, embaixo da hora da atualização */
+.pilula .txt .versao{display:block;font-size:clamp(9px,.55vw,12px);line-height:1.2;color:var(--texto-3);opacity:.55;letter-spacing:.04em;font-variant-numeric:tabular-nums}
 .pontos{
   position:fixed;z-index:20;left:50%;bottom:1.1vh;transform:translateX(-50%);
   display:flex;gap:8px;
@@ -342,7 +415,8 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
 .vertical .detalhes h2{font-size:5.9vw;line-height:1.07;-webkit-line-clamp:5}   /* cabe uma linha a mais na tela em pé */
 .vertical .topo .logo{height:82%}
 .vertical .detalhes p{font-size:2.6vw;line-height:1.35}
-.vertical .detalhes .origem{font-size:2.4vw;white-space:normal;text-wrap:balance}
+.vertical .detalhes .origem{font-size:2.4vw}
+.vertical .detalhes .origem span{white-space:normal;text-wrap:balance}
 .vertical .detalhes p.padrao{display:none}          /* frase longa sai; o QR fica com "Leia no celular" */
 .vertical .rodape-card{justify-content:flex-end;margin-top:1.6vw}
 .vertical .qr .caixa{width:22vw;padding:1.2vw;border-radius:1.8vw}
@@ -357,6 +431,7 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
 .vertical .pilula .coord{height:54%}
 .vertical .pilula .agencia{height:54%}
 .vertical .pilula .txt span{font-size:2.3vw}
+.vertical .pilula .txt .versao{font-size:1.4vw}
 
 .vertical .aviso{width:86vw;padding:7vw}
 .vertical .aviso img{width:12vw}
@@ -395,7 +470,50 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
   </div>
   <span class="sep"></span>
   <div class="relogio"><strong id="hora">--:--</strong><span id="data"></span></div>
+  <button class="engrenagem" id="btnConfig" title="Configurações (C)" aria-label="Configurações">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
 </header>
+
+<div class="config" id="config" hidden role="dialog" aria-modal="true" aria-labelledby="configTitulo">
+  <form class="config-caixa" id="configForm" autocomplete="off">
+    <header>
+      <h2 id="configTitulo">Configurações do painel</h2>
+      <span class="cfg-tela" id="cfgTela" hidden title="Monitor em que o painel está aberto"><b id="cfgTelaNum">1</b><span id="cfgTelaTxt">Monitor 1</span></span>
+      <button type="button" class="fechar" id="cfgFechar" aria-label="Fechar">×</button>
+    </header>
+    <div class="config-corpo">
+      <section>
+        <h3>Esta TV</h3>
+        <div class="campos">
+          <label class="campo">Nome ou local desta TV
+            <input type="text" id="cfgTv" maxlength="60" placeholder="Ex.: Hall do Centro de Tecnologia">
+            <span class="ajuda">Identifica esta TV nas estatísticas de leitura do QR code (Google Analytics do portal).</span>
+          </label>
+          <label class="campo" id="cfgMonitorCampo" hidden>Monitor em que o painel aparece
+            <select id="cfgMonitor"></select>
+            <span class="ajuda">Também dá para trocar com as teclas 1, 2 e 3.</span>
+          </label>
+          <label class="campo campo-tempo">Tempo de cada notícia na tela
+            <span class="com-unidade"><input type="number" id="cfgIntervalo" min="4" max="60" step="1" inputmode="numeric"><span>segundos</span></span>
+            <span class="ajuda" id="cfgIntervaloAjuda">De 4 a 60 segundos. O padrão é 7.</span>
+          </label>
+        </div>
+      </section>
+      <section>
+        <h3>De onde vêm as notícias</h3>
+        <p class="ajuda" style="margin:0 0 .9em">Marque os sites e quantas matérias com foto de cada um entram no carrossel. As notícias dos sites se alternam ao longo da rotação. Só entram matérias publicadas nos últimos 30 dias.</p>
+        <div id="cfgFontes"></div>
+      </section>
+    </div>
+    <footer>
+      <div class="total" id="cfgTotal"></div>
+      <button type="button" class="sec" id="cfgPadrao">Restaurar padrão</button>
+      <button type="button" class="sec" id="cfgCancelar">Cancelar</button>
+      <button type="submit" class="pri">Salvar e aplicar</button>
+    </footer>
+  </form>
+</div>
 
 <nav class="trilho vidro" aria-label="Controles">
   <button id="btnAtualizar" title="Atualizar agora (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
@@ -419,7 +537,7 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
   <span class="sep-c"></span>
   <img class="agencia" src="__AGENCIA_H__" alt="Agência de Notícias UFSM">
   <span class="sep-c"></span>
-  <div class="txt"><span id="rodapeTxt">Atualizando…</span></div>
+  <div class="txt"><span id="rodapeTxt">Atualizando…</span><small class="versao" title="Versão do painel">v__VERSAO__</small></div>
   <button id="btnProx" title="Próxima (→)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
 </footer>
 <div class="pontos" id="pontos"></div>
@@ -443,19 +561,16 @@ const CONFIG = {
   NOME_CARROSSEL: 'Em destaque',   // nome usado para o carrossel de banners do topo
   INTERVALO_MS:   (parseFloat(params.get('intervalo'))   || 7)  * 1000,       // troca de notícia: 7 s
   ATUALIZACAO_MS: (parseFloat(params.get('atualizacao')) || 15) * 60 * 1000,  // releitura da página: 15 min
-  MAX_ITENS:      Math.max(parseInt(params.get('max')) || 30, parseInt(params.get('quantidade')) || 0),
-  // Quantidade de notícias no carrossel: se a página principal tiver menos, completa com as
-  // últimas matérias com foto publicadas no portal (?quantidade=30)
-  QUANTIDADE:     parseInt(params.get('quantidade')) || 30,
+  MAX_ITENS:      parseInt(params.get('max')) || 30,   // limite da leitura da página principal
   BUSCAR_IMAGEM_DESTACADA: true,  // destaque sem foto: busca a imagem destacada da matéria
   // Plano B: se a leitura da página principal trouxer menos que isto (ex.: o portal mudou de
   // layout), completa com as últimas matérias com foto publicadas, direto pela API do WordPress.
   MIN_DA_PAGINA: 5,
+  // notícias publicadas há mais que isto não entram no carrossel (?dias=N muda; banners sem data entram)
+  MAX_DIAS: parseInt(params.get('dias')) || 30,
   // QR code: identifica de onde veio a leitura no Google Analytics do portal
-  //   utm_source=painel-destaques  utm_medium=qrcode  utm_campaign=<local>   (?local=ct, ?local=biblioteca…)
-  //   ?utm=0 desliga a marcação
-  LOCAL: (params.get('local') || 'ufsm').trim().toLowerCase()
-           .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9_-]+/g, '-').slice(0, 40) || 'ufsm',
+  //   utm_source=painel-destaques  utm_medium=qrcode  utm_campaign=<nome desta TV>
+  //   (nome definido na tela de configurações, ou ?local=…) — ?utm=0 desliga a marcação
   UTM: params.get('utm') !== '0',
   CORES: ['var(--laranja)', 'var(--verde)', 'var(--lilas)', 'var(--azul)'],
   FUSO: 'America/Sao_Paulo',
@@ -818,7 +933,7 @@ function linkDoQR(link){
     if (!/(^|\.)ufsm\.br$/.test(u.hostname)) return link;
     u.searchParams.set('utm_source', 'painel-destaques');
     u.searchParams.set('utm_medium', 'qrcode');
-    u.searchParams.set('utm_campaign', CONFIG.LOCAL);
+    u.searchParams.set('utm_campaign', slugDaTv());
     return u.href;
   }catch(e){ return link; }
 }
@@ -851,7 +966,7 @@ function htmlCard(it, i, total){
         <span class="contagem">${i + 1} / ${total}</span>
       </div>
       <h2>${esc(it.titulo)}</h2>
-      <p class="origem">${esc(it.origem || '')}</p>
+      <p class="origem">${htmlOrigem(it)}</p>
       <div class="rodape-card">
         ${it.resumo ? `<p>${esc(it.resumo)}</p>` : `<p class="padrao">Aponte a câmera do celular para o código e ${RE_MATERIA.test(it.link) ? 'leia a matéria completa' : 'saiba mais'} no portal da UFSM.</p>`}
         ${qr ? `<div class="qr"><div class="caixa"><img src="${qr}" alt="QR code da matéria"></div><small><span class="q-tv">ufsm.br</span><span class="q-totem">Leia no celular</span></small></div>` : ''}
@@ -1126,8 +1241,8 @@ async function completaTitulos(lista, ms){
 /* Plano B: as últimas matérias com foto, pela API do WordPress do portal.
    Usado quando a leitura da página principal falha ou traz poucas notícias.
    Foto: a imagem destacada da matéria ou, se não houver, a primeira foto do texto. */
-async function noticiasDaApi(){
-  const posts = await api('wp/v2/posts?per_page=60&_embed=wp:featuredmedia&_fields=link,date,title,excerpt,content,_links,_embedded');
+async function noticiasDaApi(site = CONFIG.SITE, quantos = 60){
+  const posts = await api(`wp/v2/posts?per_page=${quantos}&_embed=wp:featuredmedia&_fields=link,date,title,excerpt,content,_links,_embedded`, site);
   const lista = [];
   for (const p of posts || []){
     const m = p._embedded && p._embedded['wp:featuredmedia'] && p._embedded['wp:featuredmedia'][0];
@@ -1139,7 +1254,7 @@ async function noticiasDaApi(){
     } else {
       const doc = new DOMParser().parseFromString((p.content && p.content.rendered) || '', 'text/html');
       const img = [...doc.querySelectorAll('img')].find(imagemValida);
-      if (img){ imagens = candidatosDaImagem(img, CONFIG.SITE + '/'); descricao = img.getAttribute('alt') || ''; }
+      if (img){ imagens = candidatosDaImagem(img, site + '/'); descricao = img.getAttribute('alt') || ''; }
     }
     if (!imagens.length) continue;
     const tmp = document.createElement('div');
@@ -1167,7 +1282,7 @@ async function noticiasDaApi(){
    /2026/11/19/titulo                    → portal institucional
    /centros/ct/2026/11/19/titulo         → nome do site /centros/ct (pela API do WordPress)
    /pro-reitorias/prograd/descubra       → o próprio endereço, se for um site; senão, o de cima */
-const ORIGEM_PORTAL = 'Portal Institucional - Agência de Notícias da UFSM';
+const ORIGEM_PORTAL = 'Agência de Notícias UFSM - Portal Institucional';
 const cacheSites = new Map();   // caminho → nome ('' = não é um site)
 
 function caminhoDoSite(link){
@@ -1175,7 +1290,7 @@ function caminhoDoSite(link){
     const u = new URL(link);
     if (!/(^|\.)ufsm\.br$/.test(u.hostname)) return null;            // fora da UFSM
     const m = u.pathname.match(/^(.*?)\/\d{4}\/\d{2}\/\d{2}\//);   // matéria: o site é o que vem antes da data
-    return (m ? m[1] : u.pathname).replace(/\/+$/, '');
+    return (m ? m[1] : u.pathname).replace(/^\/+|\/+$/g, '');   // sem barras: 'unidades-universitarias/ct'
   }catch(e){ return null; }
 }
 // resposta imediata quando dá para saber sem consultar a API
@@ -1187,6 +1302,8 @@ function origemConhecida(link){
 async function origemDaMateria(link){
   const conhecida = origemConhecida(link);
   if (conhecida !== null) return conhecida;
+  const doCatalogo = CATALOGO.find(f => f.caminho && ('/' + caminhoDoSite(link) + '/').startsWith('/' + f.caminho + '/'));
+  if (doCatalogo) return rotuloDaFonte(doCatalogo);
   const origem = new URL(link).origin;
   const partes = caminhoDoSite(link).split('/').filter(Boolean);
   while (partes.length){
@@ -1194,8 +1311,14 @@ async function origemDaMateria(link){
     if (!cacheSites.has(caminho)){
       let nome = '';
       try{
-        const s = await api('?_fields=name', origem + caminho);
-        if (s && typeof s.name === 'string') nome = limpa(decodifica(s.name));
+        const s = await api('?_fields=name,description', origem + caminho);
+        if (s && typeof s.name === 'string'){
+          // sigla + nome por extenso, quando o site informa: "CT - Centro de Tecnologia"
+          const sigla = limpa(decodifica(s.name)), extenso = limpa(decodifica(s.description || ''));
+          const util = extenso && extenso.length <= 80 && normaliza(extenso) !== normaliza(sigla) &&
+                       normaliza(extenso) !== normaliza('Universidade Federal de Santa Maria');
+          nome = util ? `${sigla} - ${extenso}` : sigla;
+        }
       }catch(e){}
       cacheSites.set(caminho, nome);
     }
@@ -1203,6 +1326,24 @@ async function origemDaMateria(link){
     partes.pop();
   }
   return ORIGEM_PORTAL;   // nenhum subsite no caminho: é o portal principal
+}
+/* Marca ao lado da origem (identidade visual de cada unidade — ufsm.br/identidade-institucional):
+   portal → símbolo da Agência de Notícias; centros, colégios → símbolo da unidade;
+   reitoria, pró-reitorias, diretorias, campi e demais sites da UFSM → brasão da UFSM em linhas */
+const MARCAS_ORIGEM = new Set(__MARCAS_ORIGEM_IDS__);
+function marcaDaOrigem(it){
+  if (!it.origem) return '';
+  if (it.origem === ORIGEM_PORTAL) return 'agencia';
+  const c = caminhoDoSite(it.link);
+  if (c === null) return '';                       // fora da UFSM
+  const f = CATALOGO.find(f => f.caminho && ('/' + c + '/').startsWith('/' + f.caminho + '/'));
+  const m = (f && f.marca) || 'ufsm';
+  return MARCAS_ORIGEM.has(m) ? m : '';
+}
+function htmlOrigem(it){
+  if (!it.origem) return '';
+  const m = marcaDaOrigem(it);
+  return (m ? `<i class="marca-origem" data-m="${m}" aria-hidden="true"></i>` : '') + `<span>${esc(it.origem)}</span>`;
 }
 async function completaOrigens(lista, ms){
   for (const it of lista){ const c = origemConhecida(it.link); if (c !== null) it.origem = c; }
@@ -1217,40 +1358,166 @@ async function completaOrigensAtrasadas(){
     try{
       it.origem = await origemDaMateria(it.link);
       const el = palco.querySelector(`.card[data-i="${i}"] .origem`);
-      if (el && itens[i] === it){ el.textContent = it.origem; ajustaAreaDeImagem(el.closest('.card')); }
+      if (el && itens[i] === it){ el.innerHTML = htmlOrigem(it); ajustaAreaDeImagem(el.closest('.card')); }
     }catch(e){}
   }
+}
+
+/* ==================================================================
+   FONTES DE NOTÍCIAS — o portal e os subsites da UFSM
+   Escolhidas na tela de configurações (engrenagem ao lado do relógio, ou tecla C)
+   e guardadas neste computador. Padrão: só o portal, com 12 notícias.
+   ================================================================== */
+const CATALOGO = [
+  { grupo: 'Portal da UFSM', id: 'portal', caminho: '', marca: 'agencia', sigla: 'Agência de Notícias UFSM', nome: 'Portal Institucional' },
+
+  { grupo: 'Reitoria e pró-reitorias', id: 'gabinete', caminho: 'reitoria/gabinete', sigla: '', nome: 'Gabinete da Reitoria' },
+  { grupo: 'Reitoria e pró-reitorias', id: 'prograd', caminho: 'pro-reitorias/prograd', sigla: 'PROGRAD', nome: 'Pró-Reitoria de Graduação' },
+  { grupo: 'Reitoria e pró-reitorias', id: 'prpgp', caminho: 'pro-reitorias/prpgp', sigla: 'PRPGP', nome: 'Pró-Reitoria de Pós-Graduação e Pesquisa' },
+  { grupo: 'Reitoria e pró-reitorias', id: 'pre', caminho: 'pro-reitorias/pre', sigla: 'PRE', nome: 'Pró-Reitoria de Extensão' },
+  { grupo: 'Reitoria e pró-reitorias', id: 'prae', caminho: 'pro-reitorias/prae', sigla: 'PRAE', nome: 'Pró-Reitoria de Assuntos Estudantis' },
+  { grupo: 'Reitoria e pró-reitorias', id: 'progep', caminho: 'pro-reitorias/progep', sigla: 'PROGEP', nome: 'Pró-Reitoria de Gestão de Pessoas' },
+  { grupo: 'Reitoria e pró-reitorias', id: 'proplan', caminho: 'pro-reitorias/proplan', sigla: 'PROPLAN', nome: 'Pró-Reitoria de Planejamento' },
+  { grupo: 'Reitoria e pró-reitorias', id: 'pra', caminho: 'pro-reitorias/pra', sigla: 'PRA', nome: 'Pró-Reitoria de Administração' },
+  { grupo: 'Reitoria e pró-reitorias', id: 'proinfra', caminho: 'pro-reitorias/proinfra', sigla: 'PROINFRA', nome: 'Pró-Reitoria de Infraestrutura' },
+  { grupo: 'Reitoria e pró-reitorias', id: 'proinova', caminho: 'pro-reitorias/proinova', sigla: 'PROINOVA', nome: 'Pró-Reitoria de Inovação e Empreendedorismo' },
+
+  { grupo: 'Diretorias', id: 'dti', caminho: 'orgaos-suplementares/dti', sigla: 'DTI', nome: 'Diretoria de Tecnologia da Informação e Transformação Digital' },
+  { grupo: 'Diretorias', id: 'dri', caminho: 'orgaos-suplementares/dri', sigla: 'DRI', nome: 'Diretoria de Relações Internacionais' },
+
+  { grupo: 'Unidades de ensino', id: 'cal', caminho: 'unidades-universitarias/cal', marca: 'cal', sigla: 'CAL', nome: 'Centro de Artes e Letras' },
+  { grupo: 'Unidades de ensino', id: 'ccne', caminho: 'unidades-universitarias/ccne', marca: 'ccne', sigla: 'CCNE', nome: 'Centro de Ciências Naturais e Exatas' },
+  { grupo: 'Unidades de ensino', id: 'ccr', caminho: 'unidades-universitarias/ccr', marca: 'ccr', sigla: 'CCR', nome: 'Centro de Ciências Rurais' },
+  { grupo: 'Unidades de ensino', id: 'ccs', caminho: 'unidades-universitarias/ccs', marca: 'ccs', sigla: 'CCS', nome: 'Centro de Ciências da Saúde' },
+  { grupo: 'Unidades de ensino', id: 'ccsh', caminho: 'unidades-universitarias/ccsh', marca: 'ccsh', sigla: 'CCSH', nome: 'Centro de Ciências Sociais e Humanas' },
+  { grupo: 'Unidades de ensino', id: 'ce', caminho: 'unidades-universitarias/ce', marca: 'ce', sigla: 'CE', nome: 'Centro de Educação' },
+  { grupo: 'Unidades de ensino', id: 'cefd', caminho: 'unidades-universitarias/cefd', marca: 'cefd', sigla: 'CEFD', nome: 'Centro de Educação Física e Desportos' },
+  { grupo: 'Unidades de ensino', id: 'ct', caminho: 'unidades-universitarias/ct', marca: 'ct', sigla: 'CT', nome: 'Centro de Tecnologia' },
+  { grupo: 'Unidades de ensino', id: 'ctism', caminho: 'unidades-universitarias/ctism', marca: 'ctism', sigla: 'CTISM', nome: 'Colégio Técnico Industrial de Santa Maria' },
+  { grupo: 'Unidades de ensino', id: 'politecnico', caminho: 'unidades-universitarias/politecnico', marca: 'politecnico', sigla: '', nome: 'Colégio Politécnico da UFSM' },
+
+  { grupo: 'Campi', id: 'cachoeira-do-sul', caminho: 'unidades-universitarias/cachoeira-do-sul', sigla: 'UFSM-CS', nome: 'Campus Cachoeira do Sul' },
+  { grupo: 'Campi', id: 'frederico-westphalen', caminho: 'unidades-universitarias/frederico-westphalen', sigla: 'UFSM-FW', nome: 'Campus Frederico Westphalen' },
+  { grupo: 'Campi', id: 'palmeira-das-missoes', caminho: 'unidades-universitarias/palmeira-das-missoes', sigla: 'UFSM-PM', nome: 'Campus Palmeira das Missões' },
+];
+const rotuloDaFonte = f => f.sigla ? `${f.sigla} - ${f.nome}` : f.nome;
+const QTD_PADRAO_PORTAL = 12, QTD_PADRAO_SITE = 5, QTD_MAXIMA = 30;
+const CHAVE_CONFIG = 'noticiasUFSM:config';
+
+const INTERVALO_PADRAO = 7, INTERVALO_MIN = 4, INTERVALO_MAX = 60;   // segundos de cada notícia
+const limitaIntervalo = v => Math.max(INTERVALO_MIN, Math.min(INTERVALO_MAX, Math.round(Number(v)) || INTERVALO_PADRAO));
+function configPadrao(){ return { tv: '', intervalo: INTERVALO_PADRAO, fontes: { portal: { ativo: true, qtd: QTD_PADRAO_PORTAL } } }; }
+function configSalva(){
+  try{
+    const c = JSON.parse(localStorage.getItem(CHAVE_CONFIG) || 'null');
+    if (c && c.fontes && typeof c.fontes === 'object')
+      return { tv: String(c.tv || ''), intervalo: limitaIntervalo(c.intervalo), fontes: c.fontes };
+  }catch(e){}
+  return configPadrao();
+}
+// a configuração salva, com as opções da linha de comando / endereço por cima (compatibilidade)
+function configEfetiva(){
+  const c = configSalva();
+  const qtd = parseInt(params.get('quantidade'));
+  if (qtd > 0) c.fontes.portal = { ativo: true, qtd };
+  if (params.get('sites')){
+    const porSite = parseInt(params.get('porsite')) || QTD_PADRAO_SITE;
+    for (const x of params.get('sites').split(',').map(t => t.trim().replace(/^https?:\/\/[^/]+\//, '').replace(/^\/+|\/+$/g, '')).filter(Boolean)){
+      const f = CATALOGO.find(k => k.caminho === x || k.id === x);
+      c.fontes[f ? f.id : 'url:' + x] = { ativo: true, qtd: porSite };
+    }
+  }
+  if (params.get('local')) c.tv = params.get('local');
+  if (parseFloat(params.get('intervalo')) > 0) c.intervalo = parseFloat(params.get('intervalo'));
+  return c;
+}
+let PAINEL = configEfetiva();
+// tempo de cada notícia (configurações ou --intervalo): troca de card, barra de progresso e banners
+function aplicaIntervalo(){
+  CONFIG.INTERVALO_MS = (PAINEL.intervalo || INTERVALO_PADRAO) * 1000;
+  document.documentElement.style.setProperty('--rot', CONFIG.INTERVALO_MS + 'ms');
+}
+aplicaIntervalo();
+
+function slugDaTv(){
+  return (PAINEL.tv || 'ufsm').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+           .replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'ufsm';
+}
+// fontes marcadas, na ordem do catálogo (e as vindas de ?sites= que não estão nele)
+function fontesAtivas(){
+  const lista = [];
+  for (const [id, v] of Object.entries(PAINEL.fontes)){
+    if (!v || !v.ativo) continue;
+    const qtd = Math.max(1, Math.min(QTD_MAXIMA, parseInt(v.qtd) || QTD_PADRAO_SITE));
+    const f = CATALOGO.find(k => k.id === id) ||
+              (id.startsWith('url:') ? { id, caminho: id.slice(4), sigla: '', nome: '' } : null);
+    if (f) lista.push({ ...f, qtd, url: f.caminho ? `${CONFIG.SITE}/${f.caminho}` : CONFIG.SITE });
+  }
+  return lista.sort((a, b) => (CATALOGO.indexOf(a) + 1 || 999) - (CATALOGO.indexOf(b) + 1 || 999));
+}
+// alterna as notícias das fontes: portal, CT, portal, CT… (sem repetir a mesma matéria,
+// nem a republicada por outro site com o mesmo título)
+function intercala(listas){
+  const saida = [], vistos = new Set(), titulos = new Set();
+  for (let i = 0; listas.some(l => i < l.length); i++)
+    for (const l of listas){
+      if (i >= l.length) continue;
+      const it = l[i], t = normaliza(it.titulo);
+      if (vistos.has(it.link) || (t && titulos.has(t))) continue;
+      vistos.add(it.link); titulos.add(t); saida.push(it);
+    }
+  return saida;
 }
 
 async function preparaImagens(lista, ms){
   await comTempoLimite(Promise.all(lista.map(async it => { it.imagem = await resolveImagem(it.imagens); })), ms).catch(() => {});
 }
 
+// publicada dentro do prazo (CONFIG.MAX_DIAS); itens sem data (banners que levam a uma página) ficam
+function recente(it){
+  if (!it.data) return true;
+  const t = new Date(it.data).getTime();
+  return !isFinite(t) || Date.now() - t <= CONFIG.MAX_DIAS * 86400000;
+}
 async function carrega(){
   if (carregando) return;
   carregando = true;
   clearTimeout(timerRetentativa);
   status('carregando', 'atualizando…');
   try{
-    let novos = [];
-    try{
-      novos = extraiNoticias(await htmlDaPaginaPrincipal(), CONFIG.SITE + '/');
-    }catch(e){ console.warn('[Destaques] leitura da página principal falhou:', e); }
-    const daPagina = novos.length;
-    const alvo = Math.min(Math.max(CONFIG.QUANTIDADE, CONFIG.MIN_DA_PAGINA), CONFIG.MAX_ITENS);
-    if (novos.length < alvo){
-      // completa com as últimas matérias publicadas (e é o plano B se a página falhou)
+    const fontes = fontesAtivas();
+    const portal = fontes.find(f => f.id === 'portal');
+    let daPagina = 0;
+    const listas = await Promise.all(fontes.map(async f => {
+      if (f.id === 'portal'){
+        // portal: a página principal (Agência de Notícias); se tiver menos que a quantidade,
+        // completa com as últimas matérias publicadas — e é o plano B se a página mudar de layout
+        let lista = [];
+        try{ lista = extraiNoticias(await htmlDaPaginaPrincipal(), CONFIG.SITE + '/').filter(recente); }
+        catch(e){ console.warn('[Destaques] leitura da página principal falhou:', e); }
+        daPagina = lista.length;
+        if (lista.length < f.qtd){
+          try{
+            const vistos = new Set(lista.map(i => i.link));
+            const extras = (await noticiasDaApi(CONFIG.SITE, Math.min(100, Math.max(30, f.qtd * 4)))).filter(i => !vistos.has(i.link) && recente(i));
+            lista = lista.concat(extras);
+            if (daPagina < CONFIG.MIN_DA_PAGINA && extras.length)
+              console.warn(`[Destaques] página principal trouxe poucas notícias; ${extras.length} vieram da API (plano B)`);
+          }catch(e){ console.warn('[Destaques] não foi possível completar pela API:', e); }
+        }
+        return lista.slice(0, f.qtd);
+      }
+      // subsite: as últimas matérias com foto
       try{
-        const vistos = new Set(novos.map(i => i.link));
-        const extras = (await noticiasDaApi()).filter(i => !vistos.has(i.link)).slice(0, alvo - novos.length);
-        novos = novos.concat(extras);
-        if (daPagina < CONFIG.MIN_DA_PAGINA && extras.length)
-          console.warn(`[Destaques] página principal trouxe poucas notícias; ${extras.length} vieram da API (plano B)`);
-      }catch(e){ console.warn('[Destaques] não foi possível completar pela API:', e); }
-    }
-    // 'pagina' = leitura normal (mesmo completando a quantidade); 'pagina+api' ou 'api' = plano B
-    const fonte = daPagina >= CONFIG.MIN_DA_PAGINA ? 'pagina' : (daPagina ? 'pagina+api' : 'api');
-    if (!novos.length) throw new Error('nenhuma notícia com foto encontrada');
+        const lista = (await noticiasDaApi(f.url, Math.min(100, Math.max(20, f.qtd * 6)))).filter(recente).slice(0, f.qtd);
+        if (f.nome) lista.forEach(it => { it.origem = rotuloDaFonte(f); });
+        return lista;
+      }catch(e){ console.warn('[Destaques] não foi possível ler as matérias de', f.url, e); return []; }
+    }));
+    let novos = intercala(listas);
+    // 'pagina' = leitura normal; 'pagina+api' ou 'api' = plano B; 'sites' = portal desmarcado
+    const fonte = !portal ? 'sites' : daPagina >= CONFIG.MIN_DA_PAGINA ? 'pagina' : (daPagina ? 'pagina+api' : 'api');
+    if (!novos.length) throw new Error(`nenhuma notícia com foto dos últimos ${CONFIG.MAX_DIAS} dias`);
     fonteNoticias = fonte;
     await Promise.all([preparaImagens(novos, 12000), completaTitulos(novos, 8000), completaOrigens(novos, 8000)]);
 
@@ -1267,7 +1534,7 @@ async function carrega(){
       // usa os últimos destaques bons salvos neste navegador
       try{
         const salvos = JSON.parse(localStorage.getItem('noticiasUFSM:v3') || '[]')
-          .map(i => ({...i, data: i.data ? new Date(i.data) : null}));
+          .map(i => ({...i, data: i.data ? new Date(i.data) : null})).filter(recente);
         if (salvos.length){ await preparaImagens(salvos, 8000); aplica(salvos); }
       }catch(_){}
     }
@@ -1337,7 +1604,134 @@ $('#btnAnt').onclick = () => anterior();
 $('#btnPausa').onclick = alternaPausa;
 $('#btnAtualizar').onclick = carrega;
 $('#btnTela').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+/* ---------- tela de configurações (engrenagem ao lado do relógio, ou tecla C) ---------- */
+const appDesktop = window.destaquesApp || null;   // ponte com o aplicativo (só existe no Electron)
+let configAberta = false, pausadoAntesDaConfig = false;
+
+function desenhaFontes(c){
+  const grupos = [...new Set(CATALOGO.map(f => f.grupo))];
+  // fontes vindas de ?sites= que não estão no catálogo
+  const extras = Object.keys(c.fontes).filter(id => id.startsWith('url:'))
+    .map(id => ({ grupo: 'Outros sites', id, caminho: id.slice(4), sigla: '', nome: id.slice(4) }));
+  const todas = CATALOGO.concat(extras);
+  $('#cfgFontes').innerHTML = grupos.concat(extras.length ? ['Outros sites'] : []).map(g => `
+    <div class="grupo-fontes"><h4>${esc(g)}</h4><div class="lista-fontes">
+      ${todas.filter(f => f.grupo === g).map(f => {
+        const v = c.fontes[f.id] || {};
+        const qtd = v.qtd || (f.id === 'portal' ? QTD_PADRAO_PORTAL : QTD_PADRAO_SITE);
+        return `<div class="fonte${v.ativo ? ' ativa' : ''}" data-id="${esc(f.id)}" title="ufsm.br/${esc(f.caminho)}">
+          <label><input type="checkbox"${v.ativo ? ' checked' : ''}>
+            <i class="marca-origem" data-m="${esc(f.marca || 'ufsm')}" aria-hidden="true"></i>
+            <span class="nome">${f.sigla ? `<b>${esc(f.sigla)}</b>` : ''}${esc(f.nome)}${f.id === 'portal' ? '<br><small>notícias da página principal de ufsm.br</small>' : ''}</span></label>
+          <input type="number" min="1" max="${QTD_MAXIMA}" value="${qtd}" title="Quantidade de matérias"${v.ativo ? '' : ' disabled'}>
+        </div>`;
+      }).join('')}
+    </div></div>`).join('');
+  $('#cfgFontes').querySelectorAll('.fonte').forEach(el => {
+    const cb = el.querySelector('input[type=checkbox]'), num = el.querySelector('input[type=number]');
+    cb.addEventListener('change', () => { el.classList.toggle('ativa', cb.checked); num.disabled = !cb.checked; totalConfig(); });
+    num.addEventListener('input', totalConfig);
+  });
+  totalConfig();
+}
+function leFormulario(){
+  // com --intervalo no atalho, o campo fica travado e o valor salvo continua o de antes
+  const intervalo = $('#cfgIntervalo').disabled ? configSalva().intervalo : limitaIntervalo($('#cfgIntervalo').value);
+  const c = { tv: $('#cfgTv').value.trim(), intervalo, fontes: {} };
+  $('#cfgFontes').querySelectorAll('.fonte').forEach(el => {
+    const ativo = el.querySelector('input[type=checkbox]').checked;
+    const qtd = Math.max(1, Math.min(QTD_MAXIMA, parseInt(el.querySelector('input[type=number]').value) || 1));
+    if (ativo || el.dataset.id === 'portal') c.fontes[el.dataset.id] = { ativo, qtd };
+  });
+  return c;
+}
+function totalConfig(){
+  const c = leFormulario();
+  const ativas = Object.values(c.fontes).filter(v => v.ativo);
+  const total = ativas.reduce((t, v) => t + v.qtd, 0);
+  const seg = $('#cfgIntervalo').disabled ? PAINEL.intervalo : c.intervalo;
+  $('#cfgTotal').innerHTML = ativas.length
+    ? `<b>${ativas.length}</b> ${ativas.length === 1 ? 'site' : 'sites'} · até <b>${total}</b> notícias no carrossel` +
+      `<small>${seg} s por notícia · uma volta completa leva cerca de ${Math.max(1, Math.round(total * seg / 60))} min.</small>`
+    : '<b>Marque pelo menos um site.</b>';
+  return ativas.length;
+}
+async function abreConfig(){
+  if (configAberta) return;
+  configAberta = true;
+  pausadoAntesDaConfig = pausado;
+  if (!pausado) alternaPausa();
+  const c = configSalva();
+  if (params.get('local') && !c.tv) c.tv = params.get('local');
+  $('#cfgTv').value = c.tv;
+  // --intervalo na linha de comando vale por cima da tela de configurações
+  const porOpcao = parseFloat(params.get('intervalo')) > 0;
+  $('#cfgIntervalo').value = porOpcao ? PAINEL.intervalo : c.intervalo;
+  $('#cfgIntervalo').disabled = porOpcao;
+  $('#cfgIntervaloAjuda').textContent = porOpcao
+    ? 'Definido pela opção --intervalo do atalho do painel.'
+    : `De ${INTERVALO_MIN} a ${INTERVALO_MAX} segundos. O padrão é ${INTERVALO_PADRAO}.`;
+  desenhaFontes(c);
+  $('#cfgMonitorCampo').hidden = true;
+  $('#cfgTela').hidden = true;
+  if (appDesktop){
+    appDesktop.configurando(true);
+    try{
+      const telas = await appDesktop.monitores();
+      const atualTela = telas.find(t => t.atual) || telas[0];
+      if (atualTela){
+        $('#cfgTelaNum').textContent = atualTela.numero;
+        $('#cfgTelaTxt').innerHTML = `Monitor ${atualTela.numero} de ${telas.length}<small>${atualTela.largura} × ${atualTela.altura}</small>`;
+        $('#cfgTela').hidden = false;
+      }
+      if (telas.length > 1){
+        $('#cfgMonitor').innerHTML = telas.map(t => `<option value="${t.numero}"${t.atual ? ' selected' : ''}>Monitor ${t.numero} — ${t.largura} × ${t.altura}${t.atual ? ' (atual)' : ''}</option>`).join('');
+        $('#cfgMonitorCampo').hidden = false;
+      }
+    }catch(e){}
+  }
+  $('#config').hidden = false;
+  setTimeout(() => $('#cfgTv').focus(), 50);
+}
+function fechaConfig(){
+  if (!configAberta) return;
+  configAberta = false;
+  $('#config').hidden = true;
+  if (appDesktop) appDesktop.configurando(false);
+  if (pausado && !pausadoAntesDaConfig) alternaPausa();
+}
+async function salvaConfig(){
+  if (!totalConfig()) return;
+  const c = leFormulario();
+  try{ localStorage.setItem(CHAVE_CONFIG, JSON.stringify(c)); }catch(e){}
+  if (appDesktop && !$('#cfgMonitorCampo').hidden){
+    const n = parseInt($('#cfgMonitor').value);
+    try{ await appDesktop.usarMonitor(n); }catch(e){}
+  }
+  PAINEL = configEfetiva();
+  aplicaIntervalo();
+  fechaConfig();
+  try{ localStorage.removeItem('noticiasUFSM:v3'); }catch(e){}
+  atual = 0;
+  carrega();
+}
+$('#btnConfig').addEventListener('click', abreConfig);
+$('#cfgFechar').addEventListener('click', fechaConfig);
+$('#cfgCancelar').addEventListener('click', fechaConfig);
+$('#cfgPadrao').addEventListener('click', () => {
+  $('#cfgTv').value = '';
+  if (!$('#cfgIntervalo').disabled) $('#cfgIntervalo').value = INTERVALO_PADRAO;
+  desenhaFontes(configPadrao());
+});
+$('#cfgIntervalo').addEventListener('input', totalConfig);
+$('#cfgIntervalo').addEventListener('change', () => { $('#cfgIntervalo').value = limitaIntervalo($('#cfgIntervalo').value); totalConfig(); });
+$('#configForm').addEventListener('submit', e => { e.preventDefault(); salvaConfig(); });
+$('#config').addEventListener('click', e => { if (e.target === $('#config')) fechaConfig(); });
+
 addEventListener('keydown', e => {
+  // com a tela de configurações aberta, as teclas servem só a ela (Esc fecha)
+  if (configAberta){ if (e.key === 'Escape'){ e.preventDefault(); fechaConfig(); } return; }
+  if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); abreConfig(); return; }
   if (e.key === 'ArrowRight') proxima();
   else if (e.key === 'ArrowLeft') anterior();
   else if (e.key === ' ') { e.preventDefault(); alternaPausa(); }

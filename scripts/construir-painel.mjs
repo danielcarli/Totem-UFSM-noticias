@@ -1,7 +1,7 @@
 // Gera o painel a partir de painel/template.html:
 //   app/index.html                 → usado pelo aplicativo (fontes e QR code locais, funciona sem CDN)
 //   navegador/destaques-ufsm.html  → versão para abrir em qualquer navegador (arquivo único)
-// As marcas (painel/marcas/*.png) entram no HTML como imagens embutidas.
+// As marcas (painel/marcas/*.png e painel/marcas/origens/*.png) entram no HTML como imagens embutidas.
 //
 //   npm run painel             gera os dois arquivos
 //   npm run painel -- --conferir   só confere se os dois estão em dia com o template
@@ -20,9 +20,28 @@ const MARCAS = {
   __AGENCIA_H__: 'agencia.png',                   // rodapé
   __SIMBOLO__: 'coordenadoria-simbolo.png',       // card de notícia sem foto
 };
-const comMarcas = html => Object.entries(MARCAS).reduce((h, [k, arq]) => h.split(k).join(marca(arq)), html);
+// marcas ao lado do site de origem (painel/marcas/origens/<id>.png, branco sobre transparente):
+// viram máscaras CSS pintadas na cor do texto. Tamanho: 1,5em de altura, no máximo 2,4em de largura.
+const PASTA_ORIGENS = path.join(raiz, 'painel/marcas/origens');
+const origens = fs.readdirSync(PASTA_ORIGENS).filter(a => a.endsWith('.png')).sort().map(arq => {
+  const png = fs.readFileSync(path.join(PASTA_ORIGENS, arq));
+  const larg = png.readUInt32BE(16), alt = png.readUInt32BE(20);      // cabeçalho IHDR do PNG
+  const prop = larg / alt;
+  let h = 1.5, w = h * prop;
+  if (w > 2.4){ w = 2.4; h = w / prop; }
+  return { id: arq.slice(0, -4), w: +w.toFixed(3), h: +h.toFixed(3), url: 'data:image/png;base64,' + png.toString('base64') };
+});
+const CSS_ORIGENS = origens.map(o => `.marca-origem[data-m="${o.id}"]{--m:url(${o.url});--w:${o.w};--h:${o.h}}`).join('\n');
+const IDS_ORIGENS = JSON.stringify(origens.map(o => o.id));
 
-const template = ler('painel/template.html');
+const comMarcas = html => Object.entries(MARCAS)
+  .reduce((h, [k, arq]) => h.split(k).join(marca(arq)), html)
+  .split('/*__MARCAS_ORIGEM_CSS__*/').join(CSS_ORIGENS)
+  .split('__MARCAS_ORIGEM_IDS__').join(IDS_ORIGENS);
+
+// versão do package.json, mostrada discretamente no rodapé do painel
+const VERSAO = JSON.parse(ler('package.json')).version;
+const template = ler('painel/template.html').split('__VERSAO__').join(VERSAO);
 const navegador = comMarcas(template);
 let app = template
   .replace('<link rel="preconnect" href="https://fonts.googleapis.com">\n', '')

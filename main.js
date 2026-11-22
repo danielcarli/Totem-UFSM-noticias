@@ -12,14 +12,17 @@
      Ctrl+Q ..... fecha o aplicativo
      1 / 2 / 3 .. leva o painel para o monitor 1, 2 ou 3 (da esquerda para a direita)
                   e lembra a escolha nas próximas aberturas
+     C .......... tela de configurações (de onde vêm as notícias, nome da TV, monitor)
      (as setas, espaço, R e F do próprio painel continuam valendo)
 
    Opções de linha de comando (no atalho do Windows ou no terminal do Linux)
      --monitor=2            abre no segundo monitor só desta vez (as teclas 1, 2, 3 guardam a escolha)
      --intervalo=10         segundos por notícia (padrão 7)
      --atualizacao=15       minutos entre as leituras do portal (padrão 15)
-     --quantidade=30        notícias no carrossel: se a página principal tiver menos, completa
-                            com as últimas matérias com foto do portal (padrão 30)
+     --quantidade=12        notícias do portal (padrão 12; também na tela de configurações)
+     --sites=unidades-universitarias/ct,pro-reitorias/prograd
+                            inclui as últimas matérias desses subsites (5 de cada; --porsite=10
+                            muda) — o mais simples é marcar na tela de configurações (tecla C)
      --max=30               número máximo de notícias
      --secoes=Destaques,JAI só estas áreas da página principal
      --ignorar="Em destaque"  tira áreas (ex.: os banners do topo)
@@ -40,7 +43,7 @@
      (ou ao fechar o programa), e volta a abrir com as mesmas opções. Nos pacotes .deb e
      .rpm, só avisa na tela que há versão nova. Registro: atualizacao.log na pasta de dados.
    ================================================================== */
-const { app, BrowserWindow, Menu, session, screen, powerSaveBlocker } = require('electron');
+const { app, BrowserWindow, Menu, session, screen, powerSaveBlocker, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -61,6 +64,7 @@ const arg = nome => {
 
 const RECARREGA_A_CADA_HORAS = 24;   // recarga preventiva para longos períodos ligado
 let janela = null;
+let configurando = false;   // tela de configurações do painel aberta
 
 /* --- a página lê www.ufsm.br sem bloqueio de CORS ---------------- */
 function liberaPortalUFSM(){
@@ -156,7 +160,7 @@ function trocaMonitor(numero){
 
 function parametrosDoPainel(){
   const q = {};
-  for (const nome of ['intervalo', 'atualizacao', 'max', 'quantidade', 'secoes', 'ignorar', 'orientacao', 'leve', 'noite', 'recarga', 'local', 'utm']){
+  for (const nome of ['intervalo', 'atualizacao', 'max', 'quantidade', 'sites', 'porsite', 'secoes', 'ignorar', 'orientacao', 'leve', 'noite', 'recarga', 'local', 'utm', 'dias']){
     const v = arg(nome);
     if (v && v !== true) q[nome] = String(v);
   }
@@ -178,6 +182,7 @@ function criaJanela(){
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      preload: path.join(__dirname, 'preload.js'),
       backgroundThrottling: false,   // não desacelera o carrossel se a janela perder o foco
     },
   });
@@ -189,6 +194,8 @@ function criaJanela(){
   janela.webContents.on('before-input-event', (ev, input) => {
     if (input.type !== 'keyDown') return;
     const ctrl = input.control || input.meta;
+    // tela de configurações aberta: as teclas são dela (digitar números, Esc para fechar)
+    if (configurando && !ctrl && input.key !== 'F11') return;
     if (input.key === 'F11'){ ev.preventDefault(); janela.setFullScreen(!janela.isFullScreen()); }
     else if (input.key === 'Escape' && janela.isFullScreen()){ ev.preventDefault(); janela.setFullScreen(false); }
     else if (ctrl && input.key.toLowerCase() === 'q'){ ev.preventDefault(); app.quit(); }
@@ -302,6 +309,14 @@ function configuraAtualizacao(){
   setTimeout(verifica, 60 * 1000);
   setInterval(verifica, 6 * 60 * 60 * 1000);
 }
+
+/* --- ponte com a tela de configurações do painel (preload.js) -------- */
+ipcMain.on('configurando', (_, aberta) => { configurando = !!aberta; });
+ipcMain.handle('monitores', () => {
+  const atual = janela ? screen.getDisplayMatching(janela.getBounds()).id : null;
+  return telasEmOrdem().map((t, i) => ({ numero: i + 1, largura: t.size.width, altura: t.size.height, atual: t.id === atual }));
+});
+ipcMain.handle('usar-monitor', (_, numero) => { trocaMonitor(Number(numero)); return true; });
 
 app.whenReady().then(() => {
   recuperaOpcoesDaAtualizacao();
