@@ -18,16 +18,27 @@
      --monitor=2            abre no segundo monitor só desta vez (as teclas 1, 2, 3 guardam a escolha)
      --intervalo=10         segundos por notícia (padrão 7)
      --atualizacao=15       minutos entre as leituras do portal (padrão 15)
+     --quantidade=30        notícias no carrossel: se a página principal tiver menos, completa
+                            com as últimas matérias com foto do portal (padrão 30)
      --max=30               número máximo de notícias
      --secoes=Destaques,JAI só estas áreas da página principal
      --ignorar="Em destaque"  tira áreas (ex.: os banners do topo)
      --orientacao=vertical  força o layout de totem em pé (normalmente é automático)
      --leve=1               sem efeitos de desfoque (computadores fracos)
      --noite=23-6           tela preta das 23h às 6h
+     --local=ct             nome do local do painel, para medir as leituras do QR code
+                            no Google Analytics do portal (utm_campaign)
+     --sem-atualizacao      não procura versões novas (veja "Atualização automática")
      --iniciar-com-sistema  passa a abrir sozinho ao entrar no computador
                             (Windows e Linux; guarda as outras opções usadas junto)
      --nao-iniciar-com-sistema  desfaz a opção acima
      (--iniciar-com-windows / --nao-iniciar-com-windows continuam funcionando)
+
+   Atualização automática
+     O aplicativo procura versões novas nas Releases do GitHub 1 minuto depois de abrir e
+     a cada 6 horas. No Windows e no AppImage, baixa sozinho e instala às 4h30 da manhã
+     (ou ao fechar o programa), e volta a abrir com as mesmas opções. Nos pacotes .deb e
+     .rpm, só avisa na tela que há versão nova. Registro: atualizacao.log na pasta de dados.
    ================================================================== */
 const { app, BrowserWindow, Menu, session, screen, powerSaveBlocker } = require('electron');
 const path = require('path');
@@ -40,8 +51,10 @@ if (!app.requestSingleInstanceLock()){
   return;
 }
 
+// opções da linha de comando (depois de uma atualização, as que estavam em uso — veja abaixo)
+let argv = process.argv;
 const arg = nome => {
-  const a = process.argv.find(x => x === `--${nome}` || x.startsWith(`--${nome}=`));
+  const a = argv.find(x => x === `--${nome}` || x.startsWith(`--${nome}=`));
   if (!a) return null;
   return a.includes('=') ? a.slice(a.indexOf('=') + 1) : true;
 };
@@ -91,22 +104,25 @@ function escolheTela(){
   return screen.getPrimaryDisplay();
 }
 
-// mostra por um instante, sobre o painel, em qual monitor ele está
-function avisoNaTela(texto){
+// mostra por um instante um aviso sobre o painel: no centro (monitor) ou discreto, no canto (versão nova)
+function avisoNaTela(texto, ms = 1600, canto = false){
   if (!janela) return;
+  const id = canto ? 'aviso-canto' : 'aviso-monitor';
+  const lugar = canto ? 'right:1.4vw;bottom:1.4vw;' : 'left:50%;top:50%;transform:translate(-50%,-50%);';
+  const fonte = canto ? '500 clamp(13px,1vw,22px)' : '600 clamp(20px,2.4vw,44px)';
   const js = `(() => {
-    let a = document.getElementById('aviso-monitor');
+    let a = document.getElementById(${JSON.stringify(id)});
     if (!a){
-      a = document.createElement('div'); a.id = 'aviso-monitor';
-      a.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:99999;' +
+      a = document.createElement('div'); a.id = ${JSON.stringify(id)};
+      a.style.cssText = 'position:fixed;${lugar}z-index:99999;' +
         'padding:.7em 1.4em;border-radius:14px;background:rgba(6,23,42,.86);color:#fff;' +
-        'font:600 clamp(20px,2.4vw,44px)/1.2 Barlow,system-ui,sans-serif;box-shadow:0 10px 40px rgba(0,0,0,.45);' +
+        'font:${fonte}/1.2 Barlow,system-ui,sans-serif;box-shadow:0 10px 40px rgba(0,0,0,.45);' +
         'pointer-events:none;transition:opacity .4s';
       document.body.appendChild(a);
     }
     a.textContent = ${JSON.stringify(texto)}; a.style.opacity = '1';
-    clearTimeout(window.__avisoMonitor);
-    window.__avisoMonitor = setTimeout(() => { a.style.opacity = '0'; }, 1600);
+    clearTimeout(a.__t);
+    a.__t = setTimeout(() => { a.style.opacity = '0'; }, ${Number(ms) || 1600});
   })()`;
   janela.webContents.executeJavaScript(js).catch(() => {});
 }
@@ -140,7 +156,7 @@ function trocaMonitor(numero){
 
 function parametrosDoPainel(){
   const q = {};
-  for (const nome of ['intervalo', 'atualizacao', 'max', 'secoes', 'ignorar', 'orientacao', 'leve', 'noite', 'recarga']){
+  for (const nome of ['intervalo', 'atualizacao', 'max', 'quantidade', 'secoes', 'ignorar', 'orientacao', 'leve', 'noite', 'recarga', 'local', 'utm']){
     const v = arg(nome);
     if (v && v !== true) q[nome] = String(v);
   }
@@ -221,7 +237,74 @@ function iniciarComSistema(ligar){
   }
 }
 
+/* --- atualização automática (Releases do GitHub) -------------------- */
+const OPCOES_INTERNAS = /^--(updated|no-sandbox|password-store|iniciar-com|nao-iniciar-com)/;
+const opcoesEmUso = () => argv.slice(app.isPackaged ? 1 : 2).filter(a => a.startsWith('--') && !OPCOES_INTERNAS.test(a));
+
+// o instalador reabre o programa sem as opções do atalho: elas ficam guardadas antes da
+// atualização e voltam aqui
+function recuperaOpcoesDaAtualizacao(){
+  const c = lerConfig();
+  if (!Array.isArray(c.reabrirCom)) return;
+  if (!opcoesEmUso().length){
+    argv = [...process.argv, ...c.reabrirCom];
+    registra('reaberto depois da atualização, com as opções:', c.reabrirCom.join(' ') || '(nenhuma)');
+  }
+  gravarConfig({ reabrirCom: null });
+}
+
+function registra(...partes){
+  try{
+    const arq = path.join(app.getPath('userData'), 'atualizacao.log');
+    if (fs.existsSync(arq) && fs.statSync(arq).size > 200 * 1024) fs.renameSync(arq, arq + '.1');
+    fs.appendFileSync(arq, `${new Date().toISOString()} ${partes.map(p => p instanceof Error ? p.message : String(p)).join(' ')}\n`);
+  }catch(e){}
+}
+
+function configuraAtualizacao(){
+  if (!app.isPackaged || arg('sem-atualizacao')) return;
+  let autoUpdater;
+  try{ ({ autoUpdater } = require('electron-updater')); }
+  catch(e){ registra('electron-updater indisponível:', e); return; }
+
+  // .deb e .rpm precisam de senha de administrador para atualizar: nesses, só avisa
+  const soAvisa = process.platform === 'linux' && !process.env.APPIMAGE;
+  autoUpdater.autoDownload = !soAvisa;
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.logger = { info: m => registra('info', m), warn: m => registra('aviso', m), error: m => registra('erro', m), debug: () => {} };
+
+  let agendada = null;
+  autoUpdater.on('update-available', info => {
+    registra('versão nova disponível:', info.version);
+    if (soAvisa) avisoNaTela(`Versão ${info.version} disponível — github.com/danielcarli/Totem-UFSM-noticias`, 15000, true);
+  });
+  autoUpdater.on('update-not-available', () => registra('sem versão nova'));
+  autoUpdater.on('error', e => registra('falha:', e));
+  autoUpdater.on('update-downloaded', info => {
+    registra('baixada a versão', info.version);
+    if (agendada) return;
+    // instala de madrugada, quando ninguém está olhando a TV
+    const agora = new Date(), quando = new Date(agora);
+    quando.setHours(4, 30, 0, 0);
+    if (quando <= agora) quando.setDate(quando.getDate() + 1);
+    // (para testes: DESTAQUES_INSTALAR_EM_SEG=30 instala 30 s depois de baixar)
+    const teste = parseInt(process.env.DESTAQUES_INSTALAR_EM_SEG, 10);
+    if (teste > 0) quando.setTime(agora.getTime() + teste * 1000);
+    registra('instalação agendada para', quando.toLocaleString('pt-BR'), `(versão ${app.getVersion()} → ${info.version})`);
+    agendada = setTimeout(() => {
+      gravarConfig({ reabrirCom: opcoesEmUso() });
+      registra('instalando', info.version);
+      autoUpdater.quitAndInstall(true, true);     // sem janelas, e reabre o programa
+    }, quando - agora);
+  });
+
+  const verifica = () => autoUpdater.checkForUpdates().catch(e => registra('falha ao verificar:', e));
+  setTimeout(verifica, 60 * 1000);
+  setInterval(verifica, 6 * 60 * 60 * 1000);
+}
+
 app.whenReady().then(() => {
+  recuperaOpcoesDaAtualizacao();
   if (arg('iniciar-com-sistema') || arg('iniciar-com-windows'))         iniciarComSistema(true);
   if (arg('nao-iniciar-com-sistema') || arg('nao-iniciar-com-windows')) iniciarComSistema(false);
 
@@ -238,6 +321,8 @@ app.whenReady().then(() => {
 
   setInterval(() => { if (janela) janela.webContents.reloadIgnoringCache(); },
               RECARREGA_A_CADA_HORAS * 60 * 60 * 1000);
+
+  configuraAtualizacao();
 });
 
 app.on('window-all-closed', () => app.quit());

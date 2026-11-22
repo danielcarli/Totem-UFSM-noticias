@@ -4,7 +4,7 @@
 
 **Painel de notícias para TVs e totens da Universidade Federal de Santa Maria**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.4.4-0b5394)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.5.0-0b5394)
 ![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-e7640a)
 ![Plataformas](https://img.shields.io/badge/plataformas-Windows%20%7C%20Linux-1ab2af)
 ![Electron](https://img.shields.io/badge/Electron-45-47848f)
@@ -92,7 +92,10 @@ inteira, com textos e QR code maiores ("Leia no celular").
 </table>
 
 **Identidade institucional.** A marca da UFSM fica no topo; a Coordenadoria de Comunicação e a
-Agência de Notícias assinam no rodapé, com a hora da última atualização.
+Agência de Notícias, que desenvolve o painel, assinam no rodapé, com a hora da última atualização.
+Abaixo do título de cada matéria aparece o **site de onde ela vem**: o portal da UFSM é formado por
+muitos subsites (pró-reitorias, centros, cursos), e as matérias da página principal são da
+Agência — nelas aparece "Portal Institucional - Agência de Notícias da UFSM".
 
 <img src="docs/detalhe-topo.jpg" alt="Topo do painel com a marca da UFSM" width="760">
 <img src="docs/detalhe-rodape.jpg" alt="Rodapé com Coordenadoria de Comunicação e Agência de Notícias" width="560">
@@ -101,9 +104,13 @@ Agência de Notícias assinam no rodapé, com a hora da última atualização.
 
 - **Notícias do portal, sempre atualizadas.** Lê a página principal de www.ufsm.br a cada
   15 minutos e mostra todas as notícias com foto: banners do topo, Destaques, Divulga Ciência e
-  as demais áreas. Notícia nova entra sozinha; a que saiu do portal sai do painel.
-- **Feito para ser visto de longe.** Títulos grandes, editoria e data de cada matéria, e um QR
-  code para continuar a leitura no celular.
+  as demais áreas. Notícia nova entra sozinha; a que saiu do portal sai do painel. Se a página
+  tiver menos de 30 notícias com foto, completa com as últimas matérias publicadas no portal.
+- **Feito para ser visto de longe.** Títulos grandes, editoria, data e site de origem de cada
+  matéria, e um QR code para continuar a leitura no celular.
+- **Leituras do QR code medidas.** O endereço do QR leva `utm_source=painel-destaques`,
+  `utm_medium=qrcode` e `utm_campaign=<local>`: no Google Analytics do portal dá para ver quantas
+  pessoas leram matérias a partir dos painéis, e de qual painel (opção `--local`).
 - **Banners largos animados.** Artes muito largas aparecem inteiras e depois percorrem a imagem
   da esquerda para a direita, terminando antes da troca de card.
 - **TV ou totem.** Layout horizontal ou vertical automático, conforme a tela.
@@ -112,6 +119,13 @@ Agência de Notícias assinam no rodapé, com a hora da última atualização.
 - **Funciona sozinho, o dia todo.** Abre em tela cheia, impede que a tela apague, continua
   mostrando as últimas notícias se a internet cair (e tenta de novo a cada minuto), se recupera
   de travamentos, se recarrega uma vez por dia e pode abrir sozinho ao ligar o computador.
+- **Atualização automática.** O aplicativo procura versões novas nas
+  [Releases](https://github.com/danielcarli/Totem-UFSM-noticias/releases) e, no Windows e no
+  AppImage, instala sozinho às 4h30 da manhã, voltando a abrir com as mesmas opções. Nos pacotes
+  `.deb` e `.rpm` (que pedem senha de administrador para atualizar), mostra um aviso discreto.
+- **Resistente a mudanças no portal.** Se o layout da página principal mudar e o painel achar
+  poucas notícias, ele completa com as últimas matérias com foto, direto pela API do WordPress
+  (plano B). E um teste diário no GitHub avisa por e-mail quando isso acontece.
 - **Modo noite.** Opcionalmente, deixa a tela preta em um horário (ex.: das 23h às 6h).
 - **Só lê o site.** Não envia nenhum dado sobre o computador ou sobre quem está diante da tela.
 
@@ -187,12 +201,15 @@ Acrescente ao atalho (Windows, campo "Destino") ou ao comando (Linux):
 | `--monitor=2` | abre no segundo monitor só desta vez (para fixar, use as teclas 1, 2, 3) |
 | `--intervalo=10` | segundos por notícia (padrão 7) |
 | `--atualizacao=10` | minutos entre as leituras do portal (padrão 15) |
+| `--quantidade=30` | notícias no carrossel: se a página principal tiver menos, completa com as últimas matérias com foto do portal (padrão 30) |
 | `--max=30` | número máximo de notícias |
 | `--secoes=Destaques,JAI` | mostra só estas áreas da página principal |
 | `--ignorar="Em destaque"` | tira áreas (ex.: os banners do topo) |
 | `--orientacao=vertical` | força o layout de totem (normalmente é automático) |
 | `--leve=1` | sem efeitos de desfoque, para computadores mais fracos |
 | `--noite=23-6` | tela preta das 23h às 6h |
+| `--local=ct` | nome do local do painel, para medir as leituras do QR code (`utm_campaign`) |
+| `--sem-atualizacao` | não procura versões novas |
 | `--iniciar-com-sistema` | passa a abrir sozinho ao entrar no computador (guarda as outras opções) |
 | `--nao-iniciar-com-sistema` | desfaz a opção acima |
 
@@ -212,10 +229,12 @@ existe só no aplicativo.
                                                              │
                      lê a página principal, encontra as matérias com foto,
                      escolhe a melhor imagem e monta o carrossel
+                     (poucas notícias? plano B: últimas matérias pela API)
                                                              │
                                                              ▼
                           aplicativo Electron: tela cheia, tela sempre acesa,
-                          abrir com o sistema, monitores, recuperação automática
+                          abrir com o sistema, monitores, recuperação automática,
+                          atualização automática pelas Releases do GitHub
 ```
 
 O painel é uma página HTML + JavaScript que roda no próprio computador da TV. Ele lê a página
@@ -223,6 +242,17 @@ principal do portal pela API pública do WordPress da UFSM, identifica as matér
 (endereços no formato `/AAAA/MM/DD/titulo`), escolhe a melhor imagem de cada uma e monta o
 carrossel. O aplicativo para Windows e Linux é feito com [Electron](https://www.electronjs.org):
 ele abre essa página em tela cheia e cuida do que um navegador comum não faz sozinho.
+
+### Teste diário do portal
+
+O painel depende do layout da página principal do portal. Todo dia às 7h17, o GitHub Actions
+([`.github/workflows/portal.yml`](.github/workflows/portal.yml)) abre o painel contra o site real e
+confere se ele encontra pelo menos 5 notícias, todas com título, foto e site de origem — e se o
+plano B pela API também funciona. Se algo falhar, a execução fica vermelha e o GitHub avisa por
+e-mail; o resumo de cada execução lista as notícias encontradas. Para rodar à mão:
+**Actions › Teste do portal › Run workflow**, ou, no computador, `npm run teste:portal`
+(precisa do [Playwright](https://playwright.dev): `cd testes && npm install --no-save playwright`
+e `npx playwright install chromium`).
 
 ## Desenvolvimento
 
@@ -234,6 +264,7 @@ cd Totem-UFSM-noticias
 npm install
 npm start            # abre o painel
 npm run painel       # gera app/index.html e navegador/destaques-ufsm.html a partir de painel/
+npm run teste:portal # testa o painel contra o portal real (veja "Teste diário do portal")
 npm run dist:win     # instalador (Setup.exe) e versão portátil (.zip) do Windows
 npm run dist:linux   # .deb, .rpm e AppImage
 npm run dist         # todos
@@ -261,6 +292,7 @@ app/fontes/            fonte Barlow
 app/vendor/            gerador de QR code
 build/                 ícones, licença e personalização do instalador do Windows
 docs/                  imagens deste README
+testes/                teste do painel contra o portal real
 LEIA-ME.txt            instruções que acompanham os instaladores
 .github/workflows/     geração e publicação automática dos instaladores
 ```
@@ -268,10 +300,11 @@ LEIA-ME.txt            instruções que acompanham os instaladores
 ### Publicar uma versão
 
 1. Atualize `"version"` no `package.json` e a tabela de [Versões](#versões).
-2. Crie e envie a tag da versão: `git tag v1.4.4 && git push origin v1.4.4`.
+2. Crie e envie a tag da versão: `git tag v1.5.0 && git push origin v1.5.0`.
 3. O GitHub Actions ([`.github/workflows/release.yml`](.github/workflows/release.yml)) gera os
    instaladores de Windows e Linux e os publica na release da tag. Os links de
-   [Download](#download) passam a apontar para ela.
+   [Download](#download) passam a apontar para ela, e os painéis já instalados se atualizam
+   sozinhos (pelos arquivos `latest.yml` e `latest-linux.yml` da release).
 
 Também dá para publicar à mão: gere com `npm run dist`, crie a release em
 [Releases](https://github.com/danielcarli/Totem-UFSM-noticias/releases/new) e anexe os arquivos
@@ -281,6 +314,7 @@ de `dist/` e o `navegador/destaques-ufsm.html`, com os mesmos nomes.
 
 | Versão | Novidades |
 |---|---|
+| **1.5.0** | Atualização automática pelas Releases do GitHub (instala de madrugada e reabre com as mesmas opções); site de origem abaixo do título de cada matéria; carrossel com 30 notícias (completa com as últimas matérias do portal); leituras do QR code medidas no Google Analytics (`--local`); plano B pela API do WordPress quando a página principal muda de layout; teste diário contra o portal no GitHub Actions. |
 | **1.4.4** | Notícias com GIF animado como imagem de destaque (ex.: "Lembre bem") também aparecem, com a animação no card; nesses casos o fundo desfocado não usa o GIF, para não pesar na placa de vídeo. |
 | **1.4.3** | Corrige imagens piscando nas transições depois de várias trocas seguidas pelo teclado: o fundo desfocado troca sem piscar, os cards fora da tela deixam de ocupar a placa de vídeo (cerca de 1/3 menos área desenhada) e o card que chega ao centro só passa à frente quando cruza o anterior. |
 | **1.4.2** | O título da matéria fica sempre embaixo da imagem: saiu a troca de posição com as setas ↑/↓ (e a opção `--layout`). |

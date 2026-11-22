@@ -1,0 +1,34 @@
+# Teste diário do painel contra o portal real da UFSM.
+# Se a página principal mudar de layout e o painel deixar de achar as notícias (ou o
+# plano B pela API parar de funcionar), este teste falha e o GitHub avisa por e-mail
+# quem configurou o repositório. O resumo de cada execução mostra as notícias encontradas.
+name: Teste do portal
+
+on:
+  schedule:
+    - cron: '17 10 * * *'     # todo dia às 7h17 (horário de Brasília)
+  workflow_dispatch:
+  push:
+    paths:
+      - 'painel/**'
+      - 'navegador/**'
+      - 'testes/**'
+
+jobs:
+  portal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Painel em dia com o template
+        run: node scripts/construir-painel.mjs --conferir
+      - name: Instala o navegador de teste
+        working-directory: testes
+        run: |
+          npm install --no-save playwright@1.59.1
+          npx playwright install --with-deps chromium
+      - name: Testa contra www.ufsm.br
+        run: node testes/portal.mjs

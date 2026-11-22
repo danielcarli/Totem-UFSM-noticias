@@ -58,6 +58,8 @@ OPÇÕES
                            use as teclas 1, 2, 3 com o painel aberto)
   --intervalo=10           segundos por notícia (padrão 7)
   --atualizacao=10         minutos entre as leituras do portal (padrão 15)
+  --quantidade=30          notícias no carrossel (padrão 30): se a página principal
+                           tiver menos, completa com as últimas matérias do portal
   --max=30                 número máximo de notícias
   --secoes=Destaques,JAI   mostra só estas áreas da página principal
   --ignorar="Em destaque"  tira áreas (ex.: "Em destaque" = banners do topo)
@@ -65,6 +67,9 @@ OPÇÕES
                            automático: tela mais alta que larga = vertical)
   --leve=1                 sem efeitos de desfoque (computadores fracos)
   --noite=23-6             tela preta das 23h às 6h (o carrossel para)
+  --local=ct               nome do local do painel (ex.: ct, biblioteca, ru), para
+                           medir no Google Analytics do portal as leituras do QR code
+  --sem-atualizacao        não procura versões novas
   --iniciar-com-sistema    abre sozinho sempre que o usuário entrar no
                            computador (guarda as outras opções usadas junto)
   --nao-iniciar-com-sistema  desfaz a opção acima
@@ -88,6 +93,12 @@ TV OU TOTEM FUNCIONANDO SOZINHO
   4. Volta após falta de luz: na BIOS, "Restore on AC Power Loss" = Power On.
 
 COMPORTAMENTO
+  - Atualiza sozinho: procura versões novas no GitHub ao abrir e a cada 6 horas.
+    No Windows e no AppImage, baixa e instala às 4h30 da manhã, e volta a abrir
+    com as mesmas opções. Nos pacotes .deb e .rpm, mostra um aviso no canto da
+    tela; para atualizar, baixe e instale o pacote novo.
+  - Se o layout da página principal da UFSM mudar, completa com as últimas
+    matérias com foto do portal.
   - Se a internet cair, continua mostrando os últimos destaques e tenta de
     novo a cada minuto.
   - O painel se recarrega sozinho uma vez por dia e se recupera de travamentos.

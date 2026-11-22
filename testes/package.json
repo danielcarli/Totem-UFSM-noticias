@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "description": "Teste diário do painel contra o portal real da UFSM (usado pelo GitHub Actions)",
+  "type": "module"
+}

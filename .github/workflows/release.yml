@@ -1,7 +1,8 @@
 # Gera os instaladores de Windows e Linux e publica na release quando uma tag vX.Y.Z é enviada:
 #   git tag v1.4.0 && git push origin v1.4.0
 # Os nomes dos arquivos não têm versão, para os links ".../releases/latest/download/..." do README
-# sempre baixarem a versão mais recente.
+# sempre baixarem a versão mais recente. Os arquivos latest.yml / latest-linux.yml (e o .blockmap)
+# são lidos pela atualização automática dos painéis já instalados: precisam estar na Release.
 name: Release
 
 on:
@@ -29,7 +30,9 @@ jobs:
           name: windows
           path: |
             dist/Destaques-UFSM-Setup.exe
+            dist/Destaques-UFSM-Setup.exe.blockmap
             dist/Destaques-UFSM-win-x64.zip
+            dist/latest.yml
 
   linux:
     runs-on: ubuntu-latest
@@ -51,6 +54,7 @@ jobs:
             dist/destaques-ufsm_amd64.deb
             dist/destaques-ufsm.x86_64.rpm
             dist/Destaques-UFSM-x86_64.AppImage
+            dist/latest-linux.yml
             dist/destaques-ufsm.html
 
   publicar:

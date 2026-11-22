@@ -241,6 +241,12 @@ body.idle .trilho{opacity:.25}
   display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
   text-wrap:balance;
 }
+/* site de onde vem a matéria (o portal da UFSM é formado por muitos subsites) */
+.detalhes .origem{
+  flex:none;margin-top:.55em;font-size:clamp(13.8px,1.035vw,23px);line-height:1.3;font-weight:500;
+  color:var(--texto-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.detalhes .origem:empty{display:none}
 .rodape-card{flex:none;display:flex;align-items:flex-end;gap:5%;margin-top:.8em}
 .meta{flex:none}
 .detalhes p{
@@ -336,6 +342,7 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
 .vertical .detalhes h2{font-size:5.9vw;line-height:1.07;-webkit-line-clamp:5}   /* cabe uma linha a mais na tela em pé */
 .vertical .topo .logo{height:82%}
 .vertical .detalhes p{font-size:2.6vw;line-height:1.35}
+.vertical .detalhes .origem{font-size:2.4vw;white-space:normal;text-wrap:balance}
 .vertical .detalhes p.padrao{display:none}          /* frase longa sai; o QR fica com "Leia no celular" */
 .vertical .rodape-card{justify-content:flex-end;margin-top:1.6vw}
 .vertical .qr .caixa{width:22vw;padding:1.2vw;border-radius:1.8vw}
@@ -436,8 +443,20 @@ const CONFIG = {
   NOME_CARROSSEL: 'Em destaque',   // nome usado para o carrossel de banners do topo
   INTERVALO_MS:   (parseFloat(params.get('intervalo'))   || 7)  * 1000,       // troca de notícia: 7 s
   ATUALIZACAO_MS: (parseFloat(params.get('atualizacao')) || 15) * 60 * 1000,  // releitura da página: 15 min
-  MAX_ITENS:      parseInt(params.get('max')) || 30,
+  MAX_ITENS:      Math.max(parseInt(params.get('max')) || 30, parseInt(params.get('quantidade')) || 0),
+  // Quantidade de notícias no carrossel: se a página principal tiver menos, completa com as
+  // últimas matérias com foto publicadas no portal (?quantidade=30)
+  QUANTIDADE:     parseInt(params.get('quantidade')) || 30,
   BUSCAR_IMAGEM_DESTACADA: true,  // destaque sem foto: busca a imagem destacada da matéria
+  // Plano B: se a leitura da página principal trouxer menos que isto (ex.: o portal mudou de
+  // layout), completa com as últimas matérias com foto publicadas, direto pela API do WordPress.
+  MIN_DA_PAGINA: 5,
+  // QR code: identifica de onde veio a leitura no Google Analytics do portal
+  //   utm_source=painel-destaques  utm_medium=qrcode  utm_campaign=<local>   (?local=ct, ?local=biblioteca…)
+  //   ?utm=0 desliga a marcação
+  LOCAL: (params.get('local') || 'ufsm').trim().toLowerCase()
+           .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9_-]+/g, '-').slice(0, 40) || 'ufsm',
+  UTM: params.get('utm') !== '0',
   CORES: ['var(--laranja)', 'var(--verde)', 'var(--lilas)', 'var(--azul)'],
   FUSO: 'America/Sao_Paulo',
 };
@@ -791,6 +810,19 @@ function resolveImagem(cands){
 /* ---------------- desenho dos cards ---------------- */
 const SIMBOLO = '__SIMBOLO__';
 
+// endereço do QR com a origem da leitura (só links do portal da UFSM)
+function linkDoQR(link){
+  if (!CONFIG.UTM) return link;
+  try{
+    const u = new URL(link);
+    if (!/(^|\.)ufsm\.br$/.test(u.hostname)) return link;
+    u.searchParams.set('utm_source', 'painel-destaques');
+    u.searchParams.set('utm_medium', 'qrcode');
+    u.searchParams.set('utm_campaign', CONFIG.LOCAL);
+    return u.href;
+  }catch(e){ return link; }
+}
+
 function qrDataURL(texto){
   try{
     if (typeof qrcode !== 'function') return '';
@@ -803,7 +835,7 @@ function qrDataURL(texto){
 const ehGif = src => /\.gif(\?|#|$)/i.test(src || '');
 
 function htmlCard(it, i, total){
-  const qr = qrDataURL(it.link);
+  const qr = qrDataURL(linkDoQR(it.link));
   const alt = esc(it.descricaoImagem || '');
   const midia = it.imagem
     ? `${ehGif(it.imagem) ? '' : `<img class="fundo-desfocado" src="${esc(it.imagem)}" alt="" referrerpolicy="no-referrer">`}
@@ -819,6 +851,7 @@ function htmlCard(it, i, total){
         <span class="contagem">${i + 1} / ${total}</span>
       </div>
       <h2>${esc(it.titulo)}</h2>
+      <p class="origem">${esc(it.origem || '')}</p>
       <div class="rodape-card">
         ${it.resumo ? `<p>${esc(it.resumo)}</p>` : `<p class="padrao">Aponte a câmera do celular para o código e ${RE_MATERIA.test(it.link) ? 'leia a matéria completa' : 'saiba mais'} no portal da UFSM.</p>`}
         ${qr ? `<div class="qr"><div class="caixa"><img src="${qr}" alt="QR code da matéria"></div><small><span class="q-tv">ufsm.br</span><span class="q-totem">Leia no celular</span></small></div>` : ''}
@@ -1051,6 +1084,8 @@ function rodape(){
 
 /* ---------------- carga / atualização ---------------- */
 let carregando = false, timerRetentativa = null;
+// de onde vieram as notícias na última leitura: 'pagina' (normal), 'pagina+api' ou 'api' (plano B)
+let fonteNoticias = '';
 
 /* Nome de uma página ou site do portal, para banners que não são matérias.
    1. o endereço é um site próprio (ex.: /pro-reitorias/prograd/descubra) → nome do site;
@@ -1088,6 +1123,105 @@ async function completaTitulos(lista, ms){
   })), ms).catch(() => {});
 }
 
+/* Plano B: as últimas matérias com foto, pela API do WordPress do portal.
+   Usado quando a leitura da página principal falha ou traz poucas notícias.
+   Foto: a imagem destacada da matéria ou, se não houver, a primeira foto do texto. */
+async function noticiasDaApi(){
+  const posts = await api('wp/v2/posts?per_page=60&_embed=wp:featuredmedia&_fields=link,date,title,excerpt,content,_links,_embedded');
+  const lista = [];
+  for (const p of posts || []){
+    const m = p._embedded && p._embedded['wp:featuredmedia'] && p._embedded['wp:featuredmedia'][0];
+    let imagens = [], descricao = '';
+    if (m && m.source_url){
+      const t = (m.media_details && m.media_details.sizes) || {};
+      imagens = [t.large, t['1536x1536'], t.full, t.medium_large].filter(Boolean).map(x => x.source_url).concat(m.source_url);
+      descricao = m.alt_text || '';
+    } else {
+      const doc = new DOMParser().parseFromString((p.content && p.content.rendered) || '', 'text/html');
+      const img = [...doc.querySelectorAll('img')].find(imagemValida);
+      if (img){ imagens = candidatosDaImagem(img, CONFIG.SITE + '/'); descricao = img.getAttribute('alt') || ''; }
+    }
+    if (!imagens.length) continue;
+    const tmp = document.createElement('div');
+    tmp.innerHTML = (p.excerpt && p.excerpt.rendered) || '';
+    let resumo = limpa(tmp.textContent).replace(/\s*\[(…|&hellip;|\.\.\.)\]\s*$/, '…');
+    if (resumo.length > 220) resumo = resumo.slice(0, 217).replace(/\s+\S*$/, '') + '…';
+    lista.push({
+      titulo: limpa(decodifica((p.title && p.title.rendered) || '')),
+      link: (p.link || '').replace(/[?#].*$/, '').replace(/\/$/, ''),
+      guid: p.link,
+      secao: 'Notícias',
+      resumo,
+      data: p.date ? new Date(p.date) : null,
+      descricaoImagem: limpa(descricao),
+      tituloProvisorio: false,
+      imagens: [...new Set(imagens)],
+      imagem: null,
+    });
+  }
+  return lista.filter(it => it.titulo && it.link);
+}
+
+/* Site de origem de cada matéria. O portal da UFSM é formado por muitos subsites
+   (pró-reitorias, centros, cursos…); as matérias da página principal são da Agência de Notícias.
+   /2026/11/19/titulo                    → portal institucional
+   /centros/ct/2026/11/19/titulo         → nome do site /centros/ct (pela API do WordPress)
+   /pro-reitorias/prograd/descubra       → o próprio endereço, se for um site; senão, o de cima */
+const ORIGEM_PORTAL = 'Portal Institucional - Agência de Notícias da UFSM';
+const cacheSites = new Map();   // caminho → nome ('' = não é um site)
+
+function caminhoDoSite(link){
+  try{
+    const u = new URL(link);
+    if (!/(^|\.)ufsm\.br$/.test(u.hostname)) return null;            // fora da UFSM
+    const m = u.pathname.match(/^(.*?)\/\d{4}\/\d{2}\/\d{2}\//);   // matéria: o site é o que vem antes da data
+    return (m ? m[1] : u.pathname).replace(/\/+$/, '');
+  }catch(e){ return null; }
+}
+// resposta imediata quando dá para saber sem consultar a API
+function origemConhecida(link){
+  const c = caminhoDoSite(link);
+  if (c === null){ try{ return new URL(link).hostname.replace(/^www\./, ''); }catch(e){ return ''; } }
+  return c === '' ? ORIGEM_PORTAL : null;
+}
+async function origemDaMateria(link){
+  const conhecida = origemConhecida(link);
+  if (conhecida !== null) return conhecida;
+  const origem = new URL(link).origin;
+  const partes = caminhoDoSite(link).split('/').filter(Boolean);
+  while (partes.length){
+    const caminho = '/' + partes.join('/');
+    if (!cacheSites.has(caminho)){
+      let nome = '';
+      try{
+        const s = await api('?_fields=name', origem + caminho);
+        if (s && typeof s.name === 'string') nome = limpa(decodifica(s.name));
+      }catch(e){}
+      cacheSites.set(caminho, nome);
+    }
+    if (cacheSites.get(caminho)) return cacheSites.get(caminho);
+    partes.pop();
+  }
+  return ORIGEM_PORTAL;   // nenhum subsite no caminho: é o portal principal
+}
+async function completaOrigens(lista, ms){
+  for (const it of lista){ const c = origemConhecida(it.link); if (c !== null) it.origem = c; }
+  await comTempoLimite(Promise.all(lista.filter(it => !it.origem).map(async it => {
+    it.origem = await origemDaMateria(it.link);
+  })), ms).catch(() => {});
+}
+// as que não ficaram prontas a tempo entram no card depois
+async function completaOrigensAtrasadas(){
+  for (const [i, it] of itens.entries()){
+    if (it.origem) continue;
+    try{
+      it.origem = await origemDaMateria(it.link);
+      const el = palco.querySelector(`.card[data-i="${i}"] .origem`);
+      if (el && itens[i] === it){ el.textContent = it.origem; ajustaAreaDeImagem(el.closest('.card')); }
+    }catch(e){}
+  }
+}
+
 async function preparaImagens(lista, ms){
   await comTempoLimite(Promise.all(lista.map(async it => { it.imagem = await resolveImagem(it.imagens); })), ms).catch(() => {});
 }
@@ -1098,9 +1232,27 @@ async function carrega(){
   clearTimeout(timerRetentativa);
   status('carregando', 'atualizando…');
   try{
-    const html = await htmlDaPaginaPrincipal();
-    const novos = extraiNoticias(html, CONFIG.SITE + '/');
-    await Promise.all([preparaImagens(novos, 12000), completaTitulos(novos, 8000)]);
+    let novos = [];
+    try{
+      novos = extraiNoticias(await htmlDaPaginaPrincipal(), CONFIG.SITE + '/');
+    }catch(e){ console.warn('[Destaques] leitura da página principal falhou:', e); }
+    const daPagina = novos.length;
+    const alvo = Math.min(Math.max(CONFIG.QUANTIDADE, CONFIG.MIN_DA_PAGINA), CONFIG.MAX_ITENS);
+    if (novos.length < alvo){
+      // completa com as últimas matérias publicadas (e é o plano B se a página falhou)
+      try{
+        const vistos = new Set(novos.map(i => i.link));
+        const extras = (await noticiasDaApi()).filter(i => !vistos.has(i.link)).slice(0, alvo - novos.length);
+        novos = novos.concat(extras);
+        if (daPagina < CONFIG.MIN_DA_PAGINA && extras.length)
+          console.warn(`[Destaques] página principal trouxe poucas notícias; ${extras.length} vieram da API (plano B)`);
+      }catch(e){ console.warn('[Destaques] não foi possível completar pela API:', e); }
+    }
+    // 'pagina' = leitura normal (mesmo completando a quantidade); 'pagina+api' ou 'api' = plano B
+    const fonte = daPagina >= CONFIG.MIN_DA_PAGINA ? 'pagina' : (daPagina ? 'pagina+api' : 'api');
+    if (!novos.length) throw new Error('nenhuma notícia com foto encontrada');
+    fonteNoticias = fonte;
+    await Promise.all([preparaImagens(novos, 12000), completaTitulos(novos, 8000), completaOrigens(novos, 8000)]);
 
     try{ localStorage.setItem('noticiasUFSM:v3', JSON.stringify(novos)); }catch(e){}
     aplica(novos);
@@ -1108,6 +1260,7 @@ async function carrega(){
     status('ok', '');   // a hora da última atualização fica só no rodapé
     rodape();
     completaImagensFaltantes();
+    completaOrigensAtrasadas();
   }catch(e){
     console.warn('[Destaques] falha na atualização:', e);
     if (!itens.length){

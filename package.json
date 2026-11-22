@@ -1,7 +1,7 @@
 {
   "name": "destaques-ufsm",
   "productName": "Destaques UFSM",
-  "version": "1.4.4",
+  "version": "1.5.0",
   "description": "Painel de notícias da UFSM em tela cheia — todas as notícias com foto da página principal",
   "main": "main.js",
   "author": {
@@ -14,7 +14,8 @@
     "painel": "node scripts/construir-painel.mjs",
     "dist": "npm run painel && electron-builder --win --linux --publish never",
     "dist:win": "npm run painel && electron-builder --win --publish never",
-    "dist:linux": "npm run painel && electron-builder --linux --publish never"
+    "dist:linux": "npm run painel && electron-builder --linux --publish never",
+    "teste:portal": "node testes/portal.mjs"
   },
   "devDependencies": {
     "@fontsource/barlow": "^5.3.0",
@@ -51,7 +52,14 @@
       "pt-BR",
       "en-US"
     ],
-    "publish": null,
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "danielcarli",
+        "repo": "Totem-UFSM-noticias",
+        "releaseType": "release"
+      }
+    ],
     "win": {
       "target": [
         {
@@ -164,5 +172,8 @@
   },
   "bugs": {
     "url": "https://github.com/danielcarli/Totem-UFSM-noticias/issues"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.12"
   }
 }
