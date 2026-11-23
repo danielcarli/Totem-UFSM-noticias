@@ -472,7 +472,7 @@ LEIA-ME.txt            instruções que acompanham os instaladores
    15 minutos. Os links de [Download](#download) passam a apontar para ela, e os painéis já
    instalados se atualizam sozinhos (pelos arquivos `latest.yml` e `latest-linux.yml` da release).
 
-Também dá para publicar à mão: `git tag v1.7.0 && git push origin v1.7.0` depois de enviar o
+Também dá para publicar à mão: `git tag v1.7.1 && git push origin v1.7.1` depois de enviar o
 código, ou gerar com `npm run dist` e criar a release em
 [Releases](https://github.com/danielcarli/Totem-UFSM-noticias/releases/new), anexando os arquivos
 de `dist/` e o `navegador/destaques-ufsm.html`, com os mesmos nomes.

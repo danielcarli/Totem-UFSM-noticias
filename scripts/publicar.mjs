@@ -42,10 +42,28 @@ function erro(t, ...dicas){
   console.error('');
   process.exit(1);
 }
-// roda o git; 'mostrar' deixa a saída (e o pedido de login) aparecer na tela
+// roda o git; 'mostrar' deixa a saída aparecer na tela (o pedido de login do Git continua
+// funcionando). Comandos que usam a internet tentam de novo se a rede falhar por um instante.
+const ERRO_DE_REDE = /could not resolve host|failed to connect|timed out|connection (reset|refused|was reset)|unable to access|early eof|network is unreachable|temporary failure/i;
+const espera = ms => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 function git(lista, { mostrar = false, falhaOk = false } = {}){
-  const r = spawnSync('git', lista, { encoding: 'utf8', stdio: mostrar ? 'inherit' : 'pipe' });
-  if (r.error) erro('O Git não foi encontrado.', 'Instale em https://git-scm.com e abra o terminal de novo.');
+  const usaRede = ['fetch', 'push', 'ls-remote', 'pull'].includes(lista[0]);
+  let r;
+  for (let tentativa = 1; ; tentativa++){
+    r = spawnSync('git', lista, { encoding: 'utf8', stdio: ['inherit', mostrar ? 'inherit' : 'pipe', 'pipe'] });
+    if (r.error) erro('O Git não foi encontrado.', 'Instale em https://git-scm.com e abra o terminal de novo.');
+    if (r.status === 0 || !usaRede || !ERRO_DE_REDE.test(r.stderr || '') || tentativa === 3) break;
+    alerta(`sem resposta do GitHub (${(r.stderr.match(ERRO_DE_REDE) || [''])[0]}); tentando de novo em ${tentativa * 5} s…`);
+    espera(tentativa * 5000);
+  }
+  if (mostrar && r.stderr) process.stderr.write(r.stderr);
+  if (r.status !== 0 && usaRede && ERRO_DE_REDE.test(r.stderr || '')){
+    erro('Não foi possível falar com o GitHub (github.com).',
+         'Confira se este computador está com internet e se abre https://github.com no navegador.',
+         'Se a rede usa proxy, configure no Git:  git config --global http.proxy http://endereco:porta',
+         'Depois é só rodar o comando de novo.',
+         '', 'Mensagem do Git: ' + (r.stderr || '').trim().split('\n').filter(Boolean).pop());
+  }
   if (r.status !== 0 && !falhaOk){
     erro(`Falhou: git ${lista.join(' ')}`, ...(r.stderr || '').trim().split('\n').filter(Boolean));
   }
@@ -191,10 +209,9 @@ if (versao !== atual){
   }
   ok('versão atualizada no package.json');
 }
-// selo e exemplo de tag no README
+// selo da versão no README
 const novoReadme = readme
-  .replace(/(img\.shields\.io\/badge\/vers%C3%A3o-)[\d.]+(-)/, `$1${versao}$2`)
-  .replace(/git tag v[\d.]+ && git push origin v[\d.]+/, `git tag ${tag} && git push origin ${tag}`);
+  .replace(/(img\.shields\.io\/badge\/vers%C3%A3o-)[\d.]+(-)/, `$1${versao}$2`);
 if (novoReadme !== readme){ fs.writeFileSync('README.md', novoReadme); ok('versão atualizada no README'); }
 
 const painel = spawnSync(process.execPath, ['scripts/construir-painel.mjs'], { stdio: 'inherit' });
