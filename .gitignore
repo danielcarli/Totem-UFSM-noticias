@@ -2,3 +2,4 @@ node_modules/
 dist/
 .electron-zips/
 *.log
+dev-app-update.yml

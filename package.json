@@ -1,7 +1,7 @@
 {
   "name": "destaques-ufsm",
   "productName": "Destaques UFSM",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Painel de notícias da UFSM em tela cheia — todas as notícias com foto da página principal",
   "main": "main.js",
   "author": {

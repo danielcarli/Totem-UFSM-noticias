@@ -271,25 +271,64 @@ function registra(...partes){
   }catch(e){}
 }
 
+// estado da atualização, mostrado na tela de configurações do painel
+// modo: 'auto' (baixa e instala sozinho), 'aviso' (.deb/.rpm: só avisa) ou 'desligada'
+const atualizacao = { modo: 'desligada', estado: 'parada', versao: app.getVersion(), nova: '', progresso: 0, erro: '', ultimaBusca: null, instalaEm: null };
+let atualizador = null;
+function publicaAtualizacao(mudancas = {}){
+  Object.assign(atualizacao, mudancas);
+  if (janela && !janela.isDestroyed()) janela.webContents.send('atualizacao', atualizacao);
+}
+function buscaAtualizacao(){
+  if (!atualizador || atualizacao.estado === 'procurando' || atualizacao.estado === 'baixando') return;
+  publicaAtualizacao({ estado: 'procurando', erro: '' });
+  atualizador.checkForUpdates().catch(e => {
+    registra('falha ao verificar:', e);
+    publicaAtualizacao({ estado: 'erro', erro: String((e && e.message) || e).split('\n')[0].slice(0, 160), ultimaBusca: Date.now() });
+  });
+}
+function instalaAtualizacaoAgora(){
+  if (!atualizador || atualizacao.estado !== 'baixada') return false;
+  gravarConfig({ reabrirCom: opcoesEmUso() });
+  registra('instalando agora, pela tela de configurações:', atualizacao.nova);
+  setTimeout(() => atualizador.quitAndInstall(true, true), 300);
+  return true;
+}
+
 function configuraAtualizacao(){
-  if (!app.isPackaged || arg('sem-atualizacao')) return;
+  // (para testes fora do instalador: DESTAQUES_FEED_TESTE=http://servidor/pasta-com-latest.yml)
+  const feedTeste = process.env.DESTAQUES_FEED_TESTE;
+  if ((!app.isPackaged && !feedTeste) || arg('sem-atualizacao')) return;
   let autoUpdater;
   try{ ({ autoUpdater } = require('electron-updater')); }
   catch(e){ registra('electron-updater indisponível:', e); return; }
+  if (feedTeste){ autoUpdater.forceDevUpdateConfig = true; autoUpdater.setFeedURL({ provider: 'generic', url: feedTeste }); }
+  atualizador = autoUpdater;
 
   // .deb e .rpm precisam de senha de administrador para atualizar: nesses, só avisa
   const soAvisa = process.platform === 'linux' && !process.env.APPIMAGE;
+  atualizacao.modo = soAvisa ? 'aviso' : 'auto';
   autoUpdater.autoDownload = !soAvisa;
   autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.logger = { info: m => registra('info', m), warn: m => registra('aviso', m), error: m => registra('erro', m), debug: () => {} };
 
   let agendada = null;
+  autoUpdater.on('checking-for-update', () => publicaAtualizacao({ estado: 'procurando', erro: '' }));
   autoUpdater.on('update-available', info => {
     registra('versão nova disponível:', info.version);
+    if (atualizacao.estado !== 'baixada') publicaAtualizacao({ estado: 'disponivel', nova: info.version, progresso: 0, ultimaBusca: Date.now() });
     if (soAvisa) avisoNaTela(`Versão ${info.version} disponível — github.com/danielcarli/Totem-UFSM-noticias`, 15000, true);
   });
-  autoUpdater.on('update-not-available', () => registra('sem versão nova'));
-  autoUpdater.on('error', e => registra('falha:', e));
+  autoUpdater.on('download-progress', p => publicaAtualizacao({ estado: 'baixando', progresso: Math.round(p.percent || 0) }));
+  autoUpdater.on('update-not-available', () => {
+    registra('sem versão nova');
+    publicaAtualizacao({ estado: 'atual', nova: '', ultimaBusca: Date.now() });
+  });
+  autoUpdater.on('error', e => {
+    registra('falha:', e);
+    if (atualizacao.estado !== 'baixada')
+      publicaAtualizacao({ estado: 'erro', erro: String((e && e.message) || e).split('\n')[0].slice(0, 160), ultimaBusca: Date.now() });
+  });
   autoUpdater.on('update-downloaded', info => {
     registra('baixada a versão', info.version);
     if (agendada) return;
@@ -301,6 +340,7 @@ function configuraAtualizacao(){
     const teste = parseInt(process.env.DESTAQUES_INSTALAR_EM_SEG, 10);
     if (teste > 0) quando.setTime(agora.getTime() + teste * 1000);
     registra('instalação agendada para', quando.toLocaleString('pt-BR'), `(versão ${app.getVersion()} → ${info.version})`);
+    publicaAtualizacao({ estado: 'baixada', nova: info.version, progresso: 100, instalaEm: quando.getTime() });
     agendada = setTimeout(() => {
       gravarConfig({ reabrirCom: opcoesEmUso() });
       registra('instalando', info.version);
@@ -308,13 +348,15 @@ function configuraAtualizacao(){
     }, quando - agora);
   });
 
-  const verifica = () => autoUpdater.checkForUpdates().catch(e => registra('falha ao verificar:', e));
-  setTimeout(verifica, 60 * 1000);
-  setInterval(verifica, 6 * 60 * 60 * 1000);
+  setTimeout(buscaAtualizacao, 60 * 1000);
+  setInterval(buscaAtualizacao, 6 * 60 * 60 * 1000);
 }
 
 /* --- ponte com a tela de configurações do painel (preload.js) -------- */
 ipcMain.on('configurando', (_, aberta) => { configurando = !!aberta; });
+ipcMain.handle('atualizacao:estado', () => atualizacao);
+ipcMain.handle('atualizacao:buscar', () => { buscaAtualizacao(); return atualizacao; });
+ipcMain.handle('atualizacao:instalar', () => instalaAtualizacaoAgora());
 ipcMain.handle('monitores', () => {
   const atual = janela ? screen.getDisplayMatching(janela.getBounds()).id : null;
   return telasEmOrdem().map((t, i) => ({ numero: i + 1, largura: t.size.width, altura: t.size.height, atual: t.id === atual }));

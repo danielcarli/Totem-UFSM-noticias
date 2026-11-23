@@ -4,7 +4,7 @@
 
 **Painel de notícias para TVs e totens da Universidade Federal de Santa Maria**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.7.0-0b5394)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.7.1-0b5394)
 ![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-e7640a)
 ![Plataformas](https://img.shields.io/badge/plataformas-Windows%20%7C%20Linux-1ab2af)
 ![Electron](https://img.shields.io/badge/Electron-45-47848f)
@@ -95,7 +95,7 @@ inteira, com textos e QR code maiores ("Leia no celular").
 
 **Identidade institucional.** A marca da UFSM fica no topo; a Coordenadoria de Comunicação e a
 Agência de Notícias, que desenvolve o painel, assinam no rodapé, com a hora da última atualização
-e, bem discreta embaixo dela, a versão do painel (ex.: `v1.7.0`) — útil para saber se uma TV já
+e, bem discreta embaixo dela, a versão do painel (ex.: `v1.7.1`) — útil para saber se uma TV já
 recebeu a atualização.
 Abaixo do título de cada matéria aparece o **site de onde ela vem**: o portal da UFSM é formado por
 muitos subsites (pró-reitorias, centros, cursos), e as matérias da página principal são da
@@ -298,6 +298,21 @@ Como as notícias são escolhidas:
   nenhum dos sites escolhidos tiver matéria recente e o portal estiver desmarcado, o painel mostra
   as notícias do portal para a tela não ficar vazia, e avisa no topo.
 
+### Versão e atualizações
+
+No fim da tela de configurações aparece a versão instalada e o botão **Buscar atualização**, para
+não precisar esperar a busca automática (que acontece 1 minuto depois de abrir e a cada 6 horas).
+
+<img src="docs/config-atualizacao.jpg" alt="Versão e atualizações na tela de configurações" width="700">
+
+- **Windows e AppImage:** se houver versão nova, ela é baixada na hora (com o andamento em %) e
+  fica pronta para instalar de madrugada, às 4h30. Para instalar já, use **Instalar agora e
+  reiniciar**: o painel fecha, atualiza e abre de novo sozinho, com as mesmas opções.
+- **Linux com .deb ou .rpm:** instalar precisa da senha de administrador, então o painel só avisa
+  que há versão nova e onde baixar.
+- **Versão para navegador:** o botão confere a última versão publicada no GitHub e avisa se há
+  uma mais nova para baixar.
+
 ### Salvar
 
 <img src="docs/config-rodape.jpg" alt="Total de sites e notícias, e botões da tela de configurações" width="700">
@@ -452,7 +467,7 @@ LEIA-ME.txt            instruções que acompanham os instaladores
 2. Rode o script de publicação, na pasta do projeto:
 
    ```bash
-   npm run publicar -- 1.7.1     # ou: patch (1.7.0 → 1.7.1), minor (→ 1.8.0), major (→ 2.0.0)
+   npm run publicar -- 1.7.2     # ou: patch (1.7.1 → 1.7.2), minor (→ 1.8.0), major (→ 2.0.0)
    ```
 
    No Windows também dá para dar dois cliques em **`publicar.cmd`** (publica a versão que está
@@ -462,7 +477,7 @@ LEIA-ME.txt            instruções que acompanham os instaladores
    - atualiza a versão no `package.json`, no `package-lock.json` e no selo do README;
    - gera o painel (`npm run painel`);
    - mostra os arquivos que mudaram e pergunta antes de enviar;
-   - envia o código e a tag `v1.7.1`.
+   - envia o código e a tag `v1.7.2`.
 
    Opções: `--teste` (só mostra o que faria), `--sem-tag` (envia o código sem gerar instaladores),
    `--mensagem "texto"` (mensagem do commit) e `--sim` (não pergunta). Precisa do
@@ -472,7 +487,7 @@ LEIA-ME.txt            instruções que acompanham os instaladores
    15 minutos. Os links de [Download](#download) passam a apontar para ela, e os painéis já
    instalados se atualizam sozinhos (pelos arquivos `latest.yml` e `latest-linux.yml` da release).
 
-Também dá para publicar à mão: `git tag v1.7.1 && git push origin v1.7.1` depois de enviar o
+Também dá para publicar à mão: `git tag v1.7.2 && git push origin v1.7.2` depois de enviar o
 código, ou gerar com `npm run dist` e criar a release em
 [Releases](https://github.com/danielcarli/Totem-UFSM-noticias/releases/new), anexando os arquivos
 de `dist/` e o `navegador/destaques-ufsm.html`, com os mesmos nomes.
@@ -481,6 +496,7 @@ de `dist/` e o `navegador/destaques-ufsm.html`, com os mesmos nomes.
 
 | Versão | Novidades |
 |---|---|
+| **1.7.1** | Botão **Buscar atualização** na tela de configurações, com a versão instalada, o andamento do download e **Instalar agora e reiniciar** quando a versão nova já foi baixada; teste diário fixo no Ubuntu 24.04; script de publicação tenta de novo quando a rede falha. |
 | **1.7.0** | Tela de configurações (engrenagem ao lado do relógio ou tecla C): de onde vêm as notícias — portal com 12 por padrão e, se quiser, Gabinete da Reitoria, pró-reitorias, diretorias (DTI e DRI), unidades de ensino e campi, com a quantidade de cada um —, nome da TV, monitor (com o número do monitor atual) e tempo de cada notícia na tela; player da rádio UNIFM 107,9 ao vivo (desligado por padrão, tecla M); notícias das mídias da UFSM (Rádios, TV Campus, Revista .TXT), com os vídeos em destaque da TV Campus (título e capa do YouTube); quando os sites escolhidos não têm nada recente, mostra o portal em vez da tela vazia; símbolo da unidade ao lado do site de origem (Agência de Notícias, centros e colégios; brasão da UFSM em linhas para os demais); matérias com mais de 30 dias ficam de fora (`--dias`); origem do portal como "Agência de Notícias UFSM - Portal Institucional"; versão do painel discreta no rodapé; script `npm run publicar` para publicar no GitHub. |
 | **1.5.0** | Atualização automática pelas Releases do GitHub (instala de madrugada e reabre com as mesmas opções); site de origem abaixo do título de cada matéria; carrossel com 30 notícias (completa com as últimas matérias do portal); leituras do QR code medidas no Google Analytics (`--local`); plano B pela API do WordPress quando a página principal muda de layout; teste diário contra o portal no GitHub Actions. |
 | **1.4.4** | Notícias com GIF animado como imagem de destaque (ex.: "Lembre bem") também aparecem, com a animação no card; nesses casos o fundo desfocado não usa o GIF, para não pesar na placa de vídeo. |

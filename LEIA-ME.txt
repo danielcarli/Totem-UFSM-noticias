@@ -52,7 +52,10 @@ CONFIGURAÇÕES
   - o tempo de cada notícia na tela, de 4 a 60 segundos (padrão 7);
   - a rádio UNIFM 107,9 ao vivo (desligada por padrão): o player fica na lateral
     direita (no totem, no topo), pode começar a tocar sozinho e tem volume próprio.
-    Se a transmissão cair, tenta de novo sozinho.
+    Se a transmissão cair, tenta de novo sozinho;
+  - versão e atualizações: mostra a versão instalada e tem o botão "Buscar
+    atualização". Se houver versão nova, ela é baixada e instalada às 4h30, ou
+    na hora pelo botão "Instalar agora e reiniciar".
   Enquanto ela está aberta, o carrossel para; Esc ou Cancelar fecham sem mudar
   nada. "Salvar e aplicar" guarda e já busca as notícias de novo; "Restaurar
   padrão" volta ao portal com 12 notícias.

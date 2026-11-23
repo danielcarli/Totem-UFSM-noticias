@@ -148,6 +148,16 @@ body.idle{cursor:none}
 .grupo-fontes{margin-bottom:1.1em}
 .grupo-fontes h4{font-size:.95em;font-weight:600;color:var(--texto-2);margin:.2em 0 .5em}
 .lista-fontes{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:.45em .9em}
+.atualiza{display:flex;align-items:center;gap:1em;flex-wrap:wrap;padding:.8em 1em;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--vidro-borda)}
+.atualiza-info{flex:1 1 300px;display:grid;gap:.25em;min-width:0}
+.atualiza-info b{font-weight:700}
+.atualiza-info b span{color:var(--texto-2);font-weight:500;margin-left:.3em;font-variant-numeric:tabular-nums}
+.atualiza-info > span{color:var(--texto-2);font-size:.92em}
+.atualiza[data-estado="baixada"] .atualiza-info > span,.atualiza[data-estado="disponivel"] .atualiza-info > span{color:var(--texto)}
+.atualiza[data-estado="erro"] .atualiza-info > span{color:var(--laranja)}
+.atualiza-barra{height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:.3em}
+.atualiza-barra i{display:block;height:100%;width:var(--p,0%);background:var(--laranja);transition:width .4s}
+.config button:disabled{opacity:.5;cursor:default}
 .radio-cfg{display:flex;align-items:flex-start;gap:1.4em}
 .radio-cfg-logo{width:5.2em;height:auto;flex:none;margin-top:.2em;opacity:.95}
 .radio-cfg-campos{display:grid;gap:.55em;flex:1;min-width:0}
@@ -576,6 +586,19 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
         <h3>De onde vêm as notícias</h3>
         <p class="ajuda" style="margin:0 0 .9em">Marque os sites e quantas matérias com foto de cada um entram no carrossel. As notícias dos sites se alternam ao longo da rotação. Só entram matérias publicadas nos últimos 30 dias.</p>
         <div id="cfgFontes"></div>
+      </section>
+      <section>
+        <h3>Versão e atualizações</h3>
+        <div class="atualiza" id="cfgAtualiza" data-estado="parada">
+          <div class="atualiza-info">
+            <b>Destaques UFSM <span id="cfgVersao">v__VERSAO__</span></b>
+            <span id="cfgAtualizaTxt"></span>
+            <div class="atualiza-barra" id="cfgAtualizaBarra" hidden><i></i></div>
+          </div>
+          <button type="button" class="sec" id="cfgBuscarAtualizacao">Buscar atualização</button>
+          <button type="button" class="pri" id="cfgInstalarAtualizacao" hidden>Instalar agora e reiniciar</button>
+        </div>
+        <p class="ajuda" id="cfgAtualizaAjuda">As versões novas são baixadas sozinhas e instaladas de madrugada (4h30), sem ninguém precisar mexer na TV.</p>
       </section>
     </div>
     <footer>
@@ -1793,6 +1816,75 @@ $('#btnAtualizar').onclick = carrega;
 $('#btnTela').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
 /* ---------- tela de configurações (engrenagem ao lado do relógio, ou tecla C) ---------- */
 const appDesktop = window.destaquesApp || null;   // ponte com o aplicativo (só existe no Electron)
+
+/* ---------- versão e atualizações (tela de configurações) ---------- */
+const VERSAO_PAINEL = '__VERSAO__';
+const REPO_GITHUB = 'danielcarli/Totem-UFSM-noticias';
+const appAtualiza = appDesktop && appDesktop.atualizacao;
+const comparaVersoes = (a, b) => {                 // >0 se a for mais nova que b
+  const x = String(a).replace(/^v/, '').split('.').map(Number), y = String(b).replace(/^v/, '').split('.').map(Number);
+  for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0);
+  return 0;
+};
+function mostraAtualizacao(a){
+  const caixa = $('#cfgAtualiza'), txt = $('#cfgAtualizaTxt'), barra = $('#cfgAtualizaBarra');
+  const buscar = $('#cfgBuscarAtualizacao'), instalar = $('#cfgInstalarAtualizacao');
+  caixa.dataset.estado = a.estado;
+  if (a.versao) $('#cfgVersao').textContent = 'v' + a.versao;
+  const hora = a.ultimaBusca ? ` (busca às ${fmtHora(new Date(a.ultimaBusca))})` : '';
+  const textos = {
+    desligada: 'A atualização automática só funciona no aplicativo instalado.',
+    parada: a.modo === 'navegador' ? 'Clique em "Buscar atualização" para conferir se há versão nova.' : 'Procura versões novas sozinho a cada 6 horas.',
+    procurando: 'Procurando versão nova…',
+    atual: `Esta é a versão mais recente${hora}.`,
+    disponivel: a.modo === 'aviso'
+      ? `Versão ${a.nova} disponível. Neste Linux (.deb/.rpm), baixe e instale pelo site: github.com/${REPO_GITHUB}/releases`
+      : a.modo === 'navegador'
+        ? `Versão ${a.nova} disponível em github.com/${REPO_GITHUB}/releases`
+        : `Versão ${a.nova} encontrada — baixando…`,
+    baixando: `Baixando a versão ${a.nova}… ${a.progresso || 0}%`,
+    baixada: `Versão ${a.nova} pronta. Instala sozinha às ${a.instalaEm ? fmtHora(new Date(a.instalaEm)) : '4h30'}, ou agora:`,
+    erro: `Não foi possível procurar agora${a.erro ? ` (${a.erro})` : ''}. Confira a internet e tente de novo.`,
+  };
+  txt.textContent = a.modo === 'desligada' ? textos.desligada : (textos[a.estado] || textos.parada);
+  barra.hidden = !['baixando', 'disponivel'].includes(a.estado) || a.modo !== 'auto';
+  barra.style.setProperty('--p', (a.progresso || 0) + '%');
+  buscar.disabled = a.modo === 'desligada' || ['procurando', 'baixando'].includes(a.estado) || (a.estado === 'disponivel' && a.modo === 'auto');
+  buscar.textContent = a.estado === 'procurando' ? 'Procurando…' : 'Buscar atualização';
+  instalar.hidden = a.estado !== 'baixada';
+  $('#cfgAtualizaAjuda').textContent = a.modo === 'aviso'
+    ? 'Neste computador (Linux com .deb ou .rpm) o painel só avisa da versão nova: instalar precisa da senha de administrador.'
+    : a.modo === 'navegador' || a.modo === 'desligada'
+      ? 'Na versão para navegador, baixe a versão nova pela página de Releases do projeto e troque o arquivo.'
+      : 'As versões novas são baixadas sozinhas e instaladas de madrugada (4h30), sem ninguém precisar mexer na TV.';
+}
+// navegador: não se atualiza sozinho; só confere a última versão publicada no GitHub
+let estadoNavegador = { modo: 'navegador', estado: 'parada', versao: VERSAO_PAINEL };
+async function buscaAtualizacaoNoNavegador(){
+  estadoNavegador = { ...estadoNavegador, estado: 'procurando' }; mostraAtualizacao(estadoNavegador);
+  try{
+    const r = await comTempoLimite(fetch(`https://api.github.com/repos/${REPO_GITHUB}/releases/latest`, { credentials: 'omit' }).then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))), 12000);
+    const nova = String(r.tag_name || '').replace(/^v/, '');
+    estadoNavegador = { ...estadoNavegador, ultimaBusca: Date.now(), erro: '',
+      ...(nova && comparaVersoes(nova, VERSAO_PAINEL) > 0 ? { estado: 'disponivel', nova } : { estado: 'atual', nova: '' }) };
+  }catch(e){ estadoNavegador = { ...estadoNavegador, estado: 'erro', erro: String(e.message || e).slice(0, 80), ultimaBusca: Date.now() }; }
+  mostraAtualizacao(estadoNavegador);
+}
+async function preparaAtualizacao(){
+  if (appAtualiza){ try{ mostraAtualizacao(await appAtualiza.estado()); }catch(e){} }
+  else mostraAtualizacao(estadoNavegador);
+}
+if (appAtualiza) appAtualiza.aoMudar(mostraAtualizacao);
+$('#cfgBuscarAtualizacao').addEventListener('click', async () => {
+  if (appAtualiza){ try{ mostraAtualizacao(await appAtualiza.buscar()); }catch(e){} }
+  else buscaAtualizacaoNoNavegador();
+});
+$('#cfgInstalarAtualizacao').addEventListener('click', async () => {
+  if (!appAtualiza) return;
+  $('#cfgInstalarAtualizacao').disabled = true;
+  $('#cfgAtualizaTxt').textContent = 'Instalando… o painel fecha e abre de novo sozinho.';
+  try{ await appAtualiza.instalar(); }catch(e){ $('#cfgInstalarAtualizacao').disabled = false; }
+});
 let configAberta = false, pausadoAntesDaConfig = false;
 
 // depois de uma busca: avisa nos sites marcados que não trouxeram nada
@@ -1861,6 +1953,7 @@ async function abreConfig(){
   if (params.get('local') && !c.tv) c.tv = params.get('local');
   $('#cfgTv').value = c.tv;
   preencheRadio(c.radio);
+  preparaAtualizacao();
   // --intervalo na linha de comando vale por cima da tela de configurações
   const porOpcao = parseFloat(params.get('intervalo')) > 0;
   $('#cfgIntervalo').value = porOpcao ? PAINEL.intervalo : c.intervalo;
