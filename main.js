@@ -44,6 +44,8 @@
      .rpm, só avisa na tela que há versão nova. Registro: atualizacao.log na pasta de dados.
    ================================================================== */
 const { app, BrowserWindow, Menu, session, screen, powerSaveBlocker, ipcMain } = require('electron');
+// TV/totem não tem ninguém para tocar na tela: libera o som automático (rádio UNIFM)
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -184,6 +186,7 @@ function criaJanela(){
       sandbox: true,
       preload: path.join(__dirname, 'preload.js'),
       backgroundThrottling: false,   // não desacelera o carrossel se a janela perder o foco
+      autoplayPolicy: 'no-user-gesture-required',   // a rádio UNIFM pode começar a tocar sozinha
     },
   });
 

@@ -4,7 +4,7 @@
 
 **Painel de notícias para TVs e totens da Universidade Federal de Santa Maria**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.6.0-0b5394)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.7.0-0b5394)
 ![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-e7640a)
 ![Plataformas](https://img.shields.io/badge/plataformas-Windows%20%7C%20Linux-1ab2af)
 ![Electron](https://img.shields.io/badge/Electron-45-47848f)
@@ -95,7 +95,7 @@ inteira, com textos e QR code maiores ("Leia no celular").
 
 **Identidade institucional.** A marca da UFSM fica no topo; a Coordenadoria de Comunicação e a
 Agência de Notícias, que desenvolve o painel, assinam no rodapé, com a hora da última atualização
-e, bem discreta embaixo dela, a versão do painel (ex.: `v1.6.0`) — útil para saber se uma TV já
+e, bem discreta embaixo dela, a versão do painel (ex.: `v1.7.0`) — útil para saber se uma TV já
 recebeu a atualização.
 Abaixo do título de cada matéria aparece o **site de onde ela vem**: o portal da UFSM é formado por
 muitos subsites (pró-reitorias, centros, cursos), e as matérias da página principal são da
@@ -111,8 +111,10 @@ Agência — nelas aparece "Agência de Notícias UFSM - Portal Institucional".
   as demais áreas. Notícia nova entra sozinha; a que saiu do portal sai do painel. Se a página
   tiver menos notícias com foto que o configurado (12), completa com as últimas matérias do portal.
 - **Notícias de outros sites da UFSM.** Pela tela de configurações, entram também as matérias do
-  Gabinete da Reitoria, das pró-reitorias, das diretorias (DTI e DRI), das unidades de ensino e
-  dos campi.
+  Gabinete da Reitoria, das pró-reitorias, das diretorias (DTI e DRI), das unidades de ensino,
+  dos campi e das mídias da UFSM (Rádios, TV Campus e Revista .TXT).
+- **Rádio UNIFM 107,9 ao vivo (opcional).** Um player discreto, na identidade da UNIFM, na
+  lateral direita da tela (no totem, no topo). Desligado por padrão; liga-se na engrenagem.
 - **Feito para ser visto de longe.** Títulos grandes, editoria, data e site de origem de cada
   matéria, e um QR code para continuar a leitura no celular.
 - **Marca de quem publicou.** Ao lado do site de origem aparece, discreto e na cor do texto, o
@@ -142,6 +144,8 @@ Agência — nelas aparece "Agência de Notícias UFSM - Portal Institucional".
   (plano B). E um teste diário no GitHub avisa por e-mail quando isso acontece.
 - **Modo noite.** Opcionalmente, deixa a tela preta em um horário (ex.: das 23h às 6h).
 - **Só lê o site.** Não envia nenhum dado sobre o computador ou sobre quem está diante da tela.
+  Com a rádio UNIFM ligada, também recebe o áudio do servidor da transmissão
+  (`stream3.svrdedicado.org`), como qualquer player da rádio.
 
 ## Instalação
 
@@ -227,6 +231,35 @@ fecham sem mudar nada.
   dos banners largos. Se o atalho do painel tiver a opção `--intervalo`, o campo fica travado e
   vale o valor da opção.
 
+### Rádio UNIFM 107,9
+
+O painel pode tocar ao vivo a [UNIFM 107,9](https://www.ufsm.br/orgaos-suplementares/radio), a
+rádio da UFSM. **Vem desligado**: marque *Mostrar o player da rádio no painel* e salve.
+
+<img src="docs/config-radio.jpg" alt="Configurações da rádio UNIFM" width="700">
+
+- **Começar a tocar sozinha quando o painel abrir** — para TVs e totens sem ninguém por perto.
+  No aplicativo, a rádio começa sozinha. No navegador, que só libera som depois de um toque, o
+  player pisca *Toque para ouvir* até o primeiro toque ou tecla — no Chrome ou Edge em modo
+  quiosque, a opção `--autoplay-policy=no-user-gesture-required` libera o som automático.
+- **Volume** — muda na hora enquanto arrasta, para testar no som da TV (Cancelar desfaz).
+
+O player fica na lateral direita, no mesmo estilo de vidro do painel, com a marca da UNIFM
+(versão negativa, branca) e o laranja da marca no equalizador. No totem (vertical), vira uma
+faixa no topo, entre a marca da UFSM e o relógio. Sem ninguém mexendo no mouse, ele fica
+semitransparente.
+
+<img src="docs/radio-lateral.jpg" alt="Player da rádio UNIFM na lateral direita do painel" width="340">
+<img src="docs/radio-totem.jpg" alt="Player da rádio UNIFM no topo do totem" width="540">
+
+- **▶ / ❚❚** liga e pausa (ou a tecla **M**); o alto-falante tira e devolve o som.
+- *Ao vivo* com o equalizador mexendo = tocando. *Conectando* ou *Reconectando* = buscando a
+  transmissão. Se a internet ou a transmissão cair, o player tenta de novo sozinho (em 3 s,
+  6 s, 12 s… até 1 minuto entre as tentativas).
+- No horário noturno (`--noite`), a rádio também para, e volta de manhã.
+- Ao pausar, a transmissão é desligada (não fica baixando áudio). Ao voltar, entra de novo no ao
+  vivo.
+
 ### De onde vêm as notícias
 
 Cada site tem uma caixa para marcar e, ao lado, quantas matérias com foto dele entram no
@@ -241,6 +274,13 @@ carrossel (de 1 a 30). O símbolo ao lado de cada nome é o mesmo que aparece no
 | Diretorias | DTI, DRI | brasão da UFSM em linhas |
 | Unidades de ensino | CAL, CCNE, CCR, CCS, CCSH, CE, CEFD, CT, CTISM, Colégio Politécnico | símbolo de cada unidade |
 | Campi | UFSM-CS (Cachoeira do Sul), UFSM-FW (Frederico Westphalen), UFSM-PM (Palmeira das Missões) | brasão da UFSM em linhas |
+| Mídias da UFSM | Rádios da UFSM, TV Campus, Revista .TXT | brasão da UFSM em linhas |
+
+**TV Campus:** entram primeiro os vídeos do YouTube em destaque na página inicial do site (TV
+Campus Entrevista, TVC…), na ordem em que aparecem lá. O título vem do próprio YouTube, a editoria
+é o programa e a capa do vídeo aparece como a foto das matérias; o QR code abre o vídeo no
+celular. Esses vídeos não têm data, então valem enquanto estiverem na página inicial. Depois vêm
+as matérias recentes do site — as que só têm vídeo também entram com a capa do YouTube.
 
 Como as notícias são escolhidas:
 
@@ -253,6 +293,10 @@ Como as notícias são escolhidas:
 - **Alternância:** as notícias dos sites se intercalam (portal, CT, campus, portal…), para variar
   ao longo da volta.
 - **Sem repetição:** uma matéria publicada em dois sites com o mesmo título aparece uma vez só.
+- **Site sem nada recente:** depois de uma busca, os sites marcados que não trouxeram matéria
+  aparecem com o aviso *sem matérias com foto nos últimos 30 dias* (ou *não respondeu*). Se
+  nenhum dos sites escolhidos tiver matéria recente e o portal estiver desmarcado, o painel mostra
+  as notícias do portal para a tela não ficar vazia, e avisa no topo.
 
 ### Salvar
 
@@ -286,6 +330,7 @@ símbolo da unidade:
 | Espaço | pausa / continua |
 | R | busca as notícias agora |
 | C | tela de configurações |
+| M | liga / pausa a rádio UNIFM (quando o player está ligado) |
 | 1 / 2 / 3 | leva o painel para o monitor 1, 2 ou 3 (da esquerda para a direita) e lembra a escolha |
 | F11 / Esc | entra / sai da tela cheia |
 | Ctrl+R | recarrega o painel |
@@ -407,7 +452,7 @@ LEIA-ME.txt            instruções que acompanham os instaladores
 2. Rode o script de publicação, na pasta do projeto:
 
    ```bash
-   npm run publicar -- 1.6.1     # ou: patch (1.6.0 → 1.6.1), minor (→ 1.7.0), major (→ 2.0.0)
+   npm run publicar -- 1.7.1     # ou: patch (1.7.0 → 1.7.1), minor (→ 1.8.0), major (→ 2.0.0)
    ```
 
    No Windows também dá para dar dois cliques em **`publicar.cmd`** (publica a versão que está
@@ -417,7 +462,7 @@ LEIA-ME.txt            instruções que acompanham os instaladores
    - atualiza a versão no `package.json`, no `package-lock.json` e no selo do README;
    - gera o painel (`npm run painel`);
    - mostra os arquivos que mudaram e pergunta antes de enviar;
-   - envia o código e a tag `v1.6.1`.
+   - envia o código e a tag `v1.7.1`.
 
    Opções: `--teste` (só mostra o que faria), `--sem-tag` (envia o código sem gerar instaladores),
    `--mensagem "texto"` (mensagem do commit) e `--sim` (não pergunta). Precisa do
@@ -427,7 +472,7 @@ LEIA-ME.txt            instruções que acompanham os instaladores
    15 minutos. Os links de [Download](#download) passam a apontar para ela, e os painéis já
    instalados se atualizam sozinhos (pelos arquivos `latest.yml` e `latest-linux.yml` da release).
 
-Também dá para publicar à mão: `git tag v1.6.0 && git push origin v1.6.0` depois de enviar o
+Também dá para publicar à mão: `git tag v1.7.0 && git push origin v1.7.0` depois de enviar o
 código, ou gerar com `npm run dist` e criar a release em
 [Releases](https://github.com/danielcarli/Totem-UFSM-noticias/releases/new), anexando os arquivos
 de `dist/` e o `navegador/destaques-ufsm.html`, com os mesmos nomes.
@@ -436,7 +481,7 @@ de `dist/` e o `navegador/destaques-ufsm.html`, com os mesmos nomes.
 
 | Versão | Novidades |
 |---|---|
-| **1.6.0** | Tela de configurações (engrenagem ao lado do relógio ou tecla C): de onde vêm as notícias — portal com 12 por padrão e, se quiser, Gabinete da Reitoria, pró-reitorias, diretorias (DTI e DRI), unidades de ensino e campi, com a quantidade de cada um —, nome da TV, monitor (com o número do monitor atual) e tempo de cada notícia na tela; símbolo da unidade ao lado do site de origem (Agência de Notícias, centros e colégios; brasão da UFSM em linhas para os demais); matérias com mais de 30 dias ficam de fora (`--dias`); origem do portal como "Agência de Notícias UFSM - Portal Institucional"; versão do painel discreta no rodapé; script `npm run publicar` para publicar no GitHub. |
+| **1.7.0** | Tela de configurações (engrenagem ao lado do relógio ou tecla C): de onde vêm as notícias — portal com 12 por padrão e, se quiser, Gabinete da Reitoria, pró-reitorias, diretorias (DTI e DRI), unidades de ensino e campi, com a quantidade de cada um —, nome da TV, monitor (com o número do monitor atual) e tempo de cada notícia na tela; player da rádio UNIFM 107,9 ao vivo (desligado por padrão, tecla M); notícias das mídias da UFSM (Rádios, TV Campus, Revista .TXT), com os vídeos em destaque da TV Campus (título e capa do YouTube); quando os sites escolhidos não têm nada recente, mostra o portal em vez da tela vazia; símbolo da unidade ao lado do site de origem (Agência de Notícias, centros e colégios; brasão da UFSM em linhas para os demais); matérias com mais de 30 dias ficam de fora (`--dias`); origem do portal como "Agência de Notícias UFSM - Portal Institucional"; versão do painel discreta no rodapé; script `npm run publicar` para publicar no GitHub. |
 | **1.5.0** | Atualização automática pelas Releases do GitHub (instala de madrugada e reabre com as mesmas opções); site de origem abaixo do título de cada matéria; carrossel com 30 notícias (completa com as últimas matérias do portal); leituras do QR code medidas no Google Analytics (`--local`); plano B pela API do WordPress quando a página principal muda de layout; teste diário contra o portal no GitHub Actions. |
 | **1.4.4** | Notícias com GIF animado como imagem de destaque (ex.: "Lembre bem") também aparecem, com a animação no card; nesses casos o fundo desfocado não usa o GIF, para não pesar na placa de vídeo. |
 | **1.4.3** | Corrige imagens piscando nas transições depois de várias trocas seguidas pelo teclado: o fundo desfocado troca sem piscar, os cards fora da tela deixam de ocupar a placa de vídeo (cerca de 1/3 menos área desenhada) e o card que chega ao centro só passa à frente quando cruza o anterior. |

@@ -42,12 +42,17 @@ CONFIGURAÇÕES
   A engrenagem ao lado do relógio (ou a tecla C) abre a tela de configurações:
   - de onde vêm as notícias: o portal da UFSM (marcado, 12 notícias) e, se
     quiser, o Gabinete da Reitoria, as pró-reitorias, as diretorias (DTI e DRI),
-    as unidades de ensino e os campi de Cachoeira do Sul, Frederico Westphalen e Palmeira das Missões,
+    as unidades de ensino, os campi de Cachoeira do Sul, Frederico Westphalen e Palmeira das Missões
+    e as mídias da UFSM (Rádios, TV Campus — com os vídeos em destaque na página
+    inicial, título e capa do YouTube — e Revista .TXT),
     com a quantidade de matérias de cada um (só entram matérias dos últimos 30 dias);
   - o nome ou local desta TV (para as estatísticas do QR code);
   - o monitor em que o painel aparece, quando há mais de um (o número do
     monitor atual aparece no topo da tela de configurações);
-  - o tempo de cada notícia na tela, de 4 a 60 segundos (padrão 7).
+  - o tempo de cada notícia na tela, de 4 a 60 segundos (padrão 7);
+  - a rádio UNIFM 107,9 ao vivo (desligada por padrão): o player fica na lateral
+    direita (no totem, no topo), pode começar a tocar sozinho e tem volume próprio.
+    Se a transmissão cair, tenta de novo sozinho.
   Enquanto ela está aberta, o carrossel para; Esc ou Cancelar fecham sem mudar
   nada. "Salvar e aplicar" guarda e já busca as notícias de novo; "Restaurar
   padrão" volta ao portal com 12 notícias.
@@ -59,6 +64,7 @@ ATALHOS
   Espaço ...... pausa / continua
   R ........... busca as notícias agora
   C ........... tela de configurações (também pela engrenagem ao lado do relógio)
+  M ........... liga / pausa a rádio UNIFM (quando o player está ligado)
   1 / 2 / 3 ... leva o painel para o monitor 1, 2 ou 3 (da esquerda para a
                 direita) e lembra a escolha nas próximas vezes
   F11 ......... entra / sai da tela cheia

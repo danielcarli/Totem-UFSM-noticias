@@ -148,6 +148,15 @@ body.idle{cursor:none}
 .grupo-fontes{margin-bottom:1.1em}
 .grupo-fontes h4{font-size:.95em;font-weight:600;color:var(--texto-2);margin:.2em 0 .5em}
 .lista-fontes{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:.45em .9em}
+.radio-cfg{display:flex;align-items:flex-start;gap:1.4em}
+.radio-cfg-logo{width:5.2em;height:auto;flex:none;margin-top:.2em;opacity:.95}
+.radio-cfg-campos{display:grid;gap:.55em;flex:1;min-width:0}
+.config .opcao{display:flex;align-items:center;gap:.6em;cursor:pointer;color:var(--texto)}
+.config .opcao input{width:1.15em;height:1.15em;accent-color:var(--laranja);flex:none}
+.config .volume{display:flex;align-items:center;gap:.8em;color:var(--texto-2)}
+.config .volume input{flex:0 1 16em;accent-color:var(--laranja)}
+.config .volume output{min-width:3em;font-variant-numeric:tabular-nums;color:var(--texto)}
+.radio-cfg-campos .dep:has(input:disabled){opacity:.45;cursor:default}
 .fonte{display:flex;align-items:center;gap:.7em;padding:.45em .7em;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid transparent}
 .fonte.ativa{background:rgba(95,163,214,.14);border-color:rgba(95,163,214,.45)}
 .fonte label{flex:1;display:flex;align-items:center;gap:.6em;cursor:pointer;min-width:0}
@@ -156,6 +165,7 @@ body.idle{cursor:none}
 .fonte .marca-origem{color:var(--texto-2);font-size:1.05em}
 .fonte .nome b{font-weight:700;margin-right:.35em}
 .fonte .nome small{color:var(--texto-3);font-size:.85em}
+.fonte .nome small.nota-fonte{color:var(--laranja)}
 .fonte input[type=number]{width:4.2em;text-align:center;padding:.3em .3em}
 .fonte input[type=number]:disabled{opacity:.35}
 .config-caixa > footer{display:flex;align-items:center;gap:.8em;padding:1em 1.5em;border-top:1px solid var(--vidro-borda);flex-wrap:wrap}
@@ -169,6 +179,56 @@ body.idle{cursor:none}
 .relogio strong{display:block;font-size:clamp(18px,1.7vw,36px);font-weight:700;letter-spacing:.02em;font-variant-numeric:tabular-nums}
 .relogio span{font-size:clamp(11px,.78vw,16px);color:var(--texto-2)}
 
+/* ---------- rádio UNIFM 107,9: player vertical na lateral direita (espelha o trilho da esquerda) ---------- */
+.radio{
+  --unifm:#f59c3c;                                          /* laranja da marca UNIFM */
+  position:fixed;z-index:20;right:1.6vw;top:50%;transform:translateY(-50%);
+  width:calc(clamp(48px,3vw,64px) + 12px);padding:16px 6px 6px;border-radius:999px;
+  display:flex;flex-direction:column;align-items:center;gap:clamp(8px,.6vw,14px);
+  transition:opacity .6s;
+}
+.radio[hidden]{display:none}
+body.idle .radio{opacity:.5}
+body.idle .radio[data-estado="bloqueada"]{opacity:1}
+.radio-logo{width:74%;height:auto;display:block;user-select:none;-webkit-user-drag:none}
+.radio .i-pausa,.radio[data-estado="tocando"] .i-play,.radio[data-estado="conectando"] .i-play{display:none}
+.radio[data-estado="tocando"] .i-pausa,.radio[data-estado="conectando"] .i-pausa{display:block}
+.radio[data-estado="tocando"] #btnRadio{box-shadow:inset 0 0 0 2px var(--unifm)}
+.radio[data-estado="bloqueada"] #btnRadio{animation:chama 1.8s ease-in-out infinite}
+@keyframes chama{0%,100%{box-shadow:inset 0 0 0 2px rgba(245,156,60,.25)}50%{box-shadow:inset 0 0 0 2px var(--unifm),0 0 18px rgba(245,156,60,.45)}}
+.radio-eq{display:flex;align-items:flex-end;justify-content:center;gap:3px;height:clamp(16px,1.1vw,24px)}
+.radio-eq i{width:clamp(3px,.2vw,5px);height:20%;border-radius:2px;background:var(--unifm);opacity:.45;transition:height .4s}
+.radio[data-estado="tocando"] .radio-eq i{opacity:1;animation:equaliza .9s ease-in-out infinite alternate}
+.radio-eq i:nth-child(2){animation-duration:.7s !important;animation-delay:-.3s !important}
+.radio-eq i:nth-child(3){animation-duration:1.1s !important;animation-delay:-.6s !important}
+.radio-eq i:nth-child(4){animation-duration:.8s !important;animation-delay:-.15s !important}
+.radio[data-estado="conectando"] .radio-eq i{opacity:.8;animation:pisca 1.2s ease-in-out infinite}
+@keyframes equaliza{from{height:18%}to{height:100%}}
+@keyframes pisca{50%{opacity:.25}}
+.radio-estado{
+  writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;
+  font-size:clamp(10px,.62vw,13px);font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--texto-2);
+}
+.radio[data-estado="tocando"] .radio-estado{color:var(--texto)}
+.radio[data-estado="bloqueada"] .radio-estado{color:var(--unifm)}
+.radio .i-mudo,.radio[data-mudo] .i-som{display:none}
+.radio[data-mudo] .i-mudo{display:block}
+.radio #btnRadioSom{width:clamp(40px,2.4vw,52px);height:clamp(40px,2.4vw,52px);color:var(--texto-2)}
+/* totem (vertical): o card ocupa a largura toda, então o player vira uma faixa no topo,
+   entre a marca da UFSM e o relógio, na mesma altura do cabeçalho */
+.vertical .radio{
+  top:calc(1.6vh + 4.25vw);left:43.5vw;right:auto;transform:translate(-50%,-50%);
+  flex-direction:row;width:auto;height:7.4vw;padding:0 1.6vw 0 2vw;gap:1.3vw;
+}
+.vertical .radio-logo{width:7.6vw}
+.vertical .radio button{width:6.2vw;height:6.2vw}
+.vertical .radio #btnRadioSom{width:5.2vw;height:5.2vw}
+.vertical .radio-eq{height:3vw;gap:.45vw}
+.vertical .radio-eq i{width:.7vw}
+.vertical .radio-estado{writing-mode:horizontal-tb;transform:none;font-size:1.75vw;letter-spacing:.1em}
+/* sem espaço para "Conectando" / "Toque para ouvir" no topo: o botão pulsando já diz */
+.vertical .radio:not([data-estado="tocando"]) .radio-estado{display:none}
+
 /* ---------- trilho lateral ---------- */
 .trilho{
   position:fixed;z-index:20;left:1.6vw;top:50%;transform:translateY(-50%);
@@ -176,13 +236,13 @@ body.idle{cursor:none}
   transition:opacity .6s;
 }
 body.idle .trilho{opacity:.25}
-.trilho button,.pilula button{
+.trilho button,.pilula button,.radio button{
   appearance:none;border:0;cursor:pointer;color:var(--texto);
   width:clamp(48px,3vw,64px);height:clamp(48px,3vw,64px);border-radius:50%;   /* tamanho bom para toque */
   display:grid;place-items:center;background:transparent;transition:background .25s;
 }
-.trilho button:hover,.pilula button:hover{background:rgba(255,255,255,.12)}
-.trilho svg,.pilula svg{width:44%;height:44%}
+.trilho button:hover,.pilula button:hover,.radio button:hover{background:rgba(255,255,255,.12)}
+.trilho svg,.pilula svg,.radio button svg{width:44%;height:44%}
 .trilho .girando svg{animation:gira 1s linear infinite}
 @keyframes gira{to{transform:rotate(360deg)}}
 
@@ -501,6 +561,18 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
         </div>
       </section>
       <section>
+        <h3>Rádio UNIFM 107,9</h3>
+        <div class="radio-cfg">
+          <img class="radio-cfg-logo" src="__UNIFM__" alt="UNIFM 107.9 UFSM">
+          <div class="radio-cfg-campos">
+            <label class="opcao"><input type="checkbox" id="cfgRadio"> Mostrar o player da rádio no painel</label>
+            <label class="opcao dep"><input type="checkbox" id="cfgRadioAuto"> Começar a tocar sozinha quando o painel abrir</label>
+            <label class="volume dep">Volume <input type="range" id="cfgRadioVolume" min="0" max="100" step="5"><output id="cfgRadioVolumeTxt">70%</output></label>
+            <p class="ajuda" style="margin:0">Transmissão ao vivo da UNIFM 107,9, a rádio da UFSM. O player fica na lateral direita (no totem, no topo). Precisa do som da TV ou de caixas de som. A tecla M liga e pausa a rádio.</p>
+          </div>
+        </div>
+      </section>
+      <section>
         <h3>De onde vêm as notícias</h3>
         <p class="ajuda" style="margin:0 0 .9em">Marque os sites e quantas matérias com foto de cada um entram no carrossel. As notícias dos sites se alternam ao longo da rotação. Só entram matérias publicadas nos últimos 30 dias.</p>
         <div id="cfgFontes"></div>
@@ -520,6 +592,20 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
   <button id="btnPausa" title="Pausar / continuar (espaço)"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
   <button id="btnTela" title="Tela cheia (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
 </nav>
+
+<aside class="radio vidro" id="radio" hidden data-estado="parada" aria-label="Rádio UNIFM 107,9">
+  <img class="radio-logo" src="__UNIFM__" alt="UNIFM 107.9 UFSM">
+  <button id="btnRadio" title="Ouvir / pausar a rádio UNIFM (M)" aria-label="Ouvir a rádio UNIFM">
+    <svg class="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>
+    <svg class="i-pausa" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+  </button>
+  <div class="radio-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <span class="radio-estado" id="radioEstado">Rádio</span>
+  <button id="btnRadioSom" title="Tirar / devolver o som" aria-label="Tirar o som da rádio">
+    <svg class="i-som" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+    <svg class="i-mudo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="m16 9 6 6M22 9l-6 6"/></svg>
+  </button>
+</aside>
 
 <div class="noite" id="noite" aria-hidden="true"></div>
 <main class="palco" id="palco"><div class="pedestal"></div></main>
@@ -909,7 +995,8 @@ function resolveImagem(cands){
       const img = new Image();
       img.referrerPolicy = 'no-referrer';
       img.onload = () => {
-        if (img.naturalWidth <= 80){ i++; return tenta(); }
+        // (a capa "não encontrada" do YouTube tem 120 px: passa para a próxima)
+        if (img.naturalWidth <= (cands[i].includes('ytimg.com') ? 160 : 80)){ i++; return tenta(); }
         proporcaoImg.set(cands[i], img.naturalWidth / img.naturalHeight);
         resolve(cands[i]);
       };
@@ -968,8 +1055,8 @@ function htmlCard(it, i, total){
       <h2>${esc(it.titulo)}</h2>
       <p class="origem">${htmlOrigem(it)}</p>
       <div class="rodape-card">
-        ${it.resumo ? `<p>${esc(it.resumo)}</p>` : `<p class="padrao">Aponte a câmera do celular para o código e ${RE_MATERIA.test(it.link) ? 'leia a matéria completa' : 'saiba mais'} no portal da UFSM.</p>`}
-        ${qr ? `<div class="qr"><div class="caixa"><img src="${qr}" alt="QR code da matéria"></div><small><span class="q-tv">ufsm.br</span><span class="q-totem">Leia no celular</span></small></div>` : ''}
+        ${it.resumo ? `<p>${esc(it.resumo)}</p>` : `<p class="padrao">Aponte a câmera do celular para o código e ${it.video ? 'assista ao vídeo no YouTube' : RE_MATERIA.test(it.link) ? 'leia a matéria completa no portal da UFSM' : 'saiba mais no portal da UFSM'}.</p>`}
+        ${qr ? `<div class="qr"><div class="caixa"><img src="${qr}" alt="QR code ${it.video ? 'do vídeo' : 'da matéria'}"></div><small><span class="q-tv">${it.video ? 'youtube.com' : 'ufsm.br'}</span><span class="q-totem">${it.video ? 'Assista no celular' : 'Leia no celular'}</span></small></div>` : ''}
       </div>
     </div>
     <div class="sombra"></div>
@@ -1241,6 +1328,50 @@ async function completaTitulos(lista, ms){
 /* Plano B: as últimas matérias com foto, pela API do WordPress do portal.
    Usado quando a leitura da página principal falha ou traz poucas notícias.
    Foto: a imagem destacada da matéria ou, se não houver, a primeira foto do texto. */
+// primeiro vídeo do YouTube num conteúdo (iframe, link ou configuração do Elementor, com barras escapadas)
+function idDoYoutube(html){
+  const m = html.match(/(?:youtube(?:-nocookie)?\.com\\?\/(?:embed\\?\/|watch\?v=|shorts\\?\/|live\\?\/)|youtu\.be\\?\/)([\w-]{11})/);
+  return m ? m[1] : '';
+}
+// título do vídeo pelo oEmbed do YouTube (sem chave de API); noembed.com como reserva
+async function tituloDoYoutube(id){
+  const alvo = encodeURIComponent(`https://www.youtube.com/watch?v=${id}`);
+  for (const url of [`https://www.youtube.com/oembed?url=${alvo}&format=json`, `https://noembed.com/embed?url=${alvo}`]){
+    try{
+      const d = await comTempoLimite(fetch(url, { credentials: 'omit' }).then(r => r.ok ? r.json() : null), 8000);
+      if (d && d.title) return limpa(d.title);
+    }catch(e){}
+  }
+  return '';
+}
+// vídeos do YouTube incorporados numa página do site (ex.: página inicial da TV Campus), na ordem
+// em que aparecem; o título de seção (h2/h3…) logo acima de cada vídeo vira a editoria do card
+async function videosDaPagina(site, paginaId){
+  const pg = await api(`wp/v2/pages/${paginaId}?_fields=content`, site);
+  const html = (pg && pg.content && pg.content.rendered) || '';
+  const re = /<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>|(?:youtube(?:-nocookie)?\.com\\?\/(?:embed\\?\/|watch\?v=|shorts\\?\/|live\\?\/)|youtu\.be\\?\/)([\w-]{11})/g;
+  const achados = [], vistos = new Set();
+  let secao = '', m;
+  while ((m = re.exec(html))){
+    if (m[1] !== undefined){ secao = limpa(decodifica(m[1].replace(/<[^>]+>/g, ' '))); continue; }
+    if (!vistos.has(m[2])){ vistos.add(m[2]); achados.push({ id: m[2], secao }); }
+  }
+  const lista = await Promise.all(achados.map(async v => {
+    let titulo = await tituloDoYoutube(v.id);
+    if (!titulo) return null;
+    // "Geração Ansiosa | TV Campus Entrevista" → "Geração Ansiosa" (o programa já vai na editoria)
+    const partes = titulo.split(/\s+[|–-]\s+/);
+    if (partes.length > 1 && /tv\s*campus|tvc\b/i.test(partes[partes.length - 1])) titulo = partes.slice(0, -1).join(' | ');
+    return {
+      titulo, link: `https://www.youtube.com/watch?v=${v.id}`, guid: v.id,
+      secao: v.secao && v.secao.length <= 40 ? v.secao : 'Vídeo',
+      resumo: '', data: null, descricaoImagem: titulo, tituloProvisorio: false, video: true,
+      imagens: ['maxresdefault', 'sddefault', 'hqdefault'].map(t => `https://i.ytimg.com/vi/${v.id}/${t}.jpg`),
+      imagem: null,
+    };
+  }));
+  return lista.filter(Boolean);
+}
 async function noticiasDaApi(site = CONFIG.SITE, quantos = 60){
   const posts = await api(`wp/v2/posts?per_page=${quantos}&_embed=wp:featuredmedia&_fields=link,date,title,excerpt,content,_links,_embedded`, site);
   const lista = [];
@@ -1255,6 +1386,11 @@ async function noticiasDaApi(site = CONFIG.SITE, quantos = 60){
       const doc = new DOMParser().parseFromString((p.content && p.content.rendered) || '', 'text/html');
       const img = [...doc.querySelectorAll('img')].find(imagemValida);
       if (img){ imagens = candidatosDaImagem(img, site + '/'); descricao = img.getAttribute('alt') || ''; }
+      else {
+        // matéria só com vídeo (ex.: TV Campus): usa a capa do vídeo do YouTube
+        const yt = idDoYoutube((p.content && p.content.rendered) || '');
+        if (yt) imagens = [`https://i.ytimg.com/vi/${yt}/maxresdefault.jpg`, `https://i.ytimg.com/vi/${yt}/hqdefault.jpg`];
+      }
     }
     if (!imagens.length) continue;
     const tmp = document.createElement('div');
@@ -1334,7 +1470,7 @@ const MARCAS_ORIGEM = new Set(__MARCAS_ORIGEM_IDS__);
 function marcaDaOrigem(it){
   if (!it.origem) return '';
   if (it.origem === ORIGEM_PORTAL) return 'agencia';
-  const c = caminhoDoSite(it.link);
+  const c = it.caminhoFonte ?? caminhoDoSite(it.link);   // vídeo do YouTube: o site de onde veio
   if (c === null) return '';                       // fora da UFSM
   const f = CATALOGO.find(f => f.caminho && ('/' + c + '/').startsWith('/' + f.caminho + '/'));
   const m = (f && f.marca) || 'ufsm';
@@ -1346,7 +1482,7 @@ function htmlOrigem(it){
   return (m ? `<i class="marca-origem" data-m="${m}" aria-hidden="true"></i>` : '') + `<span>${esc(it.origem)}</span>`;
 }
 async function completaOrigens(lista, ms){
-  for (const it of lista){ const c = origemConhecida(it.link); if (c !== null) it.origem = c; }
+  for (const it of lista){ if (it.video && it.origem) continue; const c = origemConhecida(it.link); if (c !== null) it.origem = c; }
   await comTempoLimite(Promise.all(lista.filter(it => !it.origem).map(async it => {
     it.origem = await origemDaMateria(it.link);
   })), ms).catch(() => {});
@@ -1354,7 +1490,7 @@ async function completaOrigens(lista, ms){
 // as que não ficaram prontas a tempo entram no card depois
 async function completaOrigensAtrasadas(){
   for (const [i, it] of itens.entries()){
-    if (it.origem) continue;
+    if (it.origem || it.video) continue;
     try{
       it.origem = await origemDaMateria(it.link);
       const el = palco.querySelector(`.card[data-i="${i}"] .origem`);
@@ -1399,6 +1535,11 @@ const CATALOGO = [
   { grupo: 'Campi', id: 'cachoeira-do-sul', caminho: 'unidades-universitarias/cachoeira-do-sul', sigla: 'UFSM-CS', nome: 'Campus Cachoeira do Sul' },
   { grupo: 'Campi', id: 'frederico-westphalen', caminho: 'unidades-universitarias/frederico-westphalen', sigla: 'UFSM-FW', nome: 'Campus Frederico Westphalen' },
   { grupo: 'Campi', id: 'palmeira-das-missoes', caminho: 'unidades-universitarias/palmeira-das-missoes', sigla: 'UFSM-PM', nome: 'Campus Palmeira das Missões' },
+  // mídias da UFSM (sem símbolo próprio na identidade institucional: brasão da UFSM em linhas)
+  { grupo: 'Mídias da UFSM', id: 'radios', caminho: 'orgaos-suplementares/radio', nome: 'Rádios da UFSM' },
+  // TV Campus: além das matérias, os vídeos do YouTube incorporados na página inicial (página 5 do site)
+  { grupo: 'Mídias da UFSM', id: 'tvcampus', caminho: 'midias/tvcampus', nome: 'TV Campus', paginaVideos: 5 },
+  { grupo: 'Mídias da UFSM', id: 'revistatxt', caminho: 'midias/experimental/revistatxt', nome: 'Revista .TXT' },
 ];
 const rotuloDaFonte = f => f.sigla ? `${f.sigla} - ${f.nome}` : f.nome;
 const QTD_PADRAO_PORTAL = 12, QTD_PADRAO_SITE = 5, QTD_MAXIMA = 30;
@@ -1406,12 +1547,18 @@ const CHAVE_CONFIG = 'noticiasUFSM:config';
 
 const INTERVALO_PADRAO = 7, INTERVALO_MIN = 4, INTERVALO_MAX = 60;   // segundos de cada notícia
 const limitaIntervalo = v => Math.max(INTERVALO_MIN, Math.min(INTERVALO_MAX, Math.round(Number(v)) || INTERVALO_PADRAO));
-function configPadrao(){ return { tv: '', intervalo: INTERVALO_PADRAO, fontes: { portal: { ativo: true, qtd: QTD_PADRAO_PORTAL } } }; }
+const RADIO_PADRAO = { ativo: false, auto: true, volume: 70 };      // rádio UNIFM: desligada por padrão
+function limpaRadio(r){
+  r = r && typeof r === 'object' ? r : {};
+  const v = Number(r.volume);
+  return { ativo: r.ativo === true, auto: r.auto !== false, volume: isFinite(v) ? Math.max(0, Math.min(100, Math.round(v))) : RADIO_PADRAO.volume };
+}
+function configPadrao(){ return { tv: '', intervalo: INTERVALO_PADRAO, radio: { ...RADIO_PADRAO }, fontes: { portal: { ativo: true, qtd: QTD_PADRAO_PORTAL } } }; }
 function configSalva(){
   try{
     const c = JSON.parse(localStorage.getItem(CHAVE_CONFIG) || 'null');
     if (c && c.fontes && typeof c.fontes === 'object')
-      return { tv: String(c.tv || ''), intervalo: limitaIntervalo(c.intervalo), fontes: c.fontes };
+      return { tv: String(c.tv || ''), intervalo: limitaIntervalo(c.intervalo), radio: limpaRadio(c.radio), fontes: c.fontes };
   }catch(e){}
   return configPadrao();
 }
@@ -1479,6 +1626,27 @@ function recente(it){
   const t = new Date(it.data).getTime();
   return !isFinite(t) || Date.now() - t <= CONFIG.MAX_DIAS * 86400000;
 }
+class SemNoticiasRecentes extends Error {}
+// quantas matérias recentes cada site trouxe na última busca (-1 = não respondeu); aparece nas configurações
+let contagemFontes = {};
+// portal: a página principal (Agência de Notícias); se tiver menos que a quantidade,
+// completa com as últimas matérias publicadas — e é o plano B se a página mudar de layout
+async function noticiasDoPortal(qtd){
+  let lista = [], falhouPagina = false, falhouApi = false;
+  try{ lista = extraiNoticias(await htmlDaPaginaPrincipal(), CONFIG.SITE + '/').filter(recente); }
+  catch(e){ falhouPagina = true; console.warn('[Destaques] leitura da página principal falhou:', e); }
+  const daPagina = lista.length;
+  if (lista.length < qtd){
+    try{
+      const vistos = new Set(lista.map(i => i.link));
+      const extras = (await noticiasDaApi(CONFIG.SITE, Math.min(100, Math.max(30, qtd * 4)))).filter(i => !vistos.has(i.link) && recente(i));
+      lista = lista.concat(extras);
+      if (daPagina < CONFIG.MIN_DA_PAGINA && extras.length)
+        console.warn(`[Destaques] página principal trouxe poucas notícias; ${extras.length} vieram da API (plano B)`);
+    }catch(e){ falhouApi = true; console.warn('[Destaques] não foi possível completar pela API:', e); }
+  }
+  return { lista: lista.slice(0, qtd), daPagina, falhou: falhouPagina && (falhouApi || !lista.length) };
+}
 async function carrega(){
   if (carregando) return;
   carregando = true;
@@ -1487,44 +1655,54 @@ async function carrega(){
   try{
     const fontes = fontesAtivas();
     const portal = fontes.find(f => f.id === 'portal');
-    let daPagina = 0;
+    let daPagina = 0, falhas = 0;
+    const contagem = {};
     const listas = await Promise.all(fontes.map(async f => {
       if (f.id === 'portal'){
-        // portal: a página principal (Agência de Notícias); se tiver menos que a quantidade,
-        // completa com as últimas matérias publicadas — e é o plano B se a página mudar de layout
-        let lista = [];
-        try{ lista = extraiNoticias(await htmlDaPaginaPrincipal(), CONFIG.SITE + '/').filter(recente); }
-        catch(e){ console.warn('[Destaques] leitura da página principal falhou:', e); }
-        daPagina = lista.length;
-        if (lista.length < f.qtd){
-          try{
-            const vistos = new Set(lista.map(i => i.link));
-            const extras = (await noticiasDaApi(CONFIG.SITE, Math.min(100, Math.max(30, f.qtd * 4)))).filter(i => !vistos.has(i.link) && recente(i));
-            lista = lista.concat(extras);
-            if (daPagina < CONFIG.MIN_DA_PAGINA && extras.length)
-              console.warn(`[Destaques] página principal trouxe poucas notícias; ${extras.length} vieram da API (plano B)`);
-          }catch(e){ console.warn('[Destaques] não foi possível completar pela API:', e); }
-        }
-        return lista.slice(0, f.qtd);
+        const r = await noticiasDoPortal(f.qtd);
+        daPagina = r.daPagina;
+        if (r.falhou) falhas++;
+        contagem[f.id] = r.falhou ? -1 : r.lista.length;
+        return r.lista;
       }
       // subsite: as últimas matérias com foto
       try{
-        const lista = (await noticiasDaApi(f.url, Math.min(100, Math.max(20, f.qtd * 6)))).filter(recente).slice(0, f.qtd);
+        const [videos, materias] = await Promise.all([
+          f.paginaVideos ? videosDaPagina(f.url, f.paginaVideos).catch(e => { console.warn('[Destaques] vídeos de', f.url, e); return []; }) : [],
+          noticiasDaApi(f.url, Math.min(100, Math.max(20, f.qtd * 6))),
+        ]);
+        // vídeos em destaque na página inicial primeiro (sem data: a própria página diz o que é atual);
+        // depois as matérias recentes, sem repetir o mesmo vídeo
+        const ids = new Set(videos.map(v => v.guid));
+        const lista = videos.concat(materias.filter(recente).filter(it => !it.imagens.some(u => [...ids].some(id => u.includes(id))))).slice(0, f.qtd);
+        lista.forEach(it => { it.caminhoFonte = f.caminho; });
         if (f.nome) lista.forEach(it => { it.origem = rotuloDaFonte(f); });
+        contagem[f.id] = lista.length;
         return lista;
-      }catch(e){ console.warn('[Destaques] não foi possível ler as matérias de', f.url, e); return []; }
+      }catch(e){ console.warn('[Destaques] não foi possível ler as matérias de', f.url, e); falhas++; contagem[f.id] = -1; return []; }
     }));
+    contagemFontes = contagem;
     let novos = intercala(listas);
-    // 'pagina' = leitura normal; 'pagina+api' ou 'api' = plano B; 'sites' = portal desmarcado
-    const fonte = !portal ? 'sites' : daPagina >= CONFIG.MIN_DA_PAGINA ? 'pagina' : (daPagina ? 'pagina+api' : 'api');
-    if (!novos.length) throw new Error(`nenhuma notícia com foto dos últimos ${CONFIG.MAX_DIAS} dias`);
+    // 'pagina' = leitura normal; 'pagina+api' ou 'api' = plano B; 'sites' = portal desmarcado;
+    // 'reserva' = os sites escolhidos não têm nada recente e o portal entrou no lugar
+    let fonte = !portal ? 'sites' : daPagina >= CONFIG.MIN_DA_PAGINA ? 'pagina' : (daPagina ? 'pagina+api' : 'api');
+    if (!novos.length && falhas === fontes.length) throw new Error('nenhum site respondeu');
+    if (!novos.length && !portal){
+      // nenhum dos sites escolhidos publicou nada com foto no prazo: mostra o portal para a tela não ficar vazia
+      console.warn(`[Destaques] os sites escolhidos não têm matérias dos últimos ${CONFIG.MAX_DIAS} dias; mostrando o portal`);
+      const r = await noticiasDoPortal(QTD_PADRAO_PORTAL);
+      novos = r.lista; daPagina = r.daPagina; fonte = 'reserva';
+      if (!novos.length && r.falhou) throw new Error('portal não respondeu');
+    }
+    if (!novos.length) throw new SemNoticiasRecentes();
     fonteNoticias = fonte;
     await Promise.all([preparaImagens(novos, 12000), completaTitulos(novos, 8000), completaOrigens(novos, 8000)]);
 
     try{ localStorage.setItem('noticiasUFSM:v3', JSON.stringify(novos)); }catch(e){}
     aplica(novos);
     ultimaAtualizacao = new Date();
-    status('ok', '');   // a hora da última atualização fica só no rodapé
+    if (fonte === 'reserva') status('erro', `sites escolhidos sem matérias dos últimos ${CONFIG.MAX_DIAS} dias · mostrando o portal`);
+    else status('ok', '');   // a hora da última atualização fica só no rodapé
     rodape();
     completaImagensFaltantes();
     completaOrigensAtrasadas();
@@ -1538,11 +1716,20 @@ async function carrega(){
         if (salvos.length){ await preparaImagens(salvos, 8000); aplica(salvos); }
       }catch(_){}
     }
-    if (!itens.length){
-      aviso(true, 'Sem conexão com o portal', 'Não foi possível ler a página principal da UFSM agora. Nova tentativa em 1 minuto.', false);
+    if (e instanceof SemNoticiasRecentes){
+      // os sites responderam, mas não há matéria com foto no prazo: não é falta de conexão
+      if (!itens.length) aviso(true, 'Nenhuma notícia recente',
+        `Os sites escolhidos não publicaram matérias com foto ou vídeo nos últimos ${CONFIG.MAX_DIAS} dias. ` +
+        'Marque outros sites na engrenagem (tecla C). Nova busca em 15 minutos.', false);
+      status('erro', `sem matérias dos últimos ${CONFIG.MAX_DIAS} dias nos sites escolhidos`);
+      timerRetentativa = setTimeout(carrega, CONFIG.ATUALIZACAO_MS);
+    } else {
+      if (!itens.length){
+        aviso(true, 'Sem conexão com o portal', 'Não foi possível ler a página principal da UFSM agora. Nova tentativa em 1 minuto.', false);
+      }
+      status('erro', 'sem conexão · nova tentativa em 1 min');
+      timerRetentativa = setTimeout(carrega, 60000);
     }
-    status('erro', 'sem conexão · nova tentativa em 1 min');
-    timerRetentativa = setTimeout(carrega, 60000);
   }finally{
     carregando = false;
   }
@@ -1608,6 +1795,14 @@ $('#btnTela').onclick = () => document.fullscreenElement ? document.exitFullscre
 const appDesktop = window.destaquesApp || null;   // ponte com o aplicativo (só existe no Electron)
 let configAberta = false, pausadoAntesDaConfig = false;
 
+// depois de uma busca: avisa nos sites marcados que não trouxeram nada
+function notaDaFonte(id, ativo){
+  if (!ativo || !(id in contagemFontes)) return '';
+  const n = contagemFontes[id];
+  if (n === -1) return '<br><small class="nota-fonte">não respondeu na última busca</small>';
+  if (n === 0) return `<br><small class="nota-fonte">sem matérias com foto nos últimos ${CONFIG.MAX_DIAS} dias</small>`;
+  return '';
+}
 function desenhaFontes(c){
   const grupos = [...new Set(CATALOGO.map(f => f.grupo))];
   // fontes vindas de ?sites= que não estão no catálogo
@@ -1622,7 +1817,7 @@ function desenhaFontes(c){
         return `<div class="fonte${v.ativo ? ' ativa' : ''}" data-id="${esc(f.id)}" title="ufsm.br/${esc(f.caminho)}">
           <label><input type="checkbox"${v.ativo ? ' checked' : ''}>
             <i class="marca-origem" data-m="${esc(f.marca || 'ufsm')}" aria-hidden="true"></i>
-            <span class="nome">${f.sigla ? `<b>${esc(f.sigla)}</b>` : ''}${esc(f.nome)}${f.id === 'portal' ? '<br><small>notícias da página principal de ufsm.br</small>' : ''}</span></label>
+            <span class="nome">${f.sigla ? `<b>${esc(f.sigla)}</b>` : ''}${esc(f.nome)}${f.id === 'portal' ? '<br><small>notícias da página principal de ufsm.br</small>' : ''}${notaDaFonte(f.id, v.ativo)}</span></label>
           <input type="number" min="1" max="${QTD_MAXIMA}" value="${qtd}" title="Quantidade de matérias"${v.ativo ? '' : ' disabled'}>
         </div>`;
       }).join('')}
@@ -1637,7 +1832,8 @@ function desenhaFontes(c){
 function leFormulario(){
   // com --intervalo no atalho, o campo fica travado e o valor salvo continua o de antes
   const intervalo = $('#cfgIntervalo').disabled ? configSalva().intervalo : limitaIntervalo($('#cfgIntervalo').value);
-  const c = { tv: $('#cfgTv').value.trim(), intervalo, fontes: {} };
+  const c = { tv: $('#cfgTv').value.trim(), intervalo, fontes: {},
+    radio: limpaRadio({ ativo: $('#cfgRadio').checked, auto: $('#cfgRadioAuto').checked, volume: $('#cfgRadioVolume').value }) };
   $('#cfgFontes').querySelectorAll('.fonte').forEach(el => {
     const ativo = el.querySelector('input[type=checkbox]').checked;
     const qtd = Math.max(1, Math.min(QTD_MAXIMA, parseInt(el.querySelector('input[type=number]').value) || 1));
@@ -1664,6 +1860,7 @@ async function abreConfig(){
   const c = configSalva();
   if (params.get('local') && !c.tv) c.tv = params.get('local');
   $('#cfgTv').value = c.tv;
+  preencheRadio(c.radio);
   // --intervalo na linha de comando vale por cima da tela de configurações
   const porOpcao = parseFloat(params.get('intervalo')) > 0;
   $('#cfgIntervalo').value = porOpcao ? PAINEL.intervalo : c.intervalo;
@@ -1696,6 +1893,7 @@ async function abreConfig(){
 function fechaConfig(){
   if (!configAberta) return;
   configAberta = false;
+  aplicaVolume(radioConfig().volume);          // desfaz o volume que estava só sendo testado
   $('#config').hidden = true;
   if (appDesktop) appDesktop.configurando(false);
   if (pausado && !pausadoAntesDaConfig) alternaPausa();
@@ -1711,6 +1909,7 @@ async function salvaConfig(){
   PAINEL = configEfetiva();
   aplicaIntervalo();
   fechaConfig();
+  aplicaRadio(true);
   try{ localStorage.removeItem('noticiasUFSM:v3'); }catch(e){}
   atual = 0;
   carrega();
@@ -1720,12 +1919,122 @@ $('#cfgFechar').addEventListener('click', fechaConfig);
 $('#cfgCancelar').addEventListener('click', fechaConfig);
 $('#cfgPadrao').addEventListener('click', () => {
   $('#cfgTv').value = '';
+  preencheRadio(RADIO_PADRAO);
   if (!$('#cfgIntervalo').disabled) $('#cfgIntervalo').value = INTERVALO_PADRAO;
   desenhaFontes(configPadrao());
 });
 $('#cfgIntervalo').addEventListener('input', totalConfig);
 $('#cfgIntervalo').addEventListener('change', () => { $('#cfgIntervalo').value = limitaIntervalo($('#cfgIntervalo').value); totalConfig(); });
 $('#configForm').addEventListener('submit', e => { e.preventDefault(); salvaConfig(); });
+
+/* ---------- rádio UNIFM 107,9 ---------- */
+const RADIO_STREAM = 'https://stream3.svrdedicado.org/8150/stream';
+const radio = { audio: null, querTocar: false, retomarDeManha: false, mudo: false, tentativas: 0, timer: null, vigia: null };
+const radioConfig = () => limpaRadio(PAINEL.radio);
+function preencheRadio(r){
+  r = limpaRadio(r);
+  $('#cfgRadio').checked = r.ativo;
+  $('#cfgRadioAuto').checked = r.auto;
+  $('#cfgRadioVolume').value = r.volume;
+  atualizaCamposRadio();
+}
+function atualizaCamposRadio(){
+  const ativo = $('#cfgRadio').checked;
+  $('#cfgRadioAuto').disabled = $('#cfgRadioVolume').disabled = !ativo;
+  $('#cfgRadioVolumeTxt').textContent = $('#cfgRadioVolume').value + '%';
+}
+$('#cfgRadio').addEventListener('change', atualizaCamposRadio);
+// o volume já muda enquanto arrasta, para testar no som da TV (Cancelar desfaz)
+$('#cfgRadioVolume').addEventListener('input', () => { atualizaCamposRadio(); aplicaVolume($('#cfgRadioVolume').value); });
+
+function aplicaVolume(v){ if (radio.audio) radio.audio.volume = Math.max(0, Math.min(100, Number(v))) / 100; }
+function estadoRadio(estado, texto){
+  const el = $('#radio');
+  el.dataset.estado = estado;
+  $('#radioEstado').textContent = texto;
+  $('#btnRadio').setAttribute('aria-label', estado === 'tocando' || estado === 'conectando' ? 'Pausar a rádio UNIFM' : 'Ouvir a rádio UNIFM');
+}
+function criaAudio(){
+  const a = new Audio();
+  a.preload = 'none';
+  a.addEventListener('playing', () => {
+    radio.tentativas = 0; clearTimeout(radio.vigia);
+    if (radio.querTocar) estadoRadio('tocando', 'Ao vivo');
+  });
+  a.addEventListener('waiting', () => { if (radio.querTocar){ estadoRadio('conectando', 'Conectando'); vigiaRadio(); } });
+  // transmissão caiu (internet, servidor): tenta de novo sozinha
+  for (const ev of ['error', 'ended', 'stalled']) a.addEventListener(ev, () => { if (radio.querTocar) reconectaRadio(); });
+  return a;
+}
+// se não começar a tocar em 20 s, reconecta
+function vigiaRadio(){
+  clearTimeout(radio.vigia);
+  radio.vigia = setTimeout(() => { if (radio.querTocar && $('#radio').dataset.estado !== 'tocando') reconectaRadio(); }, 20000);
+}
+function reconectaRadio(){
+  clearTimeout(radio.timer); clearTimeout(radio.vigia);
+  if (radio.audio){ radio.audio.pause(); radio.audio.removeAttribute('src'); radio.audio.load(); }
+  radio.tentativas++;
+  const espera = Math.min(60, 3 * 2 ** (radio.tentativas - 1));     // 3, 6, 12, 24, 48, 60 s…
+  estadoRadio('conectando', 'Reconectando');
+  radio.timer = setTimeout(() => { if (radio.querTocar) tocaRadio(); }, espera * 1000);
+}
+function tocaRadio(){
+  if (!radioConfig().ativo) return;
+  radio.querTocar = true;
+  clearTimeout(radio.timer);
+  if (dormindo){ radio.retomarDeManha = true; radio.querTocar = false; estadoRadio('parada', 'Rádio'); return; }
+  const a = radio.audio ||= criaAudio();
+  aplicaVolume(radioConfig().volume);
+  a.muted = radio.mudo;
+  a.src = RADIO_STREAM + '?t=' + Date.now();                     // sempre o ao vivo, nunca um trecho guardado
+  estadoRadio('conectando', 'Conectando');
+  vigiaRadio();
+  a.play().catch(err => {
+    if (!err || err.name === 'AbortError') return;
+    if (err.name === 'NotAllowedError'){
+      // navegador bloqueou o som sem um toque na tela: espera o primeiro toque ou tecla
+      radio.querTocar = false; clearTimeout(radio.vigia);
+      estadoRadio('bloqueada', 'Toque para ouvir');
+      esperaToque();
+    } else reconectaRadio();
+  });
+}
+function paraRadio(){
+  radio.querTocar = false;
+  clearTimeout(radio.timer); clearTimeout(radio.vigia);
+  if (radio.audio){ radio.audio.pause(); radio.audio.removeAttribute('src'); radio.audio.load(); }
+  estadoRadio('parada', 'Rádio');
+}
+function alternaRadio(){ radio.querTocar ? paraRadio() : tocaRadio(); }
+let esperandoToque = false;
+function esperaToque(){
+  if (esperandoToque) return;
+  esperandoToque = true;
+  const solta = e => {
+    removeEventListener('pointerdown', solta, true); removeEventListener('keydown', solta, true);
+    esperandoToque = false;
+    // o toque no próprio botão já é tratado pelo clique
+    if (e.target && e.target.closest && e.target.closest('#btnRadio')) return;
+    if ($('#radio').dataset.estado === 'bloqueada' && radioConfig().ativo) tocaRadio();
+  };
+  addEventListener('pointerdown', solta, true); addEventListener('keydown', solta, true);
+}
+// mostra ou esconde o player conforme a configuração; 'salvou' = veio do botão Salvar
+function aplicaRadio(salvou = false){
+  const c = radioConfig();
+  $('#radio').hidden = !c.ativo;
+  if (!c.ativo){ if (radio.querTocar || radio.audio) paraRadio(); return; }
+  aplicaVolume(c.volume);
+  if (!radio.querTocar && c.auto && (!salvou || $('#radio').dataset.estado !== 'tocando')) tocaRadio();
+}
+$('#btnRadio').addEventListener('click', alternaRadio);
+$('#btnRadioSom').addEventListener('click', () => {
+  radio.mudo = !radio.mudo;
+  if (radio.audio) radio.audio.muted = radio.mudo;
+  $('#radio').toggleAttribute('data-mudo', radio.mudo);
+  $('#btnRadioSom').setAttribute('aria-label', radio.mudo ? 'Devolver o som da rádio' : 'Tirar o som da rádio');
+});
 $('#config').addEventListener('click', e => { if (e.target === $('#config')) fechaConfig(); });
 
 addEventListener('keydown', e => {
@@ -1737,6 +2046,7 @@ addEventListener('keydown', e => {
   else if (e.key === ' ') { e.preventDefault(); alternaPausa(); }
   else if (e.key.toLowerCase() === 'f') $('#btnTela').click();
   else if (e.key.toLowerCase() === 'r') carrega();
+  else if (e.key.toLowerCase() === 'm' && radioConfig().ativo) alternaRadio();
 });
 /* ---------- deslizar o dedo (tela de toque) ---------- */
 let toque = null, acabouDeDeslizar = false;
@@ -1787,8 +2097,13 @@ function verificaNoite(){
   if (deveDormir === dormindo) return;
   dormindo = deveDormir;
   $('#noite').classList.toggle('on', dormindo);
-  if (dormindo){ clearTimeout(timerRot); soltaBanner(); }
-  else if (itens.length) vaiPara(atual);
+  if (dormindo){
+    clearTimeout(timerRot); soltaBanner();
+    if (radio.querTocar){ paraRadio(); radio.retomarDeManha = true; }     // rádio também dorme
+  } else {
+    if (itens.length) vaiPara(atual);
+    if (radio.retomarDeManha){ radio.retomarDeManha = false; tocaRadio(); }
+  }
 }
 
 let timerOcioso;
@@ -1804,6 +2119,7 @@ document.addEventListener('visibilitychange', () => {
 /* ---------------- início ---------------- */
 relogio(); setInterval(relogio, 10000);
 verificaNoite(); setInterval(verificaNoite, 60000);
+aplicaRadio();
 mantemTelaAcesa();
 agendaRecargaDiaria();
 document.body.classList.add('idle');

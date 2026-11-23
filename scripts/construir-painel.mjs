@@ -12,13 +12,14 @@ import { fileURLToPath } from 'node:url';
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // quebras de linha do Windows (CRLF) viram LF, para o resultado ser o mesmo em qualquer sistema
 const ler = p => fs.readFileSync(path.join(raiz, p), 'utf8').replace(/\r\n/g, '\n');
-const marca = arq => 'data:image/png;base64,' + fs.readFileSync(path.join(raiz, 'painel/marcas', arq)).toString('base64');
+const marca = arq => `data:image/${arq.endsWith('.svg') ? 'svg+xml' : 'png'};base64,` + fs.readFileSync(path.join(raiz, 'painel/marcas', arq)).toString('base64');
 
 const MARCAS = {
   __UFSM__: 'ufsm.png',                           // topo
   __LOGO_H__: 'coordenadoria.png',                // rodapé
   __AGENCIA_H__: 'agencia.png',                   // rodapé
   __SIMBOLO__: 'coordenadoria-simbolo.png',       // card de notícia sem foto
+  __UNIFM__: 'unifm.svg',                        // player da rádio UNIFM (negativo branco)
 };
 // marcas ao lado do site de origem (painel/marcas/origens/<id>.png, branco sobre transparente):
 // viram máscaras CSS pintadas na cor do texto. Tamanho: 1,5em de altura, no máximo 2,4em de largura.
