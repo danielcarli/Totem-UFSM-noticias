@@ -1,0 +1,14 @@
+Package: destaques-sistema
+Version: @VERSAO@
+Architecture: all
+Section: misc
+Priority: optional
+Maintainer: Destaques UFSM <https://github.com/danielcarli/Totem-UFSM-noticias>
+Homepage: https://github.com/danielcarli/Totem-UFSM-noticias
+Depends: destaques-ufsm, xserver-xorg-core, xserver-xorg-input-libinput, xinit, x11-xserver-utils, x11-xkb-utils, openbox, unclutter-xfixes, network-manager, wpasupplicant, bluez, rfkill, pipewire, pipewire-pulse, pipewire-alsa, wireplumber, libspa-0.2-bluetooth, alsa-utils, jq, curl, ca-certificates, sudo, util-linux, whiptail, systemd-timesyncd, iproute2, procps, kbd
+Recommends: squashfs-tools, parted, dosfstools, e2fsprogs
+Description: Destaques UFSM – Sistema (painel de notícias para TVs e totens)
+ Camada de sistema do painel Destaques UFSM: entra sozinho e abre o painel em tela
+ cheia, configura rede cabeada, Wi-Fi, Bluetooth e som pela tela de configurações
+ do painel, desliga a tela/suspende fora do horário do setor, atualiza pela página
+ de Releases do GitHub e tem menu de recuperação com PIN (Ctrl+Alt+F2).

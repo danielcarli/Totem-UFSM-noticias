@@ -1,0 +1,104 @@
+#!/bin/bash
+# Destaques UFSM – Sistema: menu de recuperação (texto, funciona mesmo sem a parte gráfica).
+#
+# Como chegar nele:
+#   • com o painel aberto: Ctrl+Alt+F2 (Ctrl+Alt+F1 volta ao painel)
+#   • na inicialização: opção "Destaques UFSM — recuperação" do menu
+# Pede o PIN (de fábrica: 1960 — troque no próprio menu).
+set -u
+. /usr/lib/destaques/comum.sh
+
+modo=${1:---tty}
+export LANG=pt_BR.UTF-8 LC_ALL=pt_BR.UTF-8
+export NEWT_COLORS='root=white,blue window=black,lightgray title=blue,lightgray button=white,blue actbutton=white,red'
+TITULO="Destaques UFSM — recuperação"
+ARQ_PIN=$ESTADO/pin
+
+caixa(){ whiptail --title "$TITULO" "$@" 3>&1 1>&2 2>&3; }
+aviso(){ whiptail --title "$TITULO" --msgbox "$1" "${2:-12}" 72; }
+hash_pin(){ printf 'destaques:%s' "$1" | sha256sum | cut -d' ' -f1; }
+
+confere_pin(){
+  [ -f "$ARQ_PIN" ] || hash_pin 1960 > "$ARQ_PIN"
+  for _ in 1 2 3; do
+    pin=$(caixa --passwordbox "Digite o PIN de manutenção:" 9 50) || return 1
+    [ "$(hash_pin "$pin")" = "$(cat "$ARQ_PIN")" ] && return 0
+    aviso "PIN errado." 7
+  done
+  sleep 30
+  return 1
+}
+
+diagnostico(){
+  {
+    echo "Computador:  $(hostname)  —  $(cat /sys/class/dmi/id/product_name 2>/dev/null)"
+    echo "Painel:      $(versao_pacote destaques-ufsm)      Sistema: $(versao_pacote destaques-sistema)"
+    echo "Endereços:   $(ip -4 -o addr show scope global | awk '{print $2" "$4}' | paste -sd' ')"
+    if curl -fsSI --max-time 8 https://www.ufsm.br >/dev/null 2>&1; then echo "Internet:    ok (www.ufsm.br responde)"
+    else echo "Internet:    SEM ACESSO a www.ufsm.br"; fi
+    echo "Disco livre: $(df -h / | awk 'NR==2{print $4" de "$2}')"
+    echo "Horário:     $(date '+%a %d/%m/%Y %H:%M')  —  $(cat "$RUN/energia" 2>/dev/null || echo aberto)"
+    echo "Atualização: $(jq -r '"\(.estado) \(.nova) \(.erro) (\(.quando))"' "$ESTADO/atualizacao.json" 2>/dev/null || echo "nenhuma ainda")"
+    echo
+    echo "Últimas linhas do registro do painel:"
+    tail -n 12 "$(getent passwd "$PAINEL_USUARIO" | cut -d: -f6)/.local/state/destaques/painel.log" 2>/dev/null
+  } > /tmp/destaques-diagnostico.txt
+  whiptail --title "$TITULO — diagnóstico" --scrolltext --textbox /tmp/destaques-diagnostico.txt 24 78
+}
+
+atualizar(){   # atualizar --forcar|--anterior
+  clear
+  echo "$1: aguarde… (pode levar alguns minutos)"
+  if /usr/sbin/destaques-atualiza "$1" --motivo "menu de recuperação"; then
+    aviso "Pronto: painel $(versao_pacote destaques-ufsm), sistema $(versao_pacote destaques-sistema)." 8
+  else
+    aviso "Não deu certo: $(jq -r '.erro' "$ESTADO/atualizacao.json" 2>/dev/null)\n\nConfira a rede (opção 4) e tente de novo." 10
+  fi
+}
+
+[ "$modo" = --tty ] && { clear; echo; echo "  $TITULO"; echo "  Ctrl+Alt+F1 volta para o painel. Enter para entrar."; read -r _; }
+confere_pin || { [ "$modo" = --inicio ] && touch "$RUN/recuperacao-feita"; exit 0; }
+
+while true; do
+  escolha=$(caixa --menu "Painel $(versao_pacote destaques-ufsm) — $(hostname)" 21 72 11 \
+    1 "Voltar para o painel" \
+    2 "Forçar atualização (baixa e reinstala a última versão)" \
+    3 "Voltar para a versão anterior" \
+    4 "Configurar a rede (cabo e Wi-Fi)" \
+    5 "Diagnóstico" \
+    6 "Restaurar as configurações do painel (padrão de fábrica)" \
+    7 "Trocar o PIN de manutenção" \
+    8 "Terminal (avançado)" \
+    9 "Reiniciar o computador" \
+    10 "Desligar o computador") || escolha=1
+  case "$escolha" in
+    1) break ;;
+    2) atualizar --forcar ;;
+    3) atualizar --anterior ;;
+    4) nmtui; clear ;;
+    5) diagnostico ;;
+    6) if whiptail --title "$TITULO" --yesno "Apagar as configurações do painel (sites, nome da TV, rádio, monitor) e o horário de funcionamento?" 9 72; then
+         casa=$(getent passwd "$PAINEL_USUARIO" | cut -d: -f6)
+         rm -rf "$casa/.config/Destaques UFSM" "$casa/.config/destaques-ufsm"
+         echo '{"ativo":false,"modo":"suspender","dias":{}}' > /etc/destaques-os/horario.json
+         rm -f /etc/destaques-os/local.conf
+         reinicia_painel
+         aviso "Configurações restauradas." 7
+       fi ;;
+    7) p1=$(caixa --passwordbox "Novo PIN (números ou letras, mínimo 4):" 9 50) || continue
+       p2=$(caixa --passwordbox "Repita o novo PIN:" 9 50) || continue
+       if [ "$p1" = "$p2" ] && [ ${#p1} -ge 4 ]; then hash_pin "$p1" > "$ARQ_PIN"; chmod 600 "$ARQ_PIN"; aviso "PIN trocado." 7
+       else aviso "Os PINs não conferem ou são curtos demais." 7; fi ;;
+    8) clear; echo "Terminal de manutenção. Digite 'exit' para voltar ao menu."; bash -l; clear ;;
+    9) systemctl reboot; exit 0 ;;
+    10) systemctl poweroff; exit 0 ;;
+  esac
+done
+
+clear
+if [ "$modo" = --inicio ]; then
+  touch "$RUN/recuperacao-feita"      # segue para o painel
+else
+  chvt 1 2>/dev/null || true
+fi
+exit 0

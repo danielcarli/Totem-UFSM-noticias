@@ -1,0 +1,31 @@
+#!/bin/sh
+# Destaques UFSM – Sistema: ajustes finais da imagem
+set -e
+
+# português do Brasil e teclado ABNT2
+sed -i 's/^# *pt_BR.UTF-8 UTF-8/pt_BR.UTF-8 UTF-8/' /etc/locale.gen
+grep -q '^pt_BR.UTF-8 UTF-8' /etc/locale.gen || echo 'pt_BR.UTF-8 UTF-8' >> /etc/locale.gen
+locale-gen >/dev/null
+update-locale LANG=pt_BR.UTF-8 LANGUAGE=pt_BR:pt
+cat > /etc/default/keyboard <<FIM
+XKBMODEL="abnt2"
+XKBLAYOUT="br"
+XKBVARIANT=""
+XKBOPTIONS=""
+BACKSPACE="guess"
+FIM
+
+echo destaques-ufsm > /etc/hostname
+
+# atualizações do Debian ficam por conta do destaques-atualiza (nada de surpresas na TV)
+systemctl disable apt-daily.timer apt-daily-upgrade.timer >/dev/null 2>&1 || true
+systemctl mask apt-daily.service apt-daily-upgrade.service >/dev/null 2>&1 || true
+
+# versões que vieram na imagem: base para "voltar à versão anterior"
+mkdir -p /var/lib/destaques/atual
+cp /root/destaques-debs/*.deb /var/lib/destaques/atual/ 2>/dev/null || true
+rm -rf /root/destaques-debs
+
+# menos espaço
+rm -rf /usr/share/doc/* /usr/share/man/* /var/cache/apt/archives/*.deb 2>/dev/null || true
+find /usr/share/locale -mindepth 1 -maxdepth 1 ! -name 'pt*' ! -name 'en*' ! -name 'locale.alias' -exec rm -rf {} + 2>/dev/null || true

@@ -1,0 +1,116 @@
+#!/bin/bash
+# Destaques UFSM – Sistema: horário de funcionamento (roda a cada minuto, pelo timer).
+#
+# Fora do horário do setor:
+#   modo "suspender" → apaga a tela e suspende o computador (memória ligada, o resto desligado);
+#                      o relógio da placa-mãe acorda o computador 2 minutos antes da abertura
+#   modo "tela"      → só apaga a tela (sinal de vídeo desligado) e reduz a velocidade do processador
+# Se a suspensão não funcionar nesta máquina, passa a só apagar a tela até o dia seguinte.
+# Acordado à mão (tecla, botão) fora do horário, fica 30 minutos ligado antes de dormir de novo.
+#
+# /etc/destaques-os/horario.json:
+#   {"ativo":true, "modo":"suspender", "dias":{"1":{"abre":"07:30","fecha":"22:00"}, … "0":null}}
+#   (0 = domingo … 6 = sábado; null = fechado o dia todo)
+set -u
+. /usr/lib/destaques/comum.sh
+
+CONF=/etc/destaques-os/horario.json
+ARQ_ESTADO=$RUN/energia                       # "aberto" ou "fechado" (o painel acompanha este arquivo)
+anterior=$(cat "$ARQ_ESTADO" 2>/dev/null || echo aberto)
+
+tela(){ como_painel xset dpms force "$1" >/dev/null 2>&1 || true; }
+processador(){   # processador economia|normal
+  local g
+  for f in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+    [ -w "$f" ] || continue
+    if [ "$1" = economia ]; then g=powersave
+    else g=$(tr ' ' '\n' < "${f%/*}/scaling_available_governors" | grep -m1 -E '^(schedutil|ondemand)$' || echo performance); fi
+    echo "$g" > "$f" 2>/dev/null || true
+  done
+}
+
+# notebook: tampa fechada/aberta muda o arranjo das telas
+tampa=$(cat /proc/acpi/button/lid/*/state 2>/dev/null | awk '{print $2}' | head -1)
+if [ -n "$tampa" ] && [ "$tampa" != "$(cat "$RUN/tampa" 2>/dev/null)" ]; then
+  echo "$tampa" > "$RUN/tampa"
+  como_painel /usr/lib/destaques/telas >/dev/null 2>&1 || true
+fi
+
+abre(){
+  [ "$anterior" = aberto ] && return
+  echo aberto > "$ARQ_ESTADO"
+  processador normal
+  tela on
+  registra "horário: aberto — tela ligada"
+  if [ -f "$RUN/suspendeu" ]; then        # depois de dormir, o painel recomeça com notícias novas
+    rm -f "$RUN/suspendeu"
+    reinicia_painel
+  fi
+}
+
+ativo=$(jq -r '.ativo // false' "$CONF" 2>/dev/null || echo false)
+if [ "$ativo" != true ]; then abre; exit 0; fi
+
+agora=$(date +%s)
+hoje=$(date +%w)
+min=$(minutos "$(date +%H:%M)")
+abre_hoje=$(jq -r --arg d "$hoje" '.dias[$d].abre // empty' "$CONF")
+fecha_hoje=$(jq -r --arg d "$hoje" '.dias[$d].fecha // empty' "$CONF")
+
+if [ -n "$abre_hoje" ] && [ "$min" -ge "$(minutos "$abre_hoje")" ] && [ "$min" -lt "$(minutos "$fecha_hoje")" ]; then
+  abre; exit 0
+fi
+
+# ---------------- fechado ----------------
+# acordado à mão há pouco: deixa ligado
+if [ -f "$RUN/acordado-ate" ] && [ "$agora" -lt "$(cat "$RUN/acordado-ate")" ]; then
+  [ "$anterior" = fechado ] && { echo aberto > "$ARQ_ESTADO"; tela on; }
+  exit 0
+fi
+
+# próxima abertura (hoje mais tarde ou nos próximos 7 dias)
+proxima=""
+for i in 0 1 2 3 4 5 6 7; do
+  d=$(( (hoje + i) % 7 ))
+  h=$(jq -r --arg d "$d" '.dias[$d].abre // empty' "$CONF")
+  [ -n "$h" ] || continue
+  t=$(date -d "$(date -d "@$((agora + i * 86400))" +%F) $h" +%s)
+  if [ "$t" -gt "$agora" ]; then proxima=$t; break; fi
+done
+
+if [ "$anterior" != fechado ]; then
+  echo fechado > "$ARQ_ESTADO"
+  registra "horário: fechado — próxima abertura ${proxima:+$(date -d "@$proxima" '+%a %d/%m %H:%M')}"
+  sleep 5      # o painel escurece e pausa a rádio antes da tela apagar
+fi
+tela off
+processador economia
+
+modo=$(jq -r '.modo // "suspender"' "$CONF")
+[ -f "$RUN/sem-suspensao" ] && [ "$(cat "$RUN/sem-suspensao")" = "$(date +%F)" ] && modo=tela
+
+if [ "$modo" = suspender ] && [ -n "$proxima" ]; then
+  acorda=$((proxima - 120))
+  # só vale a pena suspender se faltar mais de 10 minutos
+  if [ $((acorda - agora)) -gt 600 ]; then
+    registra "suspendendo até $(date -d "@$acorda" '+%a %d/%m %H:%M')"
+    sync
+    if rtcwake -m mem -t "$acorda" >/dev/null 2>&1; then
+      depois=$(date +%s)
+      touch "$RUN/suspendeu"
+      if [ "$depois" -lt $((acorda - 60)) ]; then
+        # acordou antes da hora (tecla, botão, rede): fica ligado por 30 minutos
+        echo $((depois + 1800)) > "$RUN/acordado-ate"
+        echo aberto > "$ARQ_ESTADO"
+        tela on
+        registra "acordado à mão fora do horário: ligado por 30 minutos"
+      else
+        registra "acordou para a abertura"
+      fi
+    else
+      date +%F > "$RUN/sem-suspensao"
+      registra "a suspensão não funcionou nesta máquina: só a tela fica apagada até amanhã"
+    fi
+  fi
+fi
+exit 0

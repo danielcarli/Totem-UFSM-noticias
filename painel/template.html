@@ -139,7 +139,7 @@ body.idle{cursor:none}
 .config .com-unidade{display:flex;align-items:center;gap:.6em;color:var(--texto-2)}
 .config .com-unidade input{width:6em;text-align:center}
 .config .com-unidade input:disabled{opacity:.45}
-.config input[type=text],.config select,.config input[type=number]{
+.config input[type=text],.config input[type=password],.config input[type=time],.config select,.config input[type=number]{
   font:inherit;color:var(--texto);background:rgba(255,255,255,.06);border:1px solid var(--vidro-borda);
   border-radius:8px;padding:.5em .7em;
 }
@@ -158,11 +158,43 @@ body.idle{cursor:none}
 .atualiza-barra{height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:.3em}
 .atualiza-barra i{display:block;height:100%;width:var(--p,0%);background:var(--laranja);transition:width .4s}
 .config button:disabled{opacity:.5;cursor:default}
+/* ---- Destaques UFSM – Sistema (rede, Wi-Fi, Bluetooth, som, horário): só no sistema próprio ---- */
+.sis-bloco{padding:.9em 1em;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--vidro-borda);margin-bottom:.8em}
+.sis-cab{display:flex;align-items:center;gap:.9em;flex-wrap:wrap;margin-bottom:.6em}
+.sis-cab > b{font-weight:700;margin-right:auto}
+.sis-cab .opcao{color:var(--texto-2)}
+.sis-status{color:var(--texto-2);font-size:.92em;margin:-.2em 0 .7em}
+.sis-lista{list-style:none;margin:0;padding:0;display:grid;gap:.35em;max-height:15em;overflow:auto}
+.sis-lista li{display:flex;align-items:center;gap .8em;gap:.8em;padding:.5em .7em;border-radius:9px;background:rgba(255,255,255,.04)}
+.sis-lista li.ativo{background:rgba(244,121,32,.14);box-shadow:inset 0 0 0 1px rgba(244,121,32,.45)}
+.sis-lista .nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sis-lista small{color:var(--texto-3)}
+.sis-lista button{font:inherit;font-size:.88em;padding:.35em .9em !important}
+.sis-vazio{color:var(--texto-3);font-size:.92em;padding:.4em .2em}
+.sinal{display:inline-flex;align-items:flex-end;gap:2px;height:.95em;flex:none}
+.sinal i{width:3px;border-radius:1px;background:var(--texto-3)}
+.sinal i:nth-child(1){height:30%}.sinal i:nth-child(2){height:55%}.sinal i:nth-child(3){height:80%}.sinal i:nth-child(4){height:100%}
+.sinal i.on{background:var(--texto)}
+.sis-form{display:grid;gap:.6em;margin-top:.7em;padding:.8em;border-radius:10px;background:rgba(255,255,255,.05)}
+.sis-form .linha{display:flex;gap:.6em;flex-wrap:wrap;align-items:center}
+.sis-form input{flex:1 1 14em}
+.sis-msg{min-height:1.2em;margin:.2em 0 .8em;font-size:.92em;color:var(--texto-2)}
+.sis-msg.erro{color:var(--laranja)}
+.sis-msg.ok{color:#7fd6a4}
+.dias{display:grid;grid-template-columns:auto auto auto;gap:.45em 1.1em;align-items:center;margin:.6em 0 .8em;justify-content:start}
+.dias .opcao{min-width:8.5em}
+.dias input[type=time]{padding:.35em .5em}
+.dias .fechado{color:var(--texto-3);grid-column:span 2;font-size:.92em}
+.sis-info{display:grid;grid-template-columns:auto 1fr;gap:.25em 1.2em;font-size:.95em;margin-bottom:.8em}
+.sis-info dt{color:var(--texto-2)}
+.sis-info dd{margin:0;font-variant-numeric:tabular-nums}
+.sis-botoes{display:flex;gap:.6em;flex-wrap:wrap;align-items:center}
+.config button.perigo{border-color:rgba(244,121,32,.6)}
 .radio-cfg{display:flex;align-items:flex-start;gap:1.4em}
 .radio-cfg-logo{width:5.2em;height:auto;flex:none;margin-top:.2em;opacity:.95}
 .radio-cfg-campos{display:grid;gap:.55em;flex:1;min-width:0}
 .config .opcao{display:flex;align-items:center;gap:.6em;cursor:pointer;color:var(--texto)}
-.config .opcao input{width:1.15em;height:1.15em;accent-color:var(--laranja);flex:none}
+.config .opcao input[type=checkbox],.config .opcao input[type=radio]{width:1.15em;height:1.15em;accent-color:var(--laranja);flex:none}
 .config .volume{display:flex;align-items:center;gap:.8em;color:var(--texto-2)}
 .config .volume input{flex:0 1 16em;accent-color:var(--laranja)}
 .config .volume output{min-width:3em;font-variant-numeric:tabular-nums;color:var(--texto)}
@@ -570,6 +602,101 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
           </label>
         </div>
       </section>
+      <div id="cfgSistema" hidden>
+      <section>
+        <h3>Rede</h3>
+        <p class="sis-status" id="redeStatus">Lendo a rede…</p>
+        <div class="sis-bloco">
+          <div class="sis-cab"><b>Wi-Fi</b>
+            <label class="opcao"><input type="checkbox" id="wifiLigado"> ligado</label>
+            <button type="button" class="sec" id="wifiProcurar">Procurar redes</button>
+          </div>
+          <ul class="sis-lista" id="wifiLista"><li class="sis-vazio">Clique em "Procurar redes".</li></ul>
+          <div class="sis-form" id="wifiForm" hidden>
+            <b id="wifiFormNome"></b>
+            <input type="text" id="wifiSsid" placeholder="Nome da rede (rede oculta)" hidden>
+            <input type="text" id="wifiUsuario" placeholder="Usuário (redes com login, ex.: eduroam)" hidden autocomplete="off">
+            <input type="password" id="wifiSenha" placeholder="Senha da rede" autocomplete="off">
+            <div class="linha">
+              <label class="opcao"><input type="checkbox" id="wifiMostrar"> mostrar a senha</label>
+              <label class="opcao"><input type="checkbox" id="wifiEmpresa"> rede com usuário e senha</label>
+            </div>
+            <div class="linha"><button type="button" class="pri" id="wifiConectar">Conectar</button><button type="button" class="sec" id="wifiCancelar">Cancelar</button></div>
+          </div>
+        </div>
+        <div class="sis-bloco" id="caboBloco">
+          <div class="sis-cab"><b>Cabo de rede</b><span class="sis-status" id="caboInfo" style="margin:0"></span></div>
+          <div class="linha sis-botoes">
+            <label class="opcao"><input type="radio" name="caboModo" value="auto" checked> Automático (DHCP)</label>
+            <label class="opcao"><input type="radio" name="caboModo" value="manual"> Endereço fixo</label>
+          </div>
+          <div class="sis-form" id="caboManual" hidden>
+            <div class="linha">
+              <input type="text" id="caboIp" placeholder="IP/prefixo — ex.: 200.18.40.25/24">
+              <input type="text" id="caboGw" placeholder="Gateway — ex.: 200.18.40.1">
+              <input type="text" id="caboDns" placeholder="DNS — ex.: 200.18.32.1, 8.8.8.8">
+            </div>
+          </div>
+          <div class="sis-botoes" style="margin-top:.7em"><button type="button" class="sec" id="caboAplicar">Aplicar no cabo</button></div>
+        </div>
+        <p class="sis-msg" id="redeMsg"></p>
+      </section>
+      <section>
+        <h3>Som</h3>
+        <div class="sis-bloco">
+          <div class="campos">
+            <label class="campo">Saída de som
+              <select id="somSaida"></select>
+              <span class="ajuda">HDMI leva o som para a TV. Caixas Bluetooth aparecem aqui depois de conectadas.</span>
+            </label>
+            <label class="campo">Volume geral
+              <span class="volume"><input type="range" id="somVolume" min="0" max="100" step="5"><output id="somVolumeTxt">—</output></span>
+              <span class="ajuda">O volume da rádio UNIFM é ajustado separado, na seção da rádio.</span>
+            </label>
+          </div>
+          <div class="sis-botoes"><button type="button" class="sec" id="somTestar">Testar o som</button></div>
+        </div>
+        <p class="sis-msg" id="somMsg"></p>
+      </section>
+      <section>
+        <h3>Bluetooth</h3>
+        <div class="sis-bloco">
+          <div class="sis-cab"><b>Aparelhos</b>
+            <label class="opcao"><input type="checkbox" id="btLigado"> ligado</label>
+            <button type="button" class="sec" id="btProcurar">Procurar aparelhos</button>
+          </div>
+          <ul class="sis-lista" id="btLista"><li class="sis-vazio">—</li></ul>
+          <p class="ajuda" style="margin:.6em 0 0">Caixas de som, fones, teclados e mouses: deixe o aparelho em modo de pareamento, clique em "Procurar aparelhos" e depois em "Conectar".</p>
+        </div>
+        <p class="sis-msg" id="btMsg"></p>
+      </section>
+      <section id="secTelas" hidden>
+        <h3>Telas do notebook</h3>
+        <div class="sis-bloco">
+          <label class="campo">Com a TV ligada no notebook
+            <select id="telasModo">
+              <option value="lado-a-lado">TV e tela do notebook lado a lado (o painel vai para a TV)</option>
+              <option value="so-externa">Só a TV (desliga a tela do notebook)</option>
+              <option value="espelhar">As duas mostram o mesmo</option>
+            </select>
+            <span class="ajuda">Com a tampa fechada, só a TV fica ligada. O monitor do painel também se escolhe com as teclas 1, 2 e 3.</span>
+          </label>
+        </div>
+        <p class="sis-msg" id="telasMsg"></p>
+      </section>
+      <section>
+        <h3>Horário de funcionamento</h3>
+        <div class="sis-bloco">
+          <label class="opcao"><input type="checkbox" id="horAtivo"> Desligar fora do horário do setor</label>
+          <div class="dias" id="horDias"></div>
+          <div class="sis-botoes" style="margin-bottom:.8em"><button type="button" class="sec" id="horCopiar">Copiar segunda para terça a sexta</button></div>
+          <label class="opcao"><input type="radio" name="horModo" value="suspender" checked> Suspender o computador (gasta menos; liga sozinho 2 minutos antes de abrir)</label>
+          <label class="opcao" style="margin-top:.35em"><input type="radio" name="horModo" value="tela"> Só desligar a tela (para computadores que não voltam da suspensão)</label>
+          <div class="sis-botoes" style="margin-top:.8em"><button type="button" class="pri" id="horSalvar">Salvar horário</button></div>
+        </div>
+        <p class="sis-msg" id="horMsg"></p>
+      </section>
+      </div>
       <section>
         <h3>Rádio UNIFM 107,9</h3>
         <div class="radio-cfg">
@@ -587,6 +714,18 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
         <p class="ajuda" style="margin:0 0 .9em">Marque os sites e quantas matérias com foto de cada um entram no carrossel. As notícias dos sites se alternam ao longo da rotação. Só entram matérias publicadas nos últimos 30 dias.</p>
         <div id="cfgFontes"></div>
       </section>
+      <section id="secComputador" hidden>
+        <h3>Este computador</h3>
+        <div class="sis-bloco">
+          <dl class="sis-info" id="sisInfo"></dl>
+          <div class="sis-botoes">
+            <button type="button" class="sec perigo" id="sisReiniciar">Reiniciar</button>
+            <button type="button" class="sec perigo" id="sisDesligar">Desligar</button>
+          </div>
+          <p class="ajuda" style="margin:.7em 0 0">Se o painel travar: <b>Ctrl+Alt+F2</b> abre o menu de recuperação (com PIN) para forçar a atualização, voltar à versão anterior ou configurar a rede. Ctrl+Alt+F1 volta ao painel.</p>
+        </div>
+        <p class="sis-msg" id="sisMsg"></p>
+      </section>
       <section>
         <h3>Versão e atualizações</h3>
         <div class="atualiza" id="cfgAtualiza" data-estado="parada">
@@ -598,6 +737,7 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
           <button type="button" class="sec" id="cfgBuscarAtualizacao">Buscar atualização</button>
           <button type="button" class="pri" id="cfgInstalarAtualizacao" hidden>Instalar agora e reiniciar</button>
         </div>
+        <label class="opcao" id="cfgAtualizaAutoCampo" hidden style="margin-top:.6em"><input type="checkbox" id="cfgAtualizaAuto"> Atualizar sozinho (procura 15 minutos depois de ligar e todo dia às 4h30)</label>
         <p class="ajuda" id="cfgAtualizaAjuda">As versões novas são baixadas sozinhas e instaladas de madrugada (4h30), sem ninguém precisar mexer na TV.</p>
       </section>
     </div>
@@ -711,6 +851,7 @@ let ultimaAtualizacao = null;
 const cacheImg = new Map();
 const proporcaoImg = new Map();   // largura ÷ altura de cada imagem carregada
 const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
 const palco = $('#palco');
 
 /* ---------------- utilidades ---------------- */
@@ -1837,22 +1978,28 @@ function mostraAtualizacao(a){
     parada: a.modo === 'navegador' ? 'Clique em "Buscar atualização" para conferir se há versão nova.' : 'Procura versões novas sozinho a cada 6 horas.',
     procurando: 'Procurando versão nova…',
     atual: `Esta é a versão mais recente${hora}.`,
-    disponivel: a.modo === 'aviso'
+    instalando: `Instalando a versão ${a.nova}… o painel reinicia sozinho em seguida.`,
+    instalada: `Versão ${a.nova || a.versao} instalada${hora}.`,
+    disponivel: a.modo === 'sistema' ? `Versão ${a.nova} disponível.` : a.modo === 'aviso'
       ? `Versão ${a.nova} disponível. Neste Linux (.deb/.rpm), baixe e instale pelo site: github.com/${REPO_GITHUB}/releases`
       : a.modo === 'navegador'
         ? `Versão ${a.nova} disponível em github.com/${REPO_GITHUB}/releases`
         : `Versão ${a.nova} encontrada — baixando…`,
-    baixando: `Baixando a versão ${a.nova}… ${a.progresso || 0}%`,
+    baixando: a.modo === 'sistema' ? `Baixando a versão ${a.nova} e conferindo os arquivos…` : `Baixando a versão ${a.nova}… ${a.progresso || 0}%`,
     baixada: `Versão ${a.nova} pronta. Instala sozinha às ${a.instalaEm ? fmtHora(new Date(a.instalaEm)) : '4h30'}, ou agora:`,
     erro: `Não foi possível procurar agora${a.erro ? ` (${a.erro})` : ''}. Confira a internet e tente de novo.`,
   };
   txt.textContent = a.modo === 'desligada' ? textos.desligada : (textos[a.estado] || textos.parada);
   barra.hidden = !['baixando', 'disponivel'].includes(a.estado) || a.modo !== 'auto';
   barra.style.setProperty('--p', (a.progresso || 0) + '%');
-  buscar.disabled = a.modo === 'desligada' || ['procurando', 'baixando'].includes(a.estado) || (a.estado === 'disponivel' && a.modo === 'auto');
+  buscar.disabled = a.modo === 'desligada' || ['procurando', 'baixando', 'instalando'].includes(a.estado) || (a.estado === 'disponivel' && a.modo === 'auto');
   buscar.textContent = a.estado === 'procurando' ? 'Procurando…' : 'Buscar atualização';
-  instalar.hidden = a.estado !== 'baixada';
-  $('#cfgAtualizaAjuda').textContent = a.modo === 'aviso'
+  instalar.hidden = a.modo === 'sistema' ? a.estado !== 'disponivel' : a.estado !== 'baixada';
+  instalar.disabled = false;
+  instalar.textContent = a.modo === 'sistema' ? 'Instalar agora' : 'Instalar agora e reiniciar';
+  $('#cfgAtualizaAjuda').textContent = a.modo === 'sistema'
+    ? 'O sistema confere os arquivos com o SHA-256 da release antes de instalar. Para voltar à versão anterior, use o menu de recuperação (Ctrl+Alt+F2).'
+    : a.modo === 'aviso'
     ? 'Neste computador (Linux com .deb ou .rpm) o painel só avisa da versão nova: instalar precisa da senha de administrador.'
     : a.modo === 'navegador' || a.modo === 'desligada'
       ? 'Na versão para navegador, baixe a versão nova pela página de Releases do projeto e troque o arquivo.'
@@ -1871,21 +2018,272 @@ async function buscaAtualizacaoNoNavegador(){
   mostraAtualizacao(estadoNavegador);
 }
 async function preparaAtualizacao(){
+  if (sis.ativo) return atualizacaoSistema();
   if (appAtualiza){ try{ mostraAtualizacao(await appAtualiza.estado()); }catch(e){} }
   else mostraAtualizacao(estadoNavegador);
 }
 if (appAtualiza) appAtualiza.aoMudar(mostraAtualizacao);
 $('#cfgBuscarAtualizacao').addEventListener('click', async () => {
+  if (sis.ativo){ mostraAtualizacao({ modo: 'sistema', estado: 'procurando' }); return atualizacaoSistema('atualizacao-buscar'); }
   if (appAtualiza){ try{ mostraAtualizacao(await appAtualiza.buscar()); }catch(e){} }
   else buscaAtualizacaoNoNavegador();
 });
 $('#cfgInstalarAtualizacao').addEventListener('click', async () => {
+  if (sis.ativo){
+    $('#cfgInstalarAtualizacao').disabled = true;
+    await chamaSistema('atualizacao-instalar');
+    setTimeout(atualizacaoSistema, 1500);
+    return;
+  }
   if (!appAtualiza) return;
   $('#cfgInstalarAtualizacao').disabled = true;
   $('#cfgAtualizaTxt').textContent = 'Instalando… o painel fecha e abre de novo sozinho.';
   try{ await appAtualiza.instalar(); }catch(e){ $('#cfgInstalarAtualizacao').disabled = false; }
 });
 let configAberta = false, pausadoAntesDaConfig = false;
+
+/* ---------- Destaques UFSM – Sistema: rede, Wi-Fi, Bluetooth, som, telas, horário ----------
+   Só aparece quando o painel roda no sistema próprio; cada ação vale na hora (não depende do
+   botão "Salvar e aplicar"). As respostas vêm de /usr/sbin/destaques-sistema, via main.js. */
+const sis = { ativo: false, info: null, cabo: null, redes: [], wifiEscolhida: null };
+const chamaSistema = (acao, ...args) => appDesktop && appDesktop.sistema
+  ? appDesktop.sistema(acao, args).catch(e => ({ ok: false, erro: String(e) }))
+  : Promise.resolve({ ok: false, erro: 'indisponível' });
+function avisoSis(sel, texto, tipo = ''){ const el = $(sel); el.textContent = texto || ''; el.className = 'sis-msg' + (tipo ? ' ' + tipo : ''); }
+async function comBotao(botao, fn){ botao.disabled = true; try{ return await fn(); } finally{ botao.disabled = false; } }
+const sinalHtml = n => `<span class="sinal" aria-label="sinal ${n}%">${[1, 2, 3, 4].map(i => `<i class="${n >= i * 22 ? 'on' : ''}"></i>`).join('')}</span>`;
+
+async function preparaSistema(){
+  const r = await chamaSistema('info');
+  sis.ativo = !!r.ok;
+  $('#cfgSistema').hidden = $('#secComputador').hidden = !sis.ativo;
+  if (sis.ativo){
+    sis.info = r;
+    mostraComputador(r);
+    $('#secTelas').hidden = !r.notebook;
+    $('#telasModo').value = r.telas || 'lado-a-lado';
+    atualizaRede(); atualizaSom(); atualizaBt(false); leHorario();
+  }
+  preparaAtualizacao();
+}
+
+// ---- rede
+async function atualizaRede(){
+  const r = await chamaSistema('rede');
+  if (!r.ok){ $('#redeStatus').textContent = 'Não foi possível ler a rede.'; return; }
+  $('#wifiLigado').checked = !!r.wifiLigado;
+  const conectado = d => parseInt(d.estado, 10) === 100;
+  const partes = r.dispositivos.map(d => {
+    const tipo = d.tipo === 'wifi' ? 'Wi-Fi' : 'Cabo';
+    return conectado(d) ? `${tipo}: conectado${d.tipo === 'wifi' && d.conexao ? ' em ' + d.conexao : ''} · ${String(d.ip).split('/')[0]}` : `${tipo}: desconectado`;
+  });
+  $('#redeStatus').textContent = partes.join('   ·   ') || 'Nenhuma placa de rede encontrada.';
+  const temWifi = r.dispositivos.some(d => d.tipo === 'wifi');
+  $('#wifiLigado').disabled = $('#wifiProcurar').disabled = !temWifi;
+  if (!temWifi){ $('#wifiLigado').checked = false; $('#wifiLista').innerHTML = '<li class="sis-vazio">Este computador não tem Wi-Fi (um adaptador USB de Wi-Fi resolve).</li>'; }
+  const cabo = r.dispositivos.find(d => d.tipo === 'ethernet');
+  $('#caboBloco').hidden = !cabo;
+  sis.cabo = cabo || null;
+  if (cabo){
+    $('#caboInfo').textContent = conectado(cabo) ? `${cabo.dispositivo} · ${cabo.ip}` : `${cabo.dispositivo} · sem cabo ligado`;
+    const manual = cabo.metodo === 'manual';
+    $$('input[name=caboModo]').forEach(i => { i.checked = i.value === (manual ? 'manual' : 'auto'); });
+    $('#caboManual').hidden = !manual;
+    if (manual){ $('#caboIp').value = cabo.ip; $('#caboGw').value = cabo.gateway; $('#caboDns').value = cabo.dns; }
+  }
+}
+async function procuraWifi(){
+  $('#wifiLista').innerHTML = '<li class="sis-vazio">Procurando redes…</li>';
+  const r = await chamaSistema('wifi-lista');
+  if (!r.ok){ $('#wifiLista').innerHTML = `<li class="sis-vazio">${esc(r.erro || 'Sem Wi-Fi neste computador.')}</li>`; return; }
+  sis.redes = r.redes;
+  $('#wifiLista').innerHTML = r.redes.map((w, i) => `
+    <li class="${w.conectada ? 'ativo' : ''}">${sinalHtml(w.sinal)}
+      <span class="nome">${esc(w.ssid)} <small>${w.conectada ? '· conectada' : ''}${w.seguranca && w.seguranca !== '--' ? '' : ' · aberta'}${w.salva && !w.conectada ? ' · salva' : ''}</small></span>
+      ${w.conectada ? '' : `<button type="button" class="sec" data-wifi="${i}">Conectar</button>`}
+      ${w.salva ? `<button type="button" class="sec" data-esquecer="${i}">Esquecer</button>` : ''}
+    </li>`).join('') + `<li><span class="nome"><small>Rede que não aparece na lista</small></span><button type="button" class="sec" data-wifi="oculta">Outra rede…</button></li>`;
+}
+function abreFormWifi(w){
+  sis.wifiEscolhida = w;
+  $('#wifiForm').hidden = false;
+  $('#wifiFormNome').textContent = w ? `Conectar em "${w.ssid}"` : 'Conectar em outra rede';
+  $('#wifiSsid').hidden = !!w; $('#wifiSsid').value = '';
+  $('#wifiEmpresa').checked = !!(w && w.empresarial);
+  $('#wifiUsuario').hidden = !$('#wifiEmpresa').checked; $('#wifiUsuario').value = '';
+  $('#wifiSenha').value = '';
+  $('#wifiSenha').placeholder = w && w.salva ? 'Senha (em branco: usa a senha já salva)' : (w && (!w.seguranca || w.seguranca === '--') ? 'Rede aberta: sem senha' : 'Senha da rede');
+  (w ? $('#wifiSenha') : $('#wifiSsid')).focus();
+}
+async function conectaWifi(){
+  const ssid = sis.wifiEscolhida ? sis.wifiEscolhida.ssid : $('#wifiSsid').value.trim();
+  if (!ssid) return avisoSis('#redeMsg', 'Digite o nome da rede.', 'erro');
+  const usuario = $('#wifiEmpresa').checked ? $('#wifiUsuario').value.trim() : '';
+  avisoSis('#redeMsg', `Conectando em "${ssid}"…`);
+  const r = await comBotao($('#wifiConectar'), () => chamaSistema('wifi-conectar', ssid, $('#wifiSenha').value, usuario));
+  if (r.ok){ avisoSis('#redeMsg', `Conectado em "${ssid}".`, 'ok'); $('#wifiForm').hidden = true; }
+  else avisoSis('#redeMsg', `Não conectou: ${r.erro}. Confira a senha.`, 'erro');
+  atualizaRede(); procuraWifi();
+}
+$('#wifiProcurar').addEventListener('click', e => comBotao(e.currentTarget, procuraWifi));
+$('#wifiLista').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.wifi) abreFormWifi(b.dataset.wifi === 'oculta' ? null : sis.redes[+b.dataset.wifi]);
+  else if (b.dataset.esquecer){
+    const w = sis.redes[+b.dataset.esquecer];
+    const r = await chamaSistema('wifi-esquecer', w.ssid);
+    avisoSis('#redeMsg', r.ok ? `"${w.ssid}" esquecida.` : r.erro, r.ok ? 'ok' : 'erro');
+    procuraWifi(); atualizaRede();
+  }
+});
+$('#wifiConectar').addEventListener('click', conectaWifi);
+$('#wifiCancelar').addEventListener('click', () => { $('#wifiForm').hidden = true; });
+$('#wifiMostrar').addEventListener('change', e => { $('#wifiSenha').type = e.target.checked ? 'text' : 'password'; });
+$('#wifiEmpresa').addEventListener('change', e => { $('#wifiUsuario').hidden = !e.target.checked; });
+for (const id of ['#wifiSenha', '#wifiUsuario', '#wifiSsid'])
+  $(id).addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); conectaWifi(); } });
+$('#wifiLigado').addEventListener('change', async e => {
+  await chamaSistema('wifi-ligar', e.target.checked ? 'on' : 'off');
+  atualizaRede(); if (e.target.checked) procuraWifi(); else $('#wifiLista').innerHTML = '<li class="sis-vazio">Wi-Fi desligado.</li>';
+});
+$$('input[name=caboModo]').forEach(i => i.addEventListener('change', () => { $('#caboManual').hidden = $('input[name=caboModo]:checked').value !== 'manual'; }));
+$('#caboAplicar').addEventListener('click', e => comBotao(e.currentTarget, async () => {
+  if (!sis.cabo) return;
+  const modo = $('input[name=caboModo]:checked').value;
+  avisoSis('#redeMsg', 'Aplicando no cabo…');
+  const r = modo === 'manual'
+    ? await chamaSistema('cabo-config', sis.cabo.dispositivo, 'manual', $('#caboIp').value.trim(), $('#caboGw').value.trim(), $('#caboDns').value.trim())
+    : await chamaSistema('cabo-config', sis.cabo.dispositivo, 'auto');
+  avisoSis('#redeMsg', r.ok ? 'Cabo configurado.' : `Não foi possível: ${r.erro}`, r.ok ? 'ok' : 'erro');
+  setTimeout(atualizaRede, 2500);
+}));
+
+// ---- som
+async function atualizaSom(){
+  const r = await chamaSistema('som-estado');
+  if (!r.ok || !r.disponivel){ avisoSis('#somMsg', 'O som ainda não está disponível (o painel acabou de abrir?).', 'erro'); return; }
+  $('#somSaida').innerHTML = r.saidas.map(o => `<option value="${o.id}"${o.padrao ? ' selected' : ''}>${esc(o.nome)}</option>`).join('')
+    || '<option value="">Nenhuma saída de som encontrada</option>';
+  $('#somVolume').value = r.volume; $('#somVolumeTxt').textContent = (r.mudo ? 'mudo · ' : '') + r.volume + '%';
+  avisoSis('#somMsg', '');
+}
+$('#somSaida').addEventListener('change', async e => {
+  const r = await chamaSistema('som-saida', e.target.value);
+  avisoSis('#somMsg', r.ok ? 'Saída de som trocada.' : r.erro, r.ok ? 'ok' : 'erro');
+});
+$('#somVolume').addEventListener('input', e => { $('#somVolumeTxt').textContent = e.target.value + '%'; });
+$('#somVolume').addEventListener('change', e => chamaSistema('som-volume', e.target.value));
+$('#somTestar').addEventListener('click', e => comBotao(e.currentTarget, async () => {
+  avisoSis('#somMsg', 'Tocando um apito de teste…'); await chamaSistema('som-testar'); avisoSis('#somMsg', '');
+}));
+
+// ---- bluetooth
+async function atualizaBt(buscar){
+  if (buscar) $('#btLista').innerHTML = '<li class="sis-vazio">Procurando aparelhos (12 segundos)…</li>';
+  const r = await chamaSistema(buscar ? 'bt-buscar' : 'bt-estado');
+  if (!r.ok || !r.disponivel){
+    $('#btLista').innerHTML = '<li class="sis-vazio">Este computador não tem Bluetooth.</li>';
+    $('#btLigado').disabled = $('#btProcurar').disabled = true; return;
+  }
+  $('#btLigado').disabled = $('#btProcurar').disabled = false;
+  $('#btLigado').checked = r.ligado;
+  $('#btLista').innerHTML = r.aparelhos.length ? r.aparelhos.map(a => `
+    <li class="${a.conectado ? 'ativo' : ''}"><span class="nome">${esc(a.nome)} <small>${a.conectado ? '· conectado' : a.pareado ? '· pareado' : ''}</small></span>
+      <button type="button" class="sec" data-bt="${a.conectado ? 'bt-desconectar' : 'bt-conectar'}" data-mac="${a.mac}">${a.conectado ? 'Desconectar' : 'Conectar'}</button>
+      ${a.pareado ? `<button type="button" class="sec" data-bt="bt-remover" data-mac="${a.mac}">Esquecer</button>` : ''}
+    </li>`).join('') : `<li class="sis-vazio">${r.ligado ? 'Nenhum aparelho. Clique em "Procurar aparelhos".' : 'Bluetooth desligado.'}</li>`;
+}
+$('#btProcurar').addEventListener('click', e => comBotao(e.currentTarget, () => atualizaBt(true)));
+$('#btLigado').addEventListener('change', async e => { await chamaSistema('bt-ligar', e.target.checked ? 'on' : 'off'); atualizaBt(false); });
+$('#btLista').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-bt]'); if (!b) return;
+  avisoSis('#btMsg', b.dataset.bt === 'bt-conectar' ? 'Conectando… (até 30 segundos)' : 'Aguarde…');
+  const r = await comBotao(b, () => chamaSistema(b.dataset.bt, b.dataset.mac));
+  avisoSis('#btMsg', r.ok ? 'Pronto.' : r.erro, r.ok ? 'ok' : 'erro');
+  atualizaBt(false); if (b.dataset.bt === 'bt-conectar') setTimeout(atualizaSom, 2500);
+});
+
+// ---- telas do notebook
+$('#telasModo').addEventListener('change', async e => {
+  const r = await chamaSistema('telas-modo', e.target.value);
+  avisoSis('#telasMsg', r.ok ? 'Telas arrumadas.' : r.erro, r.ok ? 'ok' : 'erro');
+});
+
+// ---- horário de funcionamento
+const DIAS_SEMANA = [[1, 'Segunda'], [2, 'Terça'], [3, 'Quarta'], [4, 'Quinta'], [5, 'Sexta'], [6, 'Sábado'], [0, 'Domingo']];
+function desenhaHorario(h){
+  h = h || { ativo: false, modo: 'suspender', dias: {} };
+  $('#horAtivo').checked = !!h.ativo;
+  $$('input[name=horModo]').forEach(i => { i.checked = i.value === (h.modo || 'suspender'); });
+  $('#horDias').innerHTML = DIAS_SEMANA.map(([d, nome]) => {
+    const v = h.dias && h.dias[d];
+    return `<label class="opcao"><input type="checkbox" data-dia="${d}"${v ? ' checked' : ''}> ${nome}</label>
+      <label class="opcao">abre <input type="time" data-abre="${d}" value="${v ? v.abre : '07:30'}"${v ? '' : ' disabled'}></label>
+      <label class="opcao">fecha <input type="time" data-fecha="${d}" value="${v ? v.fecha : '22:00'}"${v ? '' : ' disabled'}></label>`;
+  }).join('');
+}
+async function leHorario(){ const r = await chamaSistema('horario-ler'); desenhaHorario(r.ok ? r.horario : null); }
+$('#horDias').addEventListener('change', e => {
+  const d = e.target.dataset.dia;
+  if (d !== undefined){ $(`[data-abre="${d}"]`).disabled = $(`[data-fecha="${d}"]`).disabled = !e.target.checked; }
+});
+$('#horCopiar').addEventListener('click', () => {
+  const seg = $('[data-dia="1"]').checked;
+  for (const d of [2, 3, 4, 5]){
+    $(`[data-dia="${d}"]`).checked = seg;
+    $(`[data-abre="${d}"]`).value = $('[data-abre="1"]').value; $(`[data-fecha="${d}"]`).value = $('[data-fecha="1"]').value;
+    $(`[data-abre="${d}"]`).disabled = $(`[data-fecha="${d}"]`).disabled = !seg;
+  }
+});
+$('#horSalvar').addEventListener('click', e => comBotao(e.currentTarget, async () => {
+  const dias = {};
+  for (const [d, nome] of DIAS_SEMANA){
+    if (!$(`[data-dia="${d}"]`).checked) continue;
+    const abre = $(`[data-abre="${d}"]`).value, fecha = $(`[data-fecha="${d}"]`).value;
+    if (!abre || !fecha || abre >= fecha) return avisoSis('#horMsg', `${nome}: a hora de fechar precisa ser depois da de abrir.`, 'erro');
+    dias[d] = { abre, fecha };
+  }
+  const h = { ativo: $('#horAtivo').checked, modo: $('input[name=horModo]:checked').value, dias };
+  if (h.ativo && !Object.keys(dias).length) return avisoSis('#horMsg', 'Marque pelo menos um dia de funcionamento.', 'erro');
+  const r = await chamaSistema('horario-gravar', JSON.stringify(h));
+  avisoSis('#horMsg', r.ok ? (h.ativo ? 'Horário salvo. Fora dele, a TV apaga sozinha.' : 'Horário desligado: a TV fica sempre ligada.') : r.erro, r.ok ? 'ok' : 'erro');
+}));
+
+// ---- este computador
+function mostraComputador(r){
+  const linhas = [['Nome', r.nome], ['Endereço', (r.ips || []).join(', ') || 'sem rede'], ['Modelo', r.modelo || '—'],
+    ['Painel', 'v' + r.painel], ['Sistema', 'v' + r.sistema], ['Espaço livre', r.livre]];
+  $('#sisInfo').innerHTML = linhas.map(([k, v]) => `<dt>${k}</dt><dd>${esc(String(v || '—'))}</dd>`).join('');
+}
+function botaoConfirmado(sel, acao, textoConfirma, aviso){
+  const b = $(sel), original = b.textContent;
+  b.addEventListener('click', async () => {
+    if (!b.dataset.confirma){
+      b.dataset.confirma = '1'; b.textContent = textoConfirma;
+      setTimeout(() => { delete b.dataset.confirma; b.textContent = original; }, 5000);
+      return;
+    }
+    avisoSis('#sisMsg', aviso, 'ok');
+    await chamaSistema(acao);
+  });
+}
+botaoConfirmado('#sisReiniciar', 'reiniciar', 'Clique de novo para reiniciar', 'Reiniciando…');
+botaoConfirmado('#sisDesligar', 'desligar', 'Clique de novo para desligar', 'Desligando…');
+
+// ---- atualização pelo sistema
+async function atualizacaoSistema(acao = 'atualizacao-estado'){
+  const r = await chamaSistema(acao);
+  if (!r.ok){ mostraAtualizacao({ modo: 'sistema', estado: 'erro', erro: r.erro }); return; }
+  const a = r.atualizacao || {};
+  const estado = a.estado || 'parada';
+  mostraAtualizacao({ modo: 'sistema', estado: estado === 'parada' ? 'atual' : estado, versao: a.versao, nova: a.nova,
+    erro: a.erro, ultimaBusca: a.quando ? Date.parse(a.quando) : null });
+  if (estado === 'parada') $('#cfgAtualizaTxt').textContent = 'Ainda não procurou atualização neste computador.';
+  $('#cfgAtualizaAutoCampo').hidden = false;
+  $('#cfgAtualizaAuto').checked = a.automatica !== false;
+  if (['procurando', 'baixando', 'instalando'].includes(estado)) setTimeout(() => { if (configAberta) atualizacaoSistema(); }, 3000);
+}
+$('#cfgAtualizaAuto').addEventListener('change', e => chamaSistema('atualizacao-auto', e.target.checked ? 'sim' : 'nao'));
 
 // depois de uma busca: avisa nos sites marcados que não trouxeram nada
 function notaDaFonte(id, ativo){
@@ -1953,7 +2351,7 @@ async function abreConfig(){
   if (params.get('local') && !c.tv) c.tv = params.get('local');
   $('#cfgTv').value = c.tv;
   preencheRadio(c.radio);
-  preparaAtualizacao();
+  preparaSistema();
   // --intervalo na linha de comando vale por cima da tela de configurações
   const porOpcao = parseFloat(params.get('intervalo')) > 0;
   $('#cfgIntervalo').value = porOpcao ? PAINEL.intervalo : c.intervalo;
@@ -2182,11 +2580,19 @@ function agendaRecargaDiaria(){
 
 /* ---------- horário noturno (?noite=23-6): tela preta e carrossel parado ---------- */
 let dormindo = false;
+// fora do horário de funcionamento do sistema próprio (destaques-energia)
+let energiaFechada = false;
+if (appDesktop && appDesktop.aoMudarEnergia) appDesktop.aoMudarEnergia(e => {
+  const fechada = e === 'fechado';
+  if (fechada !== energiaFechada){ energiaFechada = fechada; verificaNoite(); }
+});
 function verificaNoite(){
   const m = (params.get('noite') || '').match(/^(\d{1,2})-(\d{1,2})$/);
-  if (!m) return;
-  const ini = +m[1], fim = +m[2], h = new Date().getHours();
-  const deveDormir = ini > fim ? (h >= ini || h < fim) : (h >= ini && h < fim);
+  let deveDormir = energiaFechada;
+  if (m){
+    const ini = +m[1], fim = +m[2], h = new Date().getHours();
+    deveDormir = deveDormir || (ini > fim ? (h >= ini || h < fim) : (h >= ini && h < fim));
+  }
   if (deveDormir === dormindo) return;
   dormindo = deveDormir;
   $('#noite').classList.toggle('on', dormindo);

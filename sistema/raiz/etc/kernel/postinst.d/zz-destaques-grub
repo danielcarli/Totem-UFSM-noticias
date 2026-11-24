@@ -1,0 +1,4 @@
+#!/bin/sh
+# Destaques UFSM: kernel novo → menu do GRUB atualizado (o sistema usa só os binários do GRUB)
+[ -f /boot/grub/grub.cfg ] && command -v update-grub >/dev/null && update-grub >/dev/null 2>&1
+exit 0

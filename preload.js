@@ -6,6 +6,9 @@ contextBridge.exposeInMainWorld('destaquesApp', {
   configurando: aberta => ipcRenderer.send('configurando', !!aberta),
   monitores: () => ipcRenderer.invoke('monitores'),
   usarMonitor: numero => ipcRenderer.invoke('usar-monitor', numero),
+  // Destaques UFSM – Sistema: rede, Wi-Fi, Bluetooth, som, horário… ({ok:false} fora dele)
+  sistema: (acao, args) => ipcRenderer.invoke('sistema', acao, args),
+  aoMudarEnergia: fn => { ipcRenderer.removeAllListeners('energia'); ipcRenderer.on('energia', (_, e) => fn(e)); },
   // atualização do aplicativo (tela de configurações)
   atualizacao: {
     estado: () => ipcRenderer.invoke('atualizacao:estado'),

@@ -1,0 +1,17 @@
+#!/bin/bash
+# Destaques UFSM – Sistema: sessão gráfica do painel (startx → aqui).
+. /usr/lib/destaques/comum.sh 2>/dev/null
+
+# a tela nunca apaga sozinha: quem apaga é o horário de funcionamento (destaques-energia)
+xset s off s noblank -dpms 2>/dev/null
+setxkbmap br 2>/dev/null || true
+
+openbox --config-file /usr/lib/destaques/openbox.xml &
+
+# notebook + TV
+/usr/lib/destaques/telas
+
+# cursor do mouse some depois de 1 minuto parado e volta ao mexer o mouse
+unclutter --timeout 60 --jitter 2 --ignore-scrolling &
+
+exec /usr/lib/destaques/quiosque

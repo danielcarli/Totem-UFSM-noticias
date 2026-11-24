@@ -1,0 +1,137 @@
+#!/bin/bash
+# Destaques UFSM – Sistema: atualização pela página de Releases do GitHub.
+#
+#   destaques-atualiza               instala se houver versão nova (é o que o timer roda)
+#   destaques-atualiza --automatico  idem, mas respeita ATUALIZAR_SOZINHO=nao
+#   destaques-atualiza --verificar   só confere se há versão nova
+#   destaques-atualiza --forcar      baixa e reinstala a última versão, mesmo se já for a instalada
+#   destaques-atualiza --anterior    volta para a versão instalada antes da atual
+#   destaques-atualiza --motivo X    texto que vai para o registro (ex.: travamentos)
+#
+# Baixa destaques-ufsm_amd64.deb e destaques-sistema_all.deb da última release, confere com o
+# SHA256SUMS da própria release e instala. As duas versões mais recentes ficam guardadas em
+# /var/lib/destaques/{atual,anterior} para poder voltar atrás.
+set -u
+
+# o próprio pacote deste script pode ser trocado durante a atualização: roda uma cópia
+if [ "${DESTAQUES_COPIA:-}" != 1 ]; then
+  mkdir -p /run/destaques
+  cp -f "$0" /run/destaques/atualiza.sh
+  DESTAQUES_COPIA=1 exec bash /run/destaques/atualiza.sh "$@"
+fi
+
+. /usr/lib/destaques/comum.sh
+export DEBIAN_FRONTEND=noninteractive
+
+modo=instalar; motivo=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --verificar) modo=verificar;; --forcar) modo=forcar;; --anterior) modo=anterior;;
+    --automatico) modo=automatico;; --motivo) motivo=${2:-}; shift;;
+  esac
+  shift
+done
+
+# página de Releases (ORIGEM_RELEASES no local.conf troca por um espelho interno, se precisar)
+ORIGEM=${ORIGEM_RELEASES:-https://github.com/$REPO/releases}
+STATUS=$ESTADO/atualizacao.json
+status(){   # status ESTADO [NOVA] [ERRO]
+  jq -n --arg estado "$1" --arg nova "${2:-}" --arg erro "${3:-}" --arg quando "$(date -Is)" \
+     --arg versao "$(versao_pacote destaques-ufsm)" \
+     '{estado:$estado, nova:$nova, erro:$erro, quando:$quando, versaoNaHora:$versao}' > "$STATUS.tmp" && mv "$STATUS.tmp" "$STATUS"
+  [ -n "${3:-}" ] && registra "atualização: $1 — $3" || registra "atualização: $1 ${2:-}"
+}
+
+# uma atualização por vez
+exec 9>"$RUN/atualiza.lock"
+flock -n 9 || { registra "atualização já em andamento"; exit 0; }
+
+if [ "$modo" = automatico ]; then
+  [ "${ATUALIZAR_SOZINHO:-sim}" = sim ] || { registra "atualização automática desligada"; exit 0; }
+  modo=instalar
+fi
+
+# última versão publicada: o GitHub redireciona /releases/latest para /releases/tag/vX.Y.Z
+ultima_tag(){
+  curl -fsSI --retry 2 --max-time 25 "$ORIGEM/latest" 2>/dev/null \
+    | awk 'tolower($1)=="location:"{print $2}' | tr -d '\r' | sed 's#.*/tag/##' | tail -1
+}
+baixa(){    # baixa ARQUIVO DESTINO
+  curl -fsSL --retry 3 --connect-timeout 20 --max-time 900 -o "$2" \
+    "$ORIGEM/download/$TAG/$1"
+}
+instala_debs(){   # instala_debs PASTA
+  local debs=("$1"/*.deb)
+  [ -e "${debs[0]}" ] || return 1
+  # o apt resolve dependências novas (precisa das listas do Debian); sem internet do Debian, tenta direto
+  if ! apt-get install -y -q --allow-downgrades -o Dpkg::Options::=--force-confnew "${debs[@]}" >>"$ESTADO/atualizacao.log" 2>&1; then
+    apt-get update -q >>"$ESTADO/atualizacao.log" 2>&1 || true
+    apt-get install -y -q --allow-downgrades -o Dpkg::Options::=--force-confnew "${debs[@]}" >>"$ESTADO/atualizacao.log" 2>&1 \
+      || dpkg -i --force-confnew "${debs[@]}" >>"$ESTADO/atualizacao.log" 2>&1
+  fi
+}
+
+[ -n "$motivo" ] && registra "atualização pedida por: $motivo"
+echo "---- $(date -Is) $modo ${motivo}" >> "$ESTADO/atualizacao.log"
+
+# ---- voltar para a versão anterior ----
+if [ "$modo" = anterior ]; then
+  ls "$ESTADO"/anterior/*.deb >/dev/null 2>&1 || { status erro "" "não há versão anterior guardada"; exit 1; }
+  status instalando "anterior"
+  if instala_debs "$ESTADO/anterior"; then
+    rm -rf "$ESTADO/troca"; mv "$ESTADO/atual" "$ESTADO/troca" 2>/dev/null
+    mv "$ESTADO/anterior" "$ESTADO/atual"; mv "$ESTADO/troca" "$ESTADO/anterior" 2>/dev/null
+    status instalada "$(versao_pacote destaques-ufsm)"
+    reinicia_painel
+    exit 0
+  fi
+  status erro "" "não foi possível instalar a versão anterior (veja $ESTADO/atualizacao.log)"
+  exit 1
+fi
+
+status procurando
+TAG=$(ultima_tag)
+if [ -z "$TAG" ]; then status erro "" "sem acesso ao GitHub (internet?)"; exit 1; fi
+NOVA=${TAG#v}
+ATUAL=$(versao_pacote destaques-ufsm)
+
+if [ "$modo" != forcar ] && [ -n "$ATUAL" ] && ! versao_maior "$NOVA" "$ATUAL"; then
+  status atual "$NOVA"
+  exit 0
+fi
+if [ "$modo" = verificar ]; then status disponivel "$NOVA"; exit 0; fi
+
+# ---- baixar e conferir ----
+status baixando "$NOVA"
+PASTA=$ESTADO/baixando
+rm -rf "$PASTA"; mkdir -p "$PASTA"
+if ! baixa SHA256SUMS.txt "$PASTA/SHA256SUMS" || ! baixa destaques-ufsm_amd64.deb "$PASTA/destaques-ufsm_amd64.deb"; then
+  status erro "$NOVA" "não foi possível baixar a versão $NOVA"; rm -rf "$PASTA"; exit 1
+fi
+baixa destaques-sistema_all.deb "$PASTA/destaques-sistema_all.deb" || rm -f "$PASTA/destaques-sistema_all.deb"
+for f in "$PASTA"/*.deb; do
+  nome=$(basename "$f")
+  esperado=$(awk -v n="$nome" '$2==n || $2=="*"n {print $1}' "$PASTA/SHA256SUMS" | head -1)
+  if [ -z "$esperado" ] || [ "$(sha256sum "$f" | cut -d' ' -f1)" != "$esperado" ]; then
+    status erro "$NOVA" "o arquivo $nome não confere com o SHA256SUMS da release"; rm -rf "$PASTA"; exit 1
+  fi
+done
+rm -f "$PASTA/SHA256SUMS"
+
+# ---- instalar (guardando a versão atual para poder voltar) ----
+status instalando "$NOVA"
+if instala_debs "$PASTA"; then
+  if [ "$(versao_pacote destaques-ufsm)" != "$ATUAL" ]; then     # versão mudou: a de antes vira "anterior"
+    rm -rf "$ESTADO/anterior"
+    [ -d "$ESTADO/atual" ] && mv "$ESTADO/atual" "$ESTADO/anterior"
+  else
+    rm -rf "$ESTADO/atual"
+  fi
+  mv "$PASTA" "$ESTADO/atual"
+  status instalada "$(versao_pacote destaques-ufsm)"
+  reinicia_painel
+  exit 0
+fi
+status erro "$NOVA" "a instalação falhou (veja $ESTADO/atualizacao.log)"
+rm -rf "$PASTA"
+exit 1

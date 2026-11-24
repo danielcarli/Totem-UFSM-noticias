@@ -1,0 +1,14 @@
+# firmwares: placas de rede, Wi-Fi, Bluetooth, som e vídeo (inclusive de máquinas antigas)
+firmware-linux-free
+firmware-misc-nonfree
+firmware-realtek
+firmware-iwlwifi
+firmware-atheros
+firmware-brcm80211
+firmware-libertas
+firmware-intel-sound
+firmware-sof-signed
+firmware-amd-graphics
+bluez-firmware
+intel-microcode
+amd64-microcode

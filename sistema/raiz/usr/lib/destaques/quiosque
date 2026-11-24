@@ -1,0 +1,30 @@
+#!/bin/bash
+# Destaques UFSM – Sistema: mantém o painel sempre aberto.
+# Se fechar, abre de novo em 2 segundos. Se fechar 4 vezes seguidas em menos de 90 segundos
+# cada (travando ao abrir), pede uma atualização forçada pela Release do GitHub e tenta de novo.
+. /usr/lib/destaques/comum.sh 2>/dev/null
+
+REG="$HOME/.local/state/destaques"
+mkdir -p "$REG"
+falhas=0
+
+while true; do
+  # registro do painel: no máximo ~2 MB (mais um arquivo antigo)
+  if [ -f "$REG/painel.log" ] && [ "$(stat -c%s "$REG/painel.log")" -gt 2000000 ]; then
+    mv -f "$REG/painel.log" "$REG/painel.log.1"
+  fi
+  inicio=$(date +%s)
+  # shellcheck disable=SC2086
+  /usr/bin/destaques-ufsm --sem-atualizacao --lang=pt-BR $PAINEL_OPCOES >>"$REG/painel.log" 2>&1
+  codigo=$?
+  durou=$(( $(date +%s) - inicio ))
+  echo "$(date -Is) painel fechou (código $codigo, depois de ${durou}s)" >>"$REG/painel.log"
+
+  if [ "$durou" -lt 90 ]; then falhas=$((falhas + 1)); else falhas=0; fi
+  if [ "$falhas" -ge 4 ]; then
+    registra "o painel fechou $falhas vezes seguidas: atualização forçada"
+    sudo -n /usr/sbin/destaques-atualiza --forcar --motivo "painel fechando sozinho" || true
+    falhas=0
+  fi
+  sleep 2
+done

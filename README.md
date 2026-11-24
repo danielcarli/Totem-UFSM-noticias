@@ -4,7 +4,7 @@
 
 **Painel de notícias para TVs e totens da Universidade Federal de Santa Maria**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.7.1-0b5394)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.8.0-0b5394)
 ![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-e7640a)
 ![Plataformas](https://img.shields.io/badge/plataformas-Windows%20%7C%20Linux-1ab2af)
 ![Electron](https://img.shields.io/badge/Electron-45-47848f)
@@ -35,6 +35,7 @@ do portal e se atualiza sozinho. Depois de instalado, não precisa de ninguém p
 - [Recursos](#recursos)
 - [Instalação](#instalação)
 - [TV ou totem funcionando sozinho](#tv-ou-totem-funcionando-sozinho)
+- [Sistema próprio (Linux para TVs e totens)](#sistema-próprio-linux-para-tvs-e-totens)
 - [Configurações](#configurações)
 - [Uso](#uso)
 - [Como funciona](#como-funciona)
@@ -56,6 +57,7 @@ Os links abaixo sempre baixam a **versão mais recente** publicada em
 | **Debian, Ubuntu, Linux Mint** | [`destaques-ufsm_amd64.deb`](https://github.com/danielcarli/Totem-UFSM-noticias/releases/latest/download/destaques-ufsm_amd64.deb) |
 | **Fedora, RHEL, openSUSE** | [`destaques-ufsm.x86_64.rpm`](https://github.com/danielcarli/Totem-UFSM-noticias/releases/latest/download/destaques-ufsm.x86_64.rpm) |
 | Qualquer Linux — AppImage, sem instalar | [`Destaques-UFSM-x86_64.AppImage`](https://github.com/danielcarli/Totem-UFSM-noticias/releases/latest/download/Destaques-UFSM-x86_64.AppImage) |
+| **Sistema próprio** — Linux que liga direto no painel, para PCs e notebooks dedicados (64 bits) | [`Destaques-UFSM-Sistema-amd64.iso`](https://github.com/danielcarli/Totem-UFSM-noticias/releases/latest/download/Destaques-UFSM-Sistema-amd64.iso) — veja [Sistema próprio](#sistema-próprio-linux-para-tvs-e-totens) |
 | Navegador — arquivo único | [`destaques-ufsm.html`](https://github.com/danielcarli/Totem-UFSM-noticias/releases/latest/download/destaques-ufsm.html) |
 
 Pelo terminal do Linux (Debian, Ubuntu, Mint):
@@ -95,7 +97,7 @@ inteira, com textos e QR code maiores ("Leia no celular").
 
 **Identidade institucional.** A marca da UFSM fica no topo; a Coordenadoria de Comunicação e a
 Agência de Notícias, que desenvolve o painel, assinam no rodapé, com a hora da última atualização
-e, bem discreta embaixo dela, a versão do painel (ex.: `v1.7.1`) — útil para saber se uma TV já
+e, bem discreta embaixo dela, a versão do painel (ex.: `v1.8.0`) — útil para saber se uma TV já
 recebeu a atualização.
 Abaixo do título de cada matéria aparece o **site de onde ela vem**: o portal da UFSM é formado por
 muitos subsites (pró-reitorias, centros, cursos), e as matérias da página principal são da
@@ -193,6 +195,40 @@ e no menu Iniciar; para remover, use **Configurações › Aplicativos › Desta
 3. **Tela que não apaga.** O painel já impede o descanso de tela, mas desligue também a proteção
    de tela e o bloqueio nas configurações de energia.
 4. **Volta após falta de luz.** Na BIOS, ajuste "Restore on AC Power Loss" para **Power On**.
+
+## Sistema próprio (Linux para TVs e totens)
+
+Para um computador que fica só por conta da TV ou do totem, há uma imagem pronta:
+**[`Destaques-UFSM-Sistema-amd64.iso`](https://github.com/danielcarli/Totem-UFSM-noticias/releases/latest/download/Destaques-UFSM-Sistema-amd64.iso)**
+— um Debian 13 enxuto que **liga direto no painel**, sem área de trabalho, com só o necessário:
+vídeo (placas antigas e novas), rede cabeada e Wi-Fi, Bluetooth, som, mouse e teclado.
+
+<img src="docs/sistema-boot.jpg" alt="Menu do pendrive do Destaques UFSM – Sistema" width="420">
+<img src="docs/sistema-instalador.jpg" alt="Instalador do Destaques UFSM – Sistema" width="420">
+
+- **Instala em PCs e notebooks antigos** de 64 bits (BIOS ou UEFI, 2 GB de RAM, 8 GB de disco):
+  grave a ISO num pendrive, ligue por ele e escolha **Instalar**. Também dá para **testar** sem
+  instalar.
+- **Notebook com a TV:** usa as duas telas — o painel vai para a TV (monitor 1) — e continua
+  funcionando com a tampa fechada.
+- **Configura tudo pela engrenagem do painel**, no mesmo visual: rede cabeada (DHCP ou endereço
+  fixo), Wi-Fi (inclusive com usuário e senha, como eduroam), Bluetooth, saída de som e volume,
+  telas do notebook e horário de funcionamento.
+- **Horário de funcionamento:** fora do expediente do setor, a tela apaga e o computador
+  **suspende**, gastando quase nada; o relógio da placa-mãe liga tudo sozinho 2 minutos antes de
+  abrir. Em máquinas que não voltam bem da suspensão, só apaga a tela.
+- **Atualiza sozinho** pela página de Releases do GitHub (15 minutos depois de ligar e todo dia às
+  4h30), conferindo os arquivos com o SHA-256 da release; a versão anterior fica guardada.
+- **Recuperação:** se o painel fechar seguidas vezes, o sistema força a atualização sozinho. Para
+  entrar à mão: **Ctrl+Alt+F2** (ou a opção *recuperação* do menu de inicialização), com PIN —
+  forçar atualização, voltar à versão anterior, configurar a rede, diagnóstico, restaurar padrão.
+- O cursor do mouse some depois de 1 minuto parado.
+
+<img src="docs/sistema-configuracoes.jpg" alt="Rede, Wi-Fi e som na tela de configurações do sistema próprio" width="700">
+<img src="docs/sistema-recuperacao.jpg" alt="Menu de recuperação" width="420">
+
+O guia completo — gravar o pendrive, instalar, horário, atualização, recuperação e arquivos de
+configuração — está em **[`sistema/LEIA-ME.md`](sistema/LEIA-ME.md)**.
 
 ## Configurações
 
@@ -457,9 +493,21 @@ app/vendor/            gerador de QR code
 build/                 ícones, licença e personalização do instalador do Windows
 docs/                  imagens deste README
 testes/                teste do painel contra o portal real
+sistema/               Destaques UFSM – Sistema: scripts (raiz/), pacote .deb e imagem ISO (live/)
 LEIA-ME.txt            instruções que acompanham os instaladores
 .github/workflows/     geração e publicação automática dos instaladores
 ```
+
+### Gerar o sistema próprio
+
+```bash
+npm run dist:linux                 # painel: dist/destaques-ufsm_amd64.deb
+bash sistema/construir-deb.sh      # camada do sistema: dist/destaques-sistema_all.deb
+sudo bash sistema/construir-iso.sh # imagem: dist/Destaques-UFSM-Sistema-amd64.iso (Debian 13 + live-build, ou Docker)
+```
+
+O GitHub Actions gera os dois `.deb` e a ISO a cada versão publicada (job `sistema` do
+[`release.yml`](.github/workflows/release.yml)).
 
 ### Publicar uma versão
 
@@ -467,7 +515,7 @@ LEIA-ME.txt            instruções que acompanham os instaladores
 2. Rode o script de publicação, na pasta do projeto:
 
    ```bash
-   npm run publicar -- 1.7.2     # ou: patch (1.7.1 → 1.7.2), minor (→ 1.8.0), major (→ 2.0.0)
+   npm run publicar -- 1.8.1     # ou: patch (1.8.0 → 1.8.1), minor (→ 1.9.0), major (→ 2.0.0)
    ```
 
    No Windows também dá para dar dois cliques em **`publicar.cmd`** (publica a versão que está
@@ -477,7 +525,7 @@ LEIA-ME.txt            instruções que acompanham os instaladores
    - atualiza a versão no `package.json`, no `package-lock.json` e no selo do README;
    - gera o painel (`npm run painel`);
    - mostra os arquivos que mudaram e pergunta antes de enviar;
-   - envia o código e a tag `v1.7.2`.
+   - envia o código e a tag `v1.8.1`.
 
    Opções: `--teste` (só mostra o que faria), `--sem-tag` (envia o código sem gerar instaladores),
    `--mensagem "texto"` (mensagem do commit) e `--sim` (não pergunta). Precisa do
@@ -487,7 +535,7 @@ LEIA-ME.txt            instruções que acompanham os instaladores
    15 minutos. Os links de [Download](#download) passam a apontar para ela, e os painéis já
    instalados se atualizam sozinhos (pelos arquivos `latest.yml` e `latest-linux.yml` da release).
 
-Também dá para publicar à mão: `git tag v1.7.2 && git push origin v1.7.2` depois de enviar o
+Também dá para publicar à mão: `git tag v1.8.1 && git push origin v1.8.1` depois de enviar o
 código, ou gerar com `npm run dist` e criar a release em
 [Releases](https://github.com/danielcarli/Totem-UFSM-noticias/releases/new), anexando os arquivos
 de `dist/` e o `navegador/destaques-ufsm.html`, com os mesmos nomes.
@@ -496,6 +544,7 @@ de `dist/` e o `navegador/destaques-ufsm.html`, com os mesmos nomes.
 
 | Versão | Novidades |
 |---|---|
+| **1.8.0** | **Destaques UFSM – Sistema**: imagem ISO de um Debian 13 enxuto que liga direto no painel (PCs e notebooks de 64 bits, BIOS ou UEFI, notebook + TV), com instalador; rede cabeada, Wi-Fi (inclusive com usuário e senha), Bluetooth, som, telas e horário de funcionamento (apaga a tela e suspende fora do expediente, liga sozinho na abertura) pela engrenagem do painel; atualização pela Release do GitHub com SHA-256 e versão anterior guardada; recuperação com PIN (Ctrl+Alt+F2 ou menu de inicialização) e atualização forçada automática se o painel travar. |
 | **1.7.1** | Botão **Buscar atualização** na tela de configurações, com a versão instalada, o andamento do download e **Instalar agora e reiniciar** quando a versão nova já foi baixada; teste diário fixo no Ubuntu 24.04; script de publicação tenta de novo quando a rede falha. |
 | **1.7.0** | Tela de configurações (engrenagem ao lado do relógio ou tecla C): de onde vêm as notícias — portal com 12 por padrão e, se quiser, Gabinete da Reitoria, pró-reitorias, diretorias (DTI e DRI), unidades de ensino e campi, com a quantidade de cada um —, nome da TV, monitor (com o número do monitor atual) e tempo de cada notícia na tela; player da rádio UNIFM 107,9 ao vivo (desligado por padrão, tecla M); notícias das mídias da UFSM (Rádios, TV Campus, Revista .TXT), com os vídeos em destaque da TV Campus (título e capa do YouTube); quando os sites escolhidos não têm nada recente, mostra o portal em vez da tela vazia; símbolo da unidade ao lado do site de origem (Agência de Notícias, centros e colégios; brasão da UFSM em linhas para os demais); matérias com mais de 30 dias ficam de fora (`--dias`); origem do portal como "Agência de Notícias UFSM - Portal Institucional"; versão do painel discreta no rodapé; script `npm run publicar` para publicar no GitHub. |
 | **1.5.0** | Atualização automática pelas Releases do GitHub (instala de madrugada e reabre com as mesmas opções); site de origem abaixo do título de cada matéria; carrossel com 30 notícias (completa com as últimas matérias do portal); leituras do QR code medidas no Google Analytics (`--local`); plano B pela API do WordPress quando a página principal muda de layout; teste diário contra o portal no GitHub Actions. |

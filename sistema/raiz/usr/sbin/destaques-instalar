@@ -1,0 +1,130 @@
+#!/bin/bash
+# Destaques UFSM – Sistema: instala o sistema do pendrive no disco do computador.
+#
+# Roda a partir do pendrive (opção "Instalar" do menu de inicialização). APAGA o disco escolhido.
+#   computador com UEFI → disco GPT: partição EFI (512 MB) + sistema (ext4)
+#   computador só com BIOS (antigos) → disco MBR: uma partição de sistema (ext4)
+# O GRUB é instalado para os dois jeitos quando possível, então o disco também liga se a
+# placa-mãe for trocada de modo.
+#
+# Sem perguntas (instalação em série ou testes): parâmetro de inicialização
+#   destaques.disco=/dev/sda destaques.auto
+set -u
+export LANG=pt_BR.UTF-8 LC_ALL=pt_BR.UTF-8
+export NEWT_COLORS='root=white,blue window=black,lightgray title=blue,lightgray button=white,blue actbutton=white,red'
+TITULO="Destaques UFSM — instalação"
+ALVO=/mnt/destaques-alvo
+SQUASH=/run/live/medium/live/filesystem.squashfs
+
+caixa(){ whiptail --title "$TITULO" "$@" 3>&1 1>&2 2>&3; }
+aviso(){ whiptail --title "$TITULO" --msgbox "$1" "${2:-12}" 74; }
+passo(){ echo; echo "==> $*"; }
+falhou(){
+  echo; echo "ERRO: $*"
+  umount -R "$ALVO" 2>/dev/null || true
+  [ -n "$AUTO" ] && { sleep 10; exit 1; }
+  aviso "A instalação falhou:\n\n$*\n\nEnter abre o painel em modo de teste. Para tentar de novo, reinicie pelo pendrive." 14
+  exit 1
+}
+parametro(){ tr ' ' '\n' < /proc/cmdline | sed -n "s/^$1=//p" | tail -1; }
+
+AUTO=""; grep -qw destaques.auto /proc/cmdline && AUTO=1
+DISCO=$(parametro destaques.disco)
+[ -f "$SQUASH" ] || falhou "não encontrei o sistema no pendrive ($SQUASH)"
+
+# disco do próprio pendrive (não pode ser o destino)
+meio=$(findmnt -no SOURCE /run/live/medium 2>/dev/null | sed 's#\[.*##')
+disco_meio=$( [ -n "$meio" ] && lsblk -no PKNAME "$meio" 2>/dev/null | head -1 )
+
+if [ -z "$DISCO" ]; then
+  opcoes=()
+  while read -r nome tamanho tipo modelo; do
+    [ "$tipo" = disk ] || continue
+    [ "/dev/$nome" = "/dev/$disco_meio" ] && continue
+    case "$nome" in loop*|sr*|zram*|ram*) continue;; esac
+    opcoes+=("/dev/$nome" "$tamanho ${modelo:-disco}")
+  done < <(lsblk -dno NAME,SIZE,TYPE,MODEL)
+  [ ${#opcoes[@]} -gt 0 ] || falhou "nenhum disco encontrado para instalar"
+  aviso "Bem-vindo à instalação do Destaques UFSM.\n\nO sistema será copiado para o disco deste computador e o painel abrirá sozinho ao ligar.\n\nATENÇÃO: tudo o que estiver no disco escolhido será apagado." 13
+  DISCO=$(caixa --menu "Em qual disco instalar? (tudo nele será APAGADO)" 16 74 6 "${opcoes[@]}") || exit 0
+  conf=$(caixa --inputbox "Tudo em $DISCO será apagado.\n\nPara confirmar, digite APAGAR:" 11 60) || exit 0
+  [ "$conf" = APAGAR ] || { aviso "Instalação cancelada." 7; exit 0; }
+fi
+[ -b "$DISCO" ] || falhou "disco $DISCO não existe"
+[ "$(basename "$DISCO")" != "$disco_meio" ] || falhou "$DISCO é o próprio pendrive"
+
+clear
+echo "Instalando o Destaques UFSM em $DISCO — não desligue o computador."
+
+UEFI=""; [ -d /sys/firmware/efi ] && UEFI=1
+part(){ case "$DISCO" in *[0-9]) echo "${DISCO}p$1";; *) echo "${DISCO}$1";; esac; }
+
+passo "Preparando o disco"
+umount -R "$ALVO" 2>/dev/null || true
+for p in $(lsblk -lnpo NAME "$DISCO" | tail -n +2); do umount "$p" 2>/dev/null || true; swapoff "$p" 2>/dev/null || true; done
+wipefs -af "$DISCO" >/dev/null || falhou "não foi possível limpar $DISCO"
+if [ -n "$UEFI" ]; then
+  # GPT: 1 MB para o GRUB de BIOS + EFI + sistema
+  parted -s "$DISCO" mklabel gpt \
+    mkpart bios 1MiB 2MiB set 1 bios_grub on \
+    mkpart EFI fat32 2MiB 514MiB set 2 esp on \
+    mkpart sistema ext4 514MiB 100% || falhou "não foi possível particionar"
+  P_EFI=$(part 2); P_RAIZ=$(part 3)
+else
+  parted -s "$DISCO" mklabel msdos mkpart primary ext4 1MiB 100% set 1 boot on || falhou "não foi possível particionar"
+  P_EFI=""; P_RAIZ=$(part 1)
+fi
+partprobe "$DISCO" 2>/dev/null; udevadm settle; sleep 2
+[ -n "$P_EFI" ] && { mkfs.vfat -F 32 -n EFI "$P_EFI" >/dev/null || falhou "formatar EFI"; }
+mkfs.ext4 -F -q -L destaques "$P_RAIZ" || falhou "formatar o sistema"
+
+passo "Copiando o sistema (alguns minutos)"
+mkdir -p "$ALVO"
+mount "$P_RAIZ" "$ALVO" || falhou "montar $P_RAIZ"
+unsquashfs -f -q -d "$ALVO" "$SQUASH" >/dev/null || falhou "copiar o sistema"
+if [ -n "$P_EFI" ]; then mkdir -p "$ALVO/boot/efi"; mount "$P_EFI" "$ALVO/boot/efi" || falhou "montar EFI"; fi
+
+passo "Configurando"
+U_RAIZ=$(blkid -s UUID -o value "$P_RAIZ")
+{
+  echo "# Destaques UFSM"
+  echo "UUID=$U_RAIZ  /  ext4  errors=remount-ro,noatime  0 1"
+  [ -n "$P_EFI" ] && echo "UUID=$(blkid -s UUID -o value "$P_EFI")  /boot/efi  vfat  umask=0077  0 2"
+} > "$ALVO/etc/fstab"
+# nome do computador: painel-XXXX (final do endereço da placa de rede)
+mac=$(cat /sys/class/net/*/address 2>/dev/null | grep -v '^00:00:00' | head -1 | tr -d ':')
+nome="painel-${mac: -4}"; [ "$nome" = "painel-" ] && nome="painel-$(tr -dc a-z0-9 </dev/urandom | head -c4)"
+echo "$nome" > "$ALVO/etc/hostname"
+printf '127.0.0.1\tlocalhost\n127.0.1.1\t%s\n::1\tlocalhost ip6-localhost ip6-loopback\n' "$nome" > "$ALVO/etc/hosts"
+: > "$ALVO/etc/machine-id"; rm -f "$ALVO/var/lib/dbus/machine-id"
+# leva as redes Wi-Fi configuradas no pendrive
+cp -a /etc/NetworkManager/system-connections/. "$ALVO/etc/NetworkManager/system-connections/" 2>/dev/null || true
+
+for d in dev dev/pts proc sys run; do mount --bind "/$d" "$ALVO/$d"; done
+[ -n "$UEFI" ] && mount --bind /sys/firmware/efi/efivars "$ALVO/sys/firmware/efi/efivars" 2>/dev/null
+dentro(){ chroot "$ALVO" "$@"; }
+
+# o que só serve para o pendrive sai do sistema instalado
+dentro env DEBIAN_FRONTEND=noninteractive apt-get purge -y -q live-boot live-boot-initramfs-tools live-tools >/dev/null 2>&1 || true
+dentro update-initramfs -u -k all >/dev/null 2>&1 || falhou "gerar o initramfs"
+
+passo "Instalando a inicialização (GRUB)"
+if [ -n "$UEFI" ]; then
+  dentro grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=destaques --recheck >/dev/null 2>&1 \
+    || dentro grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=destaques --no-nvram >/dev/null 2>&1 \
+    || falhou "instalar o GRUB (UEFI)"
+  # cópia no caminho padrão: liga mesmo em placas que esquecem a entrada de boot
+  dentro grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable --no-nvram >/dev/null 2>&1 || true
+  dentro grub-install --target=i386-pc "$DISCO" >/dev/null 2>&1 || true
+else
+  dentro grub-install --target=i386-pc --recheck "$DISCO" >/dev/null 2>&1 || falhou "instalar o GRUB (BIOS)"
+fi
+dentro update-grub >/dev/null 2>&1 || falhou "gerar o menu do GRUB"
+
+sync
+umount -R "$ALVO" || true
+echo; echo "Instalação concluída em $DISCO ($nome)."
+
+if [ -n "$AUTO" ]; then sleep 3; systemctl poweroff; exit 0; fi
+aviso "Pronto! O Destaques UFSM foi instalado em $DISCO.\n\nRetire o pendrive e pressione Enter: o computador vai reiniciar e abrir o painel.\n\nDepois, na engrenagem do painel (ou tecla C), configure a rede, o som e o horário de funcionamento.\nPIN de manutenção (Ctrl+Alt+F2): 1960 — troque no menu de recuperação." 16
+systemctl reboot

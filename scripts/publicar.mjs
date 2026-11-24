@@ -4,7 +4,7 @@
 //
 //   npm run publicar                  publica a versão que está no package.json
 //   npm run publicar -- 1.5.1         muda a versão para 1.5.1 e publica
-//   npm run publicar -- patch         1.7.0 → 1.7.1   (minor: 1.8.0 · major: 2.0.0)
+//   npm run publicar -- patch         1.8.0 → 1.8.1   (minor: 1.9.0 · major: 2.0.0)
 //
 // Opções:
 //   --mensagem "texto"   mensagem do commit (padrão: "Destaques UFSM <versão>")

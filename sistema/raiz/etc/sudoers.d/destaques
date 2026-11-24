@@ -1,0 +1,2 @@
+# Destaques UFSM: o painel só pode rodar estes programas como administrador
+painel ALL=(root) NOPASSWD: /usr/sbin/destaques-sistema, /usr/sbin/destaques-atualiza, /usr/sbin/destaques-recuperacao, /usr/sbin/destaques-instalar

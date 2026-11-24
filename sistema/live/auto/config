@@ -1,0 +1,22 @@
+#!/bin/sh
+# Destaques UFSM – Sistema: configuração do live-build (Debian 13, 64 bits, BIOS e UEFI)
+set -e
+lb config noauto \
+  --mode debian --distribution trixie --architectures amd64 \
+  --archive-areas "main contrib non-free non-free-firmware" \
+  --binary-images iso-hybrid \
+  --bootloaders "grub-pc grub-efi" \
+  --debian-installer none \
+  --apt-recommends false \
+  --firmware-binary false --firmware-chroot false \
+  --linux-packages linux-image --linux-flavours amd64 \
+  --memtest none \
+  --security true --updates true \
+  --iso-application "Destaques UFSM" \
+  --iso-publisher "Agencia de Noticias UFSM" \
+  --iso-volume "DESTAQUES_UFSM" \
+  --bootappend-live "boot=live quiet loglevel=3 consoleblank=0 vt.global_cursor_default=0" \
+  --mirror-bootstrap http://deb.debian.org/debian/ \
+  --mirror-chroot http://deb.debian.org/debian/ \
+  --mirror-binary http://deb.debian.org/debian/ \
+  "${@}"

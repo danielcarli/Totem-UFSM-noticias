@@ -1,0 +1,3 @@
+# só o live-boot (sem live-config): o usuário "painel" e o resto vêm do pacote destaques-sistema
+live-boot
+systemd-sysv

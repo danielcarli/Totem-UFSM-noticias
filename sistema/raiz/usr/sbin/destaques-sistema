@@ -1,0 +1,293 @@
+#!/bin/bash
+# Destaques UFSM – Sistema: ponte entre a tela de configurações do painel e o Linux.
+# Roda como root (sudo, só este programa) e sempre responde em JSON numa linha.
+#
+#   destaques-sistema info
+#   destaques-sistema rede | wifi-lista | wifi-conectar SSID [SENHA] [USUARIO] | wifi-esquecer SSID
+#                     wifi-ligar on|off | cabo-config DISPOSITIVO auto|manual [IP/PREFIXO GATEWAY DNS]
+#   destaques-sistema bt-estado | bt-ligar on|off | bt-buscar | bt-conectar MAC | bt-desconectar MAC | bt-remover MAC
+#   destaques-sistema som-estado | som-saida ID | som-volume 0-100 | som-testar
+#   destaques-sistema horario-ler | horario-gravar JSON
+#   destaques-sistema telas-modo lado-a-lado|so-externa|espelhar
+#   destaques-sistema atualizacao-estado | atualizacao-buscar | atualizacao-instalar | atualizacao-auto sim|nao
+#   destaques-sistema reiniciar | desligar
+set -u
+. /usr/lib/destaques/comum.sh
+
+ok(){ if [ $# -gt 0 ]; then jq -cn --argjson d "$1" '{ok:true} + $d'; else echo '{"ok":true}'; fi; exit 0; }
+falha(){ jq -cn --arg e "$1" '{ok:false, erro:$e}'; exit 0; }
+precisa(){ [ -n "${1:-}" ] || falha "faltou: $2"; }
+
+# grava CHAVE="valor" em /etc/destaques-os/local.conf (só chaves conhecidas)
+grava_local(){
+  local chave=$1 valor=$2 arq=/etc/destaques-os/local.conf
+  touch "$arq"
+  grep -v "^$chave=" "$arq" > "$arq.tmp" || true
+  printf '%s="%s"\n' "$chave" "$valor" >> "$arq.tmp"
+  mv "$arq.tmp" "$arq"
+}
+
+# nmcli no modo "várias linhas": CAMPO:valor (sem escapar os dois-pontos do valor)
+nm_registros(){   # nm_registros CAMPOS args… → JSON [{campo:valor}]
+  local campos=$1; shift
+  nmcli --mode multiline --terse --fields "$campos" "$@" 2>/dev/null | awk -v n="$(echo "$campos" | tr ',' '\n' | wc -l)" '
+    function esc(s){ gsub(/\\/,"\\\\",s); gsub(/"/,"\\\"",s); gsub(/\t/," ",s); return s }
+    { i=index($0,":"); k=substr($0,1,i-1); v=substr($0,i+1); sub(/\[[0-9]+\]$/,"",k)
+      if (!(k in vistos)) { reg = reg (reg==""?"":",") "\"" esc(k) "\":\"" esc(v) "\""; vistos[k]=1 }
+      c++; if (c==n) { out = out (out==""?"":",") "{" reg "}"; reg=""; c=0; delete vistos } }
+    END { print "[" out "]" }'
+}
+
+# bluetoothctl espera para sempre quando não há adaptador: sempre com tempo limite
+btctl(){ timeout "${BT_TEMPO:-8}" bluetoothctl "$@"; }
+tem_bt(){ ls /sys/class/bluetooth/hci* >/dev/null 2>&1; }
+
+acao=${1:-}; shift || true
+case "$acao" in
+
+  info)
+    ips=$(ip -4 -o addr show scope global 2>/dev/null | awk '{split($4,a,"/"); printf "%s%s", (n++?",":""), a[1]}')
+    modelo=$(cat /sys/class/dmi/id/product_name 2>/dev/null | tr -d '\n' || true)
+    livre=$(df -h / | awk 'NR==2{print $4}')
+    ok "$(jq -cn --arg sistema "$(versao_pacote destaques-sistema)" --arg painel "$(versao_pacote destaques-ufsm)" \
+      --arg nome "$(hostname)" --arg ips "$ips" --arg modelo "$modelo" --arg livre "$livre" \
+      --arg kernel "$(uname -r)" --arg telas "${TELAS:-lado-a-lado}" --arg auto "${ATUALIZAR_SOZINHO:-sim}" \
+      --argjson notebook "$(ls /sys/class/power_supply/BAT* >/dev/null 2>&1 && echo true || echo false)" \
+      '{sistema:$sistema, painel:$painel, nome:$nome, ips:($ips|split(",")|map(select(.!=""))), modelo:$modelo,
+        livre:$livre, kernel:$kernel, telas:$telas, atualizarSozinho:($auto=="sim"), notebook:$notebook}')"
+    ;;
+
+  # ---------------- rede ----------------
+  rede)
+    disp=$(nm_registros DEVICE,TYPE,STATE,CONNECTION device status)
+    saida='[]'
+    for d in $(echo "$disp" | jq -r '.[] | select(.TYPE=="ethernet" or .TYPE=="wifi") | .DEVICE'); do
+      det=$(nm_registros GENERAL.DEVICE,GENERAL.TYPE,GENERAL.STATE,GENERAL.CONNECTION,IP4.ADDRESS,IP4.GATEWAY,IP4.DNS device show "$d" | jq '.[0] // {}')
+      con=$(echo "$det" | jq -r '."GENERAL.CONNECTION" // ""')
+      metodo=""; [ -n "$con" ] && [ "$con" != "--" ] && metodo=$(nmcli -g ipv4.method connection show "$con" 2>/dev/null || true)
+      saida=$(jq -c --argjson det "$det" --arg metodo "$metodo" '. + [{
+        dispositivo: $det."GENERAL.DEVICE", tipo: $det."GENERAL.TYPE", estado: $det."GENERAL.STATE",
+        conexao: ($det."GENERAL.CONNECTION" // "" | if .=="--" then "" else . end),
+        ip: ($det."IP4.ADDRESS" // ""), gateway: ($det."IP4.GATEWAY" // ""), dns: ($det."IP4.DNS" // ""),
+        metodo: $metodo }]' <<<"$saida")
+    done
+    wifi=$(nmcli radio wifi 2>/dev/null || echo desconhecido)
+    ok "$(jq -cn --argjson d "$saida" --arg w "$wifi" '{dispositivos:$d, wifiLigado:($w=="enabled")}')"
+    ;;
+
+  wifi-lista)
+    nmcli radio wifi on >/dev/null 2>&1 || true
+    lista=$(nm_registros IN-USE,SSID,SIGNAL,SECURITY device wifi list --rescan yes)
+    salvas=$(nmcli -g NAME,TYPE connection show 2>/dev/null | awk -F: '$2=="802-11-wireless"{print $1}' | jq -R . | jq -cs .)
+    ok "$(jq -cn --argjson l "$lista" --argjson s "$salvas" '{redes: ($l | map(select(.SSID != "" and .SSID != "--"))
+      | group_by(.SSID) | map(max_by(.SIGNAL|tonumber))
+      | map({ssid:.SSID, sinal:(.SIGNAL|tonumber), seguranca:.SECURITY, conectada:(.["IN-USE"]=="*"),
+             salva: (.SSID as $n | $s | index($n) != null),
+             empresarial: (.SECURITY | test("802\\.1X")) })
+      | sort_by(-(.conectada|if . then 1 else 0 end), -.sinal))}')"
+    ;;
+
+  wifi-conectar)
+    ssid=${1:-}; senha=${2:-}; usuario=${3:-}
+    precisa "$ssid" "nome da rede"
+    if [ -n "$usuario" ]; then
+      # rede com usuário e senha (WPA-Enterprise, ex.: eduroam)
+      nmcli connection delete id "$ssid" >/dev/null 2>&1 || true
+      msg=$(nmcli connection add type wifi ifname '*' con-name "$ssid" ssid "$ssid" \
+        wifi-sec.key-mgmt wpa-eap 802-1x.eap peap 802-1x.phase2-auth mschapv2 \
+        802-1x.identity "$usuario" 802-1x.password "$senha" 2>&1 && nmcli connection up id "$ssid" 2>&1) \
+        || falha "$(echo "$msg" | tail -1)"
+    elif [ -n "$senha" ]; then
+      nmcli connection delete id "$ssid" >/dev/null 2>&1 || true
+      msg=$(nmcli device wifi connect "$ssid" password "$senha" 2>&1) || falha "$(echo "$msg" | tail -1)"
+    else
+      # rede aberta, ou já salva neste computador
+      msg=$( (nmcli connection up id "$ssid" || nmcli device wifi connect "$ssid") 2>&1) || falha "$(echo "$msg" | tail -1)"
+    fi
+    registra "Wi-Fi conectado: $ssid"
+    ok
+    ;;
+
+  wifi-esquecer)
+    precisa "${1:-}" "nome da rede"
+    nmcli connection delete id "$1" >/dev/null 2>&1 || falha "rede não estava salva"
+    ok
+    ;;
+
+  wifi-ligar)
+    case "${1:-}" in on|off) nmcli radio wifi "$1" || falha "não foi possível";; *) falha "use on ou off";; esac
+    ok
+    ;;
+
+  cabo-config)
+    dev=${1:-}; metodo=${2:-}
+    precisa "$dev" "dispositivo"
+    [[ "$dev" =~ ^[A-Za-z0-9._-]+$ ]] || falha "dispositivo inválido"
+    con=$(nmcli -g GENERAL.CONNECTION device show "$dev" 2>/dev/null | head -1)
+    if [ -z "$con" ] || [ "$con" = "--" ]; then
+      con=$(nmcli -g NAME,DEVICE connection show 2>/dev/null | awk -F: -v d="$dev" '$2==d{print $1; exit}')
+    fi
+    if [ -z "$con" ]; then
+      con="Cabo $dev"
+      nmcli connection add type ethernet ifname "$dev" con-name "$con" >/dev/null 2>&1 || falha "não foi possível criar a conexão"
+    fi
+    if [ "$metodo" = auto ]; then
+      nmcli connection modify "$con" ipv4.method auto ipv4.addresses "" ipv4.gateway "" ipv4.dns "" >/dev/null 2>&1 || falha "não foi possível mudar"
+    elif [ "$metodo" = manual ]; then
+      ip=${3:-}; gw=${4:-}; dns=${5:-}
+      [[ "$ip" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$ ]] || falha "IP inválido (use 192.168.0.10/24)"
+      [ -z "$gw" ] || [[ "$gw" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || falha "gateway inválido"
+      dns=$(echo "$dns" | tr ' ;' ',,' | sed 's/,,*/,/g;s/^,//;s/,$//')
+      [ -z "$dns" ] || [[ "$dns" =~ ^[0-9.,]+$ ]] || falha "DNS inválido"
+      msg=$(nmcli connection modify "$con" ipv4.method manual ipv4.addresses "$ip" ipv4.gateway "$gw" ipv4.dns "$dns" 2>&1) || falha "$msg"
+    else
+      falha "use auto ou manual"
+    fi
+    nmcli connection up "$con" >/dev/null 2>&1 || true
+    registra "cabo $dev: $metodo ${3:-}"
+    ok
+    ;;
+
+  # ---------------- bluetooth ----------------
+  bt-estado|bt-buscar)
+    if ! command -v bluetoothctl >/dev/null || ! tem_bt || ! btctl list 2>/dev/null | grep -q Controller; then
+      ok '{"disponivel":false,"ligado":false,"aparelhos":[]}'
+    fi
+    [ "$acao" = bt-buscar ] && { rfkill unblock bluetooth 2>/dev/null; btctl power on >/dev/null 2>&1; BT_TEMPO=16 btctl --timeout 12 scan on >/dev/null 2>&1; }
+    ligado=$(btctl show 2>/dev/null | awk '/Powered:/{print $2; exit}')
+    lista='[]'
+    while read -r _ mac nome; do
+      [ -n "$mac" ] || continue
+      inf=$(btctl info "$mac" 2>/dev/null)
+      lista=$(jq -c --arg mac "$mac" --arg nome "${nome:-$mac}" \
+        --arg par "$(echo "$inf" | awk '/Paired:/{print $2; exit}')" \
+        --arg con "$(echo "$inf" | awk '/Connected:/{print $2; exit}')" \
+        --arg icone "$(echo "$inf" | awk '/Icon:/{print $2; exit}')" \
+        '. + [{mac:$mac, nome:$nome, pareado:($par=="yes"), conectado:($con=="yes"), tipo:$icone}]' <<<"$lista")
+    done < <(btctl devices 2>/dev/null)
+    ok "$(jq -cn --argjson l "$lista" --arg p "$ligado" '{disponivel:true, ligado:($p=="yes"),
+      aparelhos: ($l | sort_by(-(.conectado|if . then 1 else 0 end), -(.pareado|if . then 1 else 0 end), .nome))}')"
+    ;;
+
+  bt-ligar)
+    case "${1:-}" in
+      on) tem_bt || falha "este computador não tem Bluetooth"; rfkill unblock bluetooth 2>/dev/null; systemctl start bluetooth 2>/dev/null; sleep 1; btctl power on >/dev/null 2>&1 || falha "não foi possível ligar";;
+      off) btctl power off >/dev/null 2>&1 || true;;
+      *) falha "use on ou off";;
+    esac
+    ok
+    ;;
+
+  bt-conectar|bt-desconectar|bt-remover)
+    mac=${1:-}
+    [[ "$mac" =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]] || falha "aparelho inválido"
+    case "$acao" in
+      bt-conectar)
+        if ! btctl info "$mac" 2>/dev/null | grep -q "Paired: yes"; then
+          msg=$(BT_TEMPO=30 btctl --agent NoInputNoOutput --timeout 20 pair "$mac" 2>&1) || true
+          btctl info "$mac" 2>/dev/null | grep -q "Paired: yes" || falha "não pareou — deixe o aparelho em modo de pareamento"
+        fi
+        btctl trust "$mac" >/dev/null 2>&1 || true
+        BT_TEMPO=25 btctl --timeout 15 connect "$mac" >/dev/null 2>&1 || true
+        sleep 2
+        btctl info "$mac" 2>/dev/null | grep -q "Connected: yes" || falha "pareado, mas não conectou — tente de novo"
+        registra "bluetooth conectado: $mac"
+        ;;
+      bt-desconectar) btctl disconnect "$mac" >/dev/null 2>&1 || true ;;
+      bt-remover) btctl remove "$mac" >/dev/null 2>&1 || true ;;
+    esac
+    ok
+    ;;
+
+  # ---------------- som (PipeWire, na sessão do painel) ----------------
+  som-estado)
+    dump=$(como_painel pw-dump 2>/dev/null) || ok '{"disponivel":false,"saidas":[]}'
+    padrao=$(echo "$dump" | jq -r '[.[] | select(.type=="PipeWire:Interface:Metadata") | .metadata[]? | select(.key=="default.audio.sink") | .value.name][0] // ""')
+    vol=$(como_painel wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null || echo "Volume: 0")
+    ok "$(echo "$dump" | jq -c --arg padrao "$padrao" --arg vol "$vol" '{
+      disponivel: true,
+      saidas: [ .[] | select(.type=="PipeWire:Interface:Node" and .info.props["media.class"]=="Audio/Sink")
+                | {id, nome:(.info.props["node.description"] // .info.props["node.name"]), padrao:(.info.props["node.name"]==$padrao)} ],
+      volume: (($vol | capture("Volume: (?<v>[0-9.]+)").v | tonumber) * 100 | round),
+      mudo: ($vol | test("MUTED")) }')"
+    ;;
+
+  som-saida)
+    [[ "${1:-}" =~ ^[0-9]+$ ]] || falha "saída inválida"
+    como_painel wpctl set-default "$1" >/dev/null 2>&1 || falha "não foi possível trocar"
+    ok
+    ;;
+
+  som-volume)
+    [[ "${1:-}" =~ ^[0-9]+$ ]] && [ "$1" -le 150 ] || falha "volume inválido"
+    como_painel wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 >/dev/null 2>&1 || true
+    como_painel wpctl set-volume @DEFAULT_AUDIO_SINK@ "$(awk -v v="$1" 'BEGIN{printf "%.2f", v/100}')" >/dev/null 2>&1 || falha "não foi possível mudar"
+    ok
+    ;;
+
+  som-testar)
+    como_painel timeout 3 speaker-test -t sine -f 660 -l 1 -c 2 -p 1000 >/dev/null 2>&1 || true
+    ok
+    ;;
+
+  # ---------------- horário de funcionamento ----------------
+  horario-ler)
+    ok "$(jq -c '{horario: .}' /etc/destaques-os/horario.json 2>/dev/null || echo '{"horario":null}')"
+    ;;
+
+  horario-gravar)
+    novo=${1:-}
+    precisa "$novo" "horário"
+    validado=$(jq -c '
+      def hora: type=="string" and test("^([01][0-9]|2[0-3]):[0-5][0-9]$");
+      if (.modo|IN("suspender","tela")) and (.ativo|type=="boolean") and (.dias|type=="object")
+         and ([.dias[] | select(. != null) | (.abre|hora) and (.fecha|hora) and (.abre < .fecha)] | all)
+      then {ativo, modo, dias: (.dias | with_entries(select(.key|test("^[0-6]$"))))} else error("inválido") end' <<<"$novo" 2>/dev/null) \
+      || falha "horário inválido (a hora de fechar precisa ser depois da de abrir)"
+    echo "$validado" > /etc/destaques-os/horario.json.tmp && mv /etc/destaques-os/horario.json.tmp /etc/destaques-os/horario.json
+    rm -f "$RUN/sem-suspensao"
+    registra "horário de funcionamento gravado: $validado"
+    systemctl start --no-block destaques-energia.service 2>/dev/null || true
+    ok
+    ;;
+
+  # ---------------- telas (notebook + TV) ----------------
+  telas-modo)
+    case "${1:-}" in lado-a-lado|so-externa|espelhar) ;; *) falha "modo inválido";; esac
+    grava_local TELAS "$1"
+    como_painel /usr/lib/destaques/telas >/dev/null 2>&1 || true
+    ok
+    ;;
+
+  # ---------------- atualização ----------------
+  atualizacao-estado)
+    est=$(cat "$ESTADO/atualizacao.json" 2>/dev/null || echo '{}')
+    ok "$(jq -c --arg v "$(versao_pacote destaques-ufsm)" --arg s "$(versao_pacote destaques-sistema)" \
+      --argjson anterior "$(ls "$ESTADO"/anterior/*.deb >/dev/null 2>&1 && echo true || echo false)" \
+      --arg auto "${ATUALIZAR_SOZINHO:-sim}" \
+      '{atualizacao: (. + {versao:$v, sistema:$s, temAnterior:$anterior, automatica:($auto=="sim")})}' <<<"$est")"
+    ;;
+
+  atualizacao-buscar)
+    /usr/sbin/destaques-atualiza --verificar >/dev/null 2>&1 || true
+    exec "$0" atualizacao-estado
+    ;;
+
+  atualizacao-instalar)
+    # roda separado: o painel é reiniciado no fim da instalação
+    systemd-run --no-block --unit "destaques-atualiza-agora-$(date +%s)" /usr/sbin/destaques-atualiza >/dev/null 2>&1 \
+      || (setsid /usr/sbin/destaques-atualiza >/dev/null 2>&1 &)
+    ok '{"iniciada":true}'
+    ;;
+
+  atualizacao-auto)
+    case "${1:-}" in sim|nao) grava_local ATUALIZAR_SOZINHO "$1";; *) falha "use sim ou nao";; esac
+    ok
+    ;;
+
+  # ---------------- energia ----------------
+  reiniciar) registra "reiniciado pela tela de configurações"; systemd-run --on-active=2 /bin/systemctl reboot >/dev/null 2>&1 || (sleep 2; systemctl reboot) & ok ;;
+  desligar)  registra "desligado pela tela de configurações"; systemd-run --on-active=2 /bin/systemctl poweroff >/dev/null 2>&1 || (sleep 2; systemctl poweroff) & ok ;;
+
+  *) falha "ação desconhecida: $acao" ;;
+esac

@@ -1,0 +1,49 @@
+#!/bin/sh
+# Destaques UFSM – Sistema: prepara o computador para ser um painel
+set -e
+U=painel
+
+# usuário do painel (entra sozinho no tty1)
+if ! id "$U" >/dev/null 2>&1; then
+  adduser --disabled-password --gecos "Painel Destaques UFSM" "$U" >/dev/null
+fi
+for g in audio video input render bluetooth netdev plugdev; do
+  getent group "$g" >/dev/null && adduser "$U" "$g" >/dev/null 2>&1 || true
+done
+CASA=$(getent passwd "$U" | cut -d: -f6)
+cat > "$CASA/.bash_profile" <<'FIM'
+# Destaques UFSM: abre o painel ao entrar no tty1
+[ -f ~/.bashrc ] && . ~/.bashrc
+exec /usr/lib/destaques/sessao
+FIM
+mkdir -p "$CASA/.local/state/destaques"
+chown -R "$U:$U" "$CASA/.bash_profile" "$CASA/.local"
+
+# estado: PIN de manutenção (de fábrica 1960) e horário de funcionamento (desligado)
+mkdir -p /var/lib/destaques
+[ -f /var/lib/destaques/pin ] || printf 'destaques:%s' 1960 | sha256sum | cut -d' ' -f1 > /var/lib/destaques/pin
+chmod 600 /var/lib/destaques/pin
+[ -f /etc/destaques-os/horario.json ] || echo '{"ativo":false,"modo":"suspender","dias":{"1":{"abre":"07:30","fecha":"22:00"},"2":{"abre":"07:30","fecha":"22:00"},"3":{"abre":"07:30","fecha":"22:00"},"4":{"abre":"07:30","fecha":"22:00"},"5":{"abre":"07:30","fecha":"22:00"}}}' > /etc/destaques-os/horario.json
+
+# fuso horário de Santa Maria (uma vez só; depois respeita o que foi mudado)
+if [ ! -f /var/lib/destaques/.fuso ]; then
+  ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
+  echo America/Sao_Paulo > /etc/timezone
+  touch /var/lib/destaques/.fuso
+fi
+
+chmod 440 /etc/sudoers.d/destaques
+visudo -cf /etc/sudoers.d/destaques >/dev/null || { echo "sudoers inválido"; rm -f /etc/sudoers.d/destaques; }
+
+# serviços
+systemctl enable destaques-energia.timer destaques-atualiza.timer >/dev/null 2>&1 || true
+for s in NetworkManager bluetooth systemd-timesyncd; do systemctl enable "$s" >/dev/null 2>&1 || true; done
+if [ -d /run/systemd/system ]; then
+  systemctl daemon-reload || true
+  systemctl start destaques-energia.timer destaques-atualiza.timer >/dev/null 2>&1 || true
+  udevadm control --reload >/dev/null 2>&1 || true
+fi
+
+# menu de inicialização (só quando o sistema já está instalado num disco)
+[ -f /boot/grub/grub.cfg ] && command -v update-grub >/dev/null && update-grub >/dev/null 2>&1 || true
+exit 0

@@ -123,6 +123,15 @@ TV OU TOTEM FUNCIONANDO SOZINHO
      também a proteção de tela e o bloqueio nas configurações de energia.
   4. Volta após falta de luz: na BIOS, "Restore on AC Power Loss" = Power On.
 
+SISTEMA PRÓPRIO (LINUX PARA TVS E TOTENS)
+  Para um computador dedicado à TV ou ao totem, use a imagem
+  Destaques-UFSM-Sistema-amd64.iso (página de Releases): um Linux enxuto que
+  liga direto no painel. Grave num pendrive, ligue por ele e escolha "Instalar".
+  Rede, Wi-Fi, Bluetooth, som, telas e horário de funcionamento ficam na
+  engrenagem do painel; o sistema se atualiza sozinho pelo GitHub e tem menu de
+  recuperação em Ctrl+Alt+F2 (PIN de fábrica 1960 — troque).
+  Guia completo: sistema/LEIA-ME.md no repositório do projeto.
+
 COMPORTAMENTO
   - Atualiza sozinho: procura versões novas no GitHub ao abrir e a cada 6 horas.
     No Windows e no AppImage, baixa e instala às 4h30 da manhã, e volta a abrir

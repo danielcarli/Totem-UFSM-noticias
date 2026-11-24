@@ -1,0 +1,15 @@
+# parte gráfica: X.Org com os drivers de vídeo de placas antigas e novas
+xserver-xorg-core
+xserver-xorg-video-all
+xserver-xorg-input-libinput
+xserver-xorg-input-wacom
+xinit
+x11-xserver-utils
+x11-xkb-utils
+x11-utils
+libgl1-mesa-dri
+openbox
+unclutter-xfixes
+xdotool
+fonts-dejavu-core
+fonts-noto-color-emoji

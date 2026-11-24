@@ -1,0 +1,11 @@
+[Unit]
+Description=Destaques UFSM — procura atualização 15 min depois de ligar e todo dia às 4h30
+
+[Timer]
+OnBootSec=15min
+OnCalendar=*-*-* 04:30:00
+RandomizedDelaySec=20min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

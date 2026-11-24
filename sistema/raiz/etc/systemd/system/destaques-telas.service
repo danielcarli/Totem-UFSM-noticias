@@ -1,0 +1,7 @@
+[Unit]
+Description=Destaques UFSM — arruma as telas quando um monitor/TV é ligado ou desligado
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sleep 2
+ExecStart=/usr/lib/destaques/telas-root

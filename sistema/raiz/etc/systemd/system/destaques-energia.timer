@@ -1,0 +1,10 @@
+[Unit]
+Description=Destaques UFSM — confere o horário de funcionamento a cada minuto
+
+[Timer]
+OnBootSec=90s
+OnCalendar=*-*-* *:*:30
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,9 @@
+[Unit]
+Description=Destaques UFSM — atualização pela Release do GitHub
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/destaques-atualiza --automatico
+Nice=10

@@ -1,0 +1,22 @@
+#!/bin/bash
+# Destaques UFSM – Sistema: o que o usuário "painel" roda ao entrar sozinho no tty1
+# (chamado pelo ~/.bash_profile dele).
+[ "$(tty)" = /dev/tty1 ] || exit 0
+[ -z "${DISPLAY:-}" ] || exit 0
+
+# pendrive de instalação: abre o instalador em vez do painel
+# (se a instalação for cancelada ou falhar, o painel abre em modo de teste)
+if grep -qw 'destaques.instalar' /proc/cmdline && [ ! -f "${XDG_RUNTIME_DIR:-/tmp}/instalador-aberto" ]; then
+  touch "${XDG_RUNTIME_DIR:-/tmp}/instalador-aberto"
+  sudo -n /usr/sbin/destaques-instalar
+fi
+# opção "recuperação" do menu de inicialização
+if grep -qw 'destaques.recuperacao' /proc/cmdline && [ ! -f /run/destaques/recuperacao-feita ]; then
+  sudo -n /usr/sbin/destaques-recuperacao --inicio
+fi
+
+mkdir -p "$HOME/.local/state/destaques"
+setterm --blank 0 --powerdown 0 2>/dev/null || true
+clear
+exec startx /usr/lib/destaques/xsessao -- :0 vt1 -nolisten tcp -keeptty \
+  >"$HOME/.local/state/destaques/x.log" 2>&1

@@ -48,6 +48,11 @@ const { app, BrowserWindow, Menu, session, screen, powerSaveBlocker, ipcMain } =
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 const path = require('path');
 const fs = require('fs');
+const { execFile } = require('child_process');
+
+// rodando no "Destaques UFSM – Sistema" (Linux próprio do painel): rede, Wi-Fi, Bluetooth, som,
+// horário de funcionamento e atualização passam pela ponte /usr/sbin/destaques-sistema
+const SISTEMA = process.platform === 'linux' && fs.existsSync('/etc/destaques-os/sistema.conf');
 const os = require('os');
 
 // uma única instância (um segundo clique só traz a janela para frente)
@@ -200,7 +205,7 @@ function criaJanela(){
     // tela de configurações aberta: as teclas são dela (digitar números, Esc para fechar)
     if (configurando && !ctrl && input.key !== 'F11') return;
     if (input.key === 'F11'){ ev.preventDefault(); janela.setFullScreen(!janela.isFullScreen()); }
-    else if (input.key === 'Escape' && janela.isFullScreen()){ ev.preventDefault(); janela.setFullScreen(false); }
+    else if (input.key === 'Escape' && janela.isFullScreen() && !SISTEMA){ ev.preventDefault(); janela.setFullScreen(false); }
     else if (ctrl && input.key.toLowerCase() === 'q'){ ev.preventDefault(); app.quit(); }
     else if (ctrl && input.key.toLowerCase() === 'r'){ ev.preventDefault(); janela.webContents.reloadIgnoringCache(); }
     else if (ctrl && input.shift && input.key.toLowerCase() === 'i'){ ev.preventDefault(); janela.webContents.toggleDevTools(); }
@@ -213,6 +218,14 @@ function criaJanela(){
 
   // recuperação automática
   janela.webContents.on('render-process-gone', () => setTimeout(() => janela && janela.reload(), 3000));
+  // página travada: recarrega; no sistema próprio, se continuar travada, fecha (o quiosque reabre)
+  let travada = null;
+  janela.on('unresponsive', () => {
+    clearTimeout(travada);
+    travada = setTimeout(() => { if (SISTEMA) app.exit(3); else if (janela) janela.webContents.forcefullyCrashRenderer(); }, 60000);
+  });
+  janela.on('responsive', () => clearTimeout(travada));
+  if (SISTEMA) janela.webContents.on('did-finish-load', enviaEnergia);
   janela.on('unresponsive', () => setTimeout(() => janela && janela.reload(), 10000));
 
   janela.on('closed', () => { janela = null; });
@@ -352,6 +365,29 @@ function configuraAtualizacao(){
   setInterval(buscaAtualizacao, 6 * 60 * 60 * 1000);
 }
 
+/* --- ponte com o sistema próprio (Destaques UFSM – Sistema) ---------- */
+const ACOES_SISTEMA = new Set(['info', 'rede', 'wifi-lista', 'wifi-conectar', 'wifi-esquecer', 'wifi-ligar', 'cabo-config',
+  'bt-estado', 'bt-ligar', 'bt-buscar', 'bt-conectar', 'bt-desconectar', 'bt-remover',
+  'som-estado', 'som-saida', 'som-volume', 'som-testar', 'horario-ler', 'horario-gravar', 'telas-modo',
+  'atualizacao-estado', 'atualizacao-buscar', 'atualizacao-instalar', 'atualizacao-auto', 'reiniciar', 'desligar']);
+ipcMain.handle('sistema', (_, acao, args = []) => new Promise(responde => {
+  if (!SISTEMA || !ACOES_SISTEMA.has(acao)) return responde({ ok: false, erro: 'indisponível' });
+  const lista = (Array.isArray(args) ? args : []).slice(0, 6).map(a => String(a).slice(0, 2000));
+  execFile('sudo', ['-n', '/usr/sbin/destaques-sistema', acao, ...lista], { timeout: 90000, maxBuffer: 4 * 1024 * 1024 }, (erro, saida) => {
+    const linha = String(saida || '').trim().split('\n').pop();
+    try{ responde(JSON.parse(linha)); }
+    catch(e){ responde({ ok: false, erro: erro ? String(erro.message).split('\n')[0] : 'resposta inválida' }); }
+  });
+}));
+// horário de funcionamento: o sistema escreve "aberto" ou "fechado"; o painel escurece junto
+const ARQ_ENERGIA = '/run/destaques/energia';
+function enviaEnergia(){
+  let estado = 'aberto';
+  try{ estado = fs.readFileSync(ARQ_ENERGIA, 'utf8').trim() || 'aberto'; }catch(e){}
+  if (janela && !janela.isDestroyed()) janela.webContents.send('energia', estado);
+}
+if (SISTEMA) fs.watchFile(ARQ_ENERGIA, { interval: 3000 }, enviaEnergia);
+
 /* --- ponte com a tela de configurações do painel (preload.js) -------- */
 ipcMain.on('configurando', (_, aberta) => { configurando = !!aberta; });
 ipcMain.handle('atualizacao:estado', () => atualizacao);
@@ -365,6 +401,7 @@ ipcMain.handle('usar-monitor', (_, numero) => { trocaMonitor(Number(numero)); re
 
 app.whenReady().then(() => {
   recuperaOpcoesDaAtualizacao();
+  if (SISTEMA) argv = argv.concat('--sem-atualizacao');   // no sistema próprio quem atualiza é o destaques-atualiza
   if (arg('iniciar-com-sistema') || arg('iniciar-com-windows'))         iniciarComSistema(true);
   if (arg('nao-iniciar-com-sistema') || arg('nao-iniciar-com-windows')) iniciarComSistema(false);
 

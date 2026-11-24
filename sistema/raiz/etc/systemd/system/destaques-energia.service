@@ -1,0 +1,7 @@
+[Unit]
+Description=Destaques UFSM — horário de funcionamento (tela e suspensão)
+After=graphical.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/destaques-energia

@@ -1,0 +1,50 @@
+#!/bin/bash
+# Destaques UFSM – Sistema: arranjo das telas (roda na sessão do painel, com DISPLAY=:0).
+#
+# Notebook + TV: a tela do notebook (eDP/LVDS) e a externa (HDMI/VGA/DisplayPort) ficam lado a
+# lado, com a externa à esquerda — ela é o "monitor 1" do painel. Com a tampa fechada, ou no modo
+# "so-externa", a tela do notebook é desligada. TELAS vem de sistema.conf / local.conf.
+set -u
+. /usr/lib/destaques/comum.sh 2>/dev/null
+export DISPLAY=${DISPLAY:-:0}
+modo=${TELAS:-lado-a-lado}
+
+command -v xrandr >/dev/null || exit 0
+mapfile -t conectadas < <(xrandr --query 2>/dev/null | awk '$2=="connected"{print $1}')
+[ ${#conectadas[@]} -gt 0 ] || exit 0
+
+interna=""; externas=()
+for s in "${conectadas[@]}"; do
+  case "$s" in eDP*|LVDS*|DSI*) interna=$s ;; *) externas+=("$s") ;; esac
+done
+
+# tampa fechada: só as externas
+if [ -n "$interna" ] && grep -qs closed /proc/acpi/button/lid/*/state && [ ${#externas[@]} -gt 0 ]; then
+  modo=so-externa
+fi
+
+args=()
+# saídas desligadas (desconectadas) ficam desligadas
+while read -r s; do args+=(--output "$s" --off); done < <(xrandr --query | awk '$2=="disconnected"{print $1}')
+
+if [ ${#externas[@]} -eq 0 ]; then
+  args+=(--output "$interna" --auto --primary --pos 0x0)
+elif [ "$modo" = espelhar ] && [ -n "$interna" ]; then
+  args+=(--output "${externas[0]}" --auto --primary --pos 0x0)
+  for s in "${externas[@]:1}" "$interna"; do args+=(--output "$s" --auto --same-as "${externas[0]}"); done
+else
+  anterior=""
+  for s in "${externas[@]}"; do
+    if [ -z "$anterior" ]; then args+=(--output "$s" --auto --primary --pos 0x0)
+    else args+=(--output "$s" --auto --right-of "$anterior"); fi
+    anterior=$s
+  done
+  if [ -n "$interna" ]; then
+    if [ "$modo" = so-externa ]; then args+=(--output "$interna" --off)
+    else args+=(--output "$interna" --auto --right-of "$anterior"); fi
+  fi
+fi
+
+xrandr "${args[@]}" 2>/dev/null || xrandr --auto 2>/dev/null
+logger -t destaques -- "telas ($modo): ${conectadas[*]}" 2>/dev/null || true
+exit 0

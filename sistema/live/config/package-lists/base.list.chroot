@@ -1,0 +1,49 @@
+# Destaques UFSM – Sistema: o mínimo para o painel rodar
+systemd-sysv
+dbus
+dbus-user-session
+polkitd
+sudo
+locales
+console-setup
+keyboard-configuration
+tzdata
+ca-certificates
+curl
+jq
+whiptail
+less
+nano
+iproute2
+iputils-ping
+procps
+kbd
+util-linux
+rfkill
+systemd-timesyncd
+# rede
+network-manager
+wpasupplicant
+iw
+wireless-regdb
+# bluetooth e som
+bluez
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+libspa-0.2-bluetooth
+alsa-utils
+alsa-ucm-conf
+# pendrive e instalador
+live-boot
+squashfs-tools
+parted
+dosfstools
+e2fsprogs
+grub-pc-bin
+grub-efi-amd64-bin
+grub-efi-amd64-signed
+shim-signed
+grub2-common
+efibootmgr

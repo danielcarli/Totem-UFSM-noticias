@@ -1,0 +1,11 @@
+#!/bin/sh
+# Destaques UFSM: entrada "recuperação" no menu de inicialização
+set -e
+UUID=$(grub-probe --target=fs_uuid / 2>/dev/null) || exit 0
+cat <<FIM
+menuentry 'Destaques UFSM — recuperação (forçar atualização, rede, diagnóstico)' --class recovery {
+	search --no-floppy --fs-uuid --set=root $UUID
+	linux /vmlinuz root=UUID=$UUID ro quiet destaques.recuperacao
+	initrd /initrd.img
+}
+FIM

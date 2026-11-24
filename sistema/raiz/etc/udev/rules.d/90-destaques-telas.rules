@@ -1,0 +1,2 @@
+# Destaques UFSM: TV ou monitor ligado/desligado → refaz o arranjo das telas
+ACTION=="change", SUBSYSTEM=="drm", RUN+="/bin/systemctl --no-block start destaques-telas.service"
