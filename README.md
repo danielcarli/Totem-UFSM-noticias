@@ -4,7 +4,7 @@
 
 **Painel de notícias para TVs e totens da Universidade Federal de Santa Maria**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.8.0-0b5394)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.9.0-0b5394)
 ![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-e7640a)
 ![Plataformas](https://img.shields.io/badge/plataformas-Windows%20%7C%20Linux-1ab2af)
 ![Electron](https://img.shields.io/badge/Electron-45-47848f)
@@ -97,7 +97,7 @@ inteira, com textos e QR code maiores ("Leia no celular").
 
 **Identidade institucional.** A marca da UFSM fica no topo; a Coordenadoria de Comunicação e a
 Agência de Notícias, que desenvolve o painel, assinam no rodapé, com a hora da última atualização
-e, bem discreta embaixo dela, a versão do painel (ex.: `v1.8.0`) — útil para saber se uma TV já
+e, bem discreta embaixo dela, a versão do painel (ex.: `v1.9.0`) — útil para saber se uma TV já
 recebeu a atualização.
 Abaixo do título de cada matéria aparece o **site de onde ela vem**: o portal da UFSM é formado por
 muitos subsites (pró-reitorias, centros, cursos), e as matérias da página principal são da
@@ -115,6 +115,18 @@ Agência — nelas aparece "Agência de Notícias UFSM - Portal Institucional".
 - **Notícias de outros sites da UFSM.** Pela tela de configurações, entram também as matérias do
   Gabinete da Reitoria, das pró-reitorias, das diretorias (DTI e DRI), das unidades de ensino,
   dos campi e das mídias da UFSM (Rádios, TV Campus e Revista .TXT).
+- **Vídeos da página principal.** Os vídeos do YouTube incorporados em www.ufsm.br (ex.: a seção
+  TV Campus) entram no carrossel com o título do YouTube, a capa na maior resolução que o vídeo
+  tiver (1280 px, senão 640 ou 480) e, no lugar da autoria, o nome do canal do YouTube onde o
+  vídeo está publicado (ex.: *TV Campus UFSM*), com um símbolo de vídeo. O QR leva ao vídeo.
+
+  <img src="docs/video-portal.jpg" alt="Vídeo da página principal no carrossel" width="700">
+
+- **Cardápio do RU.** A cada 7 notícias entra um card com a refeição do momento (café, almoço
+  ou jantar) do Restaurante Universitário escolhido, com a marca do RU, as cores dela e um ícone
+  para cada categoria de alimento. Fica 10 segundos na tela (os dois valores mudam na engrenagem).
+- **Previsão do tempo.** Com a cidade da TV configurada (Santa Maria, Frederico Westphalen,
+  Palmeira das Missões ou Cachoeira do Sul), um ícone e a temperatura aparecem ao lado do relógio.
 - **Rádio UNIFM 107,9 ao vivo (opcional).** Um player discreto, na identidade da UNIFM, na
   lateral direita da tela (no totem, no topo). Desligado por padrão; liga-se na engrenagem.
 - **Feito para ser visto de longe.** Títulos grandes, editoria, data e site de origem de cada
@@ -147,7 +159,9 @@ Agência — nelas aparece "Agência de Notícias UFSM - Portal Institucional".
 - **Modo noite.** Opcionalmente, deixa a tela preta em um horário (ex.: das 23h às 6h).
 - **Só lê o site.** Não envia nenhum dado sobre o computador ou sobre quem está diante da tela.
   Com a rádio UNIFM ligada, também recebe o áudio do servidor da transmissão
-  (`stream3.svrdedicado.org`), como qualquer player da rádio.
+  (`stream3.svrdedicado.org`), como qualquer player da rádio. O cardápio vem do Portal do RU
+  (`portal.ufsm.br`) e a previsão do tempo, do [Open-Meteo](https://open-meteo.com)
+  (só as coordenadas do campus vão na consulta).
 
 ## Instalação
 
@@ -262,8 +276,17 @@ fecham sem mudar nada.
 - **Monitor em que o painel aparece.** Só aparece no aplicativo, quando o computador tem mais de
   um monitor. A escolha é lembrada nas próximas vezes que o painel abrir. As teclas **1**, **2** e
   **3** fazem o mesmo fora da tela de configurações.
+- **Cidade desta TV.** Santa Maria, Frederico Westphalen, Palmeira das Missões ou Cachoeira do
+  Sul. Com uma cidade escolhida, a previsão do tempo aparece no canto superior direito, ao lado do
+  relógio: ícone do tempo agora (sol, nuvens, chuva, temporal… e lua à noite), a temperatura e a
+  máxima/mínima do dia. Atualiza a cada 30 minutos. Os dados são do
+  [Open-Meteo](https://open-meteo.com) (gratuito para uso não comercial, licença CC BY 4.0).
+  Em branco (padrão), a previsão não aparece. Opção de linha de comando: `--cidade=santa-maria`.
+
+  <img src="docs/tempo-topo.jpg" alt="Previsão do tempo ao lado do relógio" width="700">
+
 - **Tempo de cada notícia na tela.** Quantos segundos cada notícia fica no centro antes de passar
-  para a próxima — de 4 a 60, padrão 7. Vale também para a barra de progresso e para a animação
+  para a próxima — de 4 a 60, padrão 10. Vale também para a barra de progresso e para a animação
   dos banners largos. Se o atalho do painel tiver a opção `--intervalo`, o campo fica travado e
   vale o valor da opção.
 
@@ -295,6 +318,59 @@ semitransparente.
 - No horário noturno (`--noite`), a rádio também para, e volta de manhã.
 - Ao pausar, a transmissão é desligada (não fica baixando áudio). Ao voltar, entra de novo no ao
   vivo.
+
+### Cardápio do Restaurante Universitário
+
+O card do cardápio entra no carrossel entre as notícias. **Vem ligado, com o RU Campus I.**
+
+<img src="docs/config-cardapio.jpg" alt="Configurações do cardápio do RU" width="700">
+
+- **De quais RUs?** Campus I, Campus II, HUSM, Ipê Amarelo, Frederico Westphalen, Palmeira das
+  Missões e Cachoeira do Sul — os mesmos do [Portal do RU](https://portal.ufsm.br/ru/cardapio.html).
+  Dá para marcar mais de um: a cada vez que o cardápio entra, vêm os cards de todos os RUs
+  marcados agrupados, um depois do outro (ex.: RU Campus I e, em seguida, RU Campus II).
+- **Tempo do cardápio na tela.** Separado do tempo das notícias: de 4 a 60 segundos, padrão 10.
+- **Mostrar o cardápio a cada N notícias.** De 2 a 30, padrão 7. Com menos notícias que isso,
+  o cardápio entra uma vez, no fim da volta.
+- **Depois da última refeição do dia, mostrar o cardápio do dia seguinte.** Marcado (padrão),
+  depois do jantar o card passa a mostrar o café da manhã de amanhã. Desmarcado, o card some até
+  a próxima refeição.
+
+<img src="docs/cardapio-tv.jpg" alt="Card do cardápio do RU na TV" width="700">
+<img src="docs/cardapio-totem.jpg" alt="Card do cardápio do RU no totem" width="300">
+
+Como o card funciona:
+
+- O **nome do RU** vem em destaque, numa etiqueta verde logo acima da refeição.
+- Mostra a **refeição do momento**: a que está sendo servida (*Servindo agora*), a próxima do dia
+  (*Próxima refeição*) ou, depois da última, a primeira do dia seguinte (*Amanhã*). Embaixo, as
+  outras refeições que ainda vêm no mesmo dia, com o horário.
+- **Horários** de RU Campus I (dias úteis: café 6h50–8h45, almoço 10h45–13h45, jantar
+  17h45–19h45; fim de semana: 8h–9h30, 11h30–13h30, 18h–19h30) e RU Campus II (almoço
+  10h45–13h45), conforme o site do RU. Para os outros RUs o horário não aparece e o painel usa
+  janelas aproximadas só para escolher a refeição. Nas férias e no recesso, quando o horário
+  muda, vale o que o RU divulgar.
+- **Categorias com ícone**: prato principal, opção vegetal, saladas, arroz, feijão e grãos,
+  acompanhamentos, sobremesa e fruta (no café: bebidas, pães, para acompanhar e fruta). O portal
+  não informa a categoria: o painel deduz pelo nome do prato e pelas marcações de origem animal e
+  vegetal do próprio portal. Temperos, água e açúcar ficam de fora.
+- **Identidade do RU**: marca branca do RU com o nome do campus (Santa Maria, Frederico
+  Westphalen, Palmeira das Missões ou Cachoeira do Sul), da
+  [identidade institucional](https://www.ufsm.br/identidade-institucional), e fundo nas cores dela
+  — fica claro que é um card de serviço, não uma notícia. Cada refeição tem a sua cor:
+  **café da manhã em âmbar** (o laranja dos pingos do "ü"), **almoço em vinho e framboesa** e
+  **jantar em verde-noite** (os verdes do "U"). A etiqueta com o nome do RU, os ícones e a barra
+  de progresso acompanham: creme, verde e laranja na etiqueta; laranja, rosa e verde na barra.
+
+  <img src="docs/cardapio-refeicoes.jpg" alt="Cards do café da manhã, do almoço e do jantar" width="800">
+- O QR code leva ao cardápio completo no Portal do RU.
+- O cardápio é lido junto com as notícias, a cada 15 minutos, e guardado no computador: se a
+  internet cair, o card continua com o último cardápio lido. Dia sem cardápio (RU fechado): o
+  card não aparece.
+
+Os **avisos do site do RU** (RU fechado, horários especiais, pesquisas) podem entrar como notícias:
+marque *RU - Restaurante Universitário* em *Órgãos suplementares*, logo abaixo. Como esses avisos
+quase nunca têm foto, entram com o fundo padrão do painel.
 
 ### De onde vêm as notícias
 
@@ -396,7 +472,8 @@ Acrescente ao atalho (Windows, campo "Destino") ou ao comando (Linux):
 | Opção | O que faz |
 |---|---|
 | `--monitor=2` | abre no segundo monitor só desta vez (para fixar, use as teclas 1, 2, 3) |
-| `--intervalo=10` | segundos por notícia (padrão 7). Também na tela de configurações |
+| `--intervalo=12` | segundos por notícia (padrão 10). Também na tela de configurações |
+| `--cidade=santa-maria` | previsão do tempo ao lado do relógio: `santa-maria`, `frederico-westphalen`, `palmeira-das-missoes` ou `cachoeira-do-sul`. Também na tela de configurações |
 | `--atualizacao=10` | minutos entre as leituras do portal (padrão 15) |
 | `--quantidade=12` | notícias do portal (padrão 12; se a página principal tiver menos, completa com as últimas matérias do portal). Também na tela de configurações |
 | `--sites=unidades-universitarias/ct,pro-reitorias/prograd` | inclui as últimas matérias desses subsites (5 de cada; `--porsite=10` muda). O mais simples é marcar na tela de configurações |
@@ -412,13 +489,13 @@ Acrescente ao atalho (Windows, campo "Destino") ou ao comando (Linux):
 | `--iniciar-com-sistema` | passa a abrir sozinho ao entrar no computador (guarda as outras opções) |
 | `--nao-iniciar-com-sistema` | desfaz a opção acima |
 
-Exemplo no Windows: `"%LOCALAPPDATA%\Programs\DestaquesUFSM\DestaquesUFSM.exe" --intervalo=8`
+Exemplo no Windows: `"%LOCALAPPDATA%\Programs\DestaquesUFSM\DestaquesUFSM.exe" --intervalo=12`
 
 ### Versão para navegador
 
 [`destaques-ufsm.html`](navegador/destaques-ufsm.html) é o mesmo painel em um único arquivo, para abrir em qualquer navegador
 (Chrome ou Edge em modo quiosque, por exemplo). As opções vão no endereço:
-`destaques-ufsm.html?intervalo=10&orientacao=vertical`. A troca de monitor pelas teclas 1, 2 e 3
+`destaques-ufsm.html?intervalo=12&orientacao=vertical`. A troca de monitor pelas teclas 1, 2 e 3
 existe só no aplicativo.
 
 ## Como funciona
@@ -515,7 +592,7 @@ O GitHub Actions gera os dois `.deb` e a ISO a cada versão publicada (job `sist
 2. Rode o script de publicação, na pasta do projeto:
 
    ```bash
-   npm run publicar -- 1.8.1     # ou: patch (1.8.0 → 1.8.1), minor (→ 1.9.0), major (→ 2.0.0)
+   npm run publicar -- 1.9.1     # ou: patch (1.9.0 → 1.9.1), minor (→ 1.10.0), major (→ 2.0.0)
    ```
 
    No Windows também dá para dar dois cliques em **`publicar.cmd`** (publica a versão que está
@@ -544,6 +621,7 @@ de `dist/` e o `navegador/destaques-ufsm.html`, com os mesmos nomes.
 
 | Versão | Novidades |
 |---|---|
+| **1.9.0** | Tempo padrão de cada notícia passa de 7 para 10 segundos. **Cardápio do RU** entre as notícias (a cada 7, 10 s na tela; um ou mais RUs, com os cards agrupados, e o nome do RU em destaque), com a marca e as cores do RU (âmbar no café, vinho no almoço, verde-noite no jantar) e ícones por categoria de alimento; avisos do site do RU como fonte de notícias. **Previsão do tempo** ao lado do relógio, pela cidade da TV (Open-Meteo, `--cidade`). Vídeos do YouTube incorporados na página principal entram no carrossel, com o nome do canal como autoria e a capa em alta resolução. |
 | **1.8.0** | **Destaques UFSM – Sistema**: imagem ISO de um Debian 13 enxuto que liga direto no painel (PCs e notebooks de 64 bits, BIOS ou UEFI, notebook + TV), com instalador; rede cabeada, Wi-Fi (inclusive com usuário e senha), Bluetooth, som, telas e horário de funcionamento (apaga a tela e suspende fora do expediente, liga sozinho na abertura) pela engrenagem do painel; atualização pela Release do GitHub com SHA-256 e versão anterior guardada; recuperação com PIN (Ctrl+Alt+F2 ou menu de inicialização) e atualização forçada automática se o painel travar. |
 | **1.7.1** | Botão **Buscar atualização** na tela de configurações, com a versão instalada, o andamento do download e **Instalar agora e reiniciar** quando a versão nova já foi baixada; teste diário fixo no Ubuntu 24.04; script de publicação tenta de novo quando a rede falha. |
 | **1.7.0** | Tela de configurações (engrenagem ao lado do relógio ou tecla C): de onde vêm as notícias — portal com 12 por padrão e, se quiser, Gabinete da Reitoria, pró-reitorias, diretorias (DTI e DRI), unidades de ensino e campi, com a quantidade de cada um —, nome da TV, monitor (com o número do monitor atual) e tempo de cada notícia na tela; player da rádio UNIFM 107,9 ao vivo (desligado por padrão, tecla M); notícias das mídias da UFSM (Rádios, TV Campus, Revista .TXT), com os vídeos em destaque da TV Campus (título e capa do YouTube); quando os sites escolhidos não têm nada recente, mostra o portal em vez da tela vazia; símbolo da unidade ao lado do site de origem (Agência de Notícias, centros e colégios; brasão da UFSM em linhas para os demais); matérias com mais de 30 dias ficam de fora (`--dias`); origem do portal como "Agência de Notícias UFSM - Portal Institucional"; versão do painel discreta no rodapé; script `npm run publicar` para publicar no GitHub. |
@@ -564,8 +642,8 @@ Ideias para as próximas versões (contribuições são bem-vindas):
 - [ ] **Avisos urgentes**: uma mensagem institucional que ocupa a tela em todas as TVs (suspensão de aulas, alerta climático, mudança de horário).
 - [ ] **Configuração central**: ajustar todas as TVs de um lugar só, sem ir até cada computador.
 - [ ] **Painel de funcionamento**: cada TV informa que está ligada e mostrando notícias; aviso quando alguma parar.
-- [ ] **Agenda de eventos** da UFSM e **cardápio do RU** entre as notícias.
-- [ ] **Previsão do tempo** de Santa Maria (e dos campi) no topo.
+- [ ] **Agenda de eventos** da UFSM entre as notícias.
+- [ ] **Horários do RU nas férias e no recesso**, lidos dos avisos do site do RU.
 - [ ] **Ligar e desligar a TV** por horário (HDMI-CEC), além da tela preta do modo noite.
 - [ ] **Fotos guardadas no computador**, para continuar mostrando as notícias com a internet fora por mais tempo.
 - [ ] **Vídeos** como destaque, quando a matéria tiver vídeo em vez de foto.

@@ -34,7 +34,7 @@
   --H: min(calc(100vh - var(--topo-fim) - var(--base-ini)), calc(var(--W) * 1.2));  /* altura do card */
   --raio: clamp(21px, 1.84vw, 39px);
   --raio-card: clamp(13.65px, 1.196vw, 25.35px);   /* 35% menor que --raio */
-  --rot: 5000ms;                            /* sobrescrito pelo JS */
+  --rot: 10000ms;                           /* sobrescrito pelo JS */
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -105,6 +105,16 @@ body.idle{cursor:none}
 .vertical .status.ok{display:none}
 @keyframes pulso{0%{box-shadow:0 0 0 0 rgba(26,178,175,.55)}70%{box-shadow:0 0 0 .7em rgba(26,178,175,0)}100%{box-shadow:0 0 0 0 rgba(26,178,175,0)}}
 .relogio{flex:none;text-align:right;line-height:1.05}
+/* previsão do tempo da cidade da TV, ao lado do relógio (Open-Meteo) */
+.tempo{flex:none;display:flex;align-items:center;gap:.55em;line-height:1.05;font-size:clamp(11px,.78vw,16px)}
+.tempo[hidden],.topo .sep[hidden]{display:none}
+.tempo-icone{display:block;width:clamp(26px,2.3vw,48px);height:clamp(26px,2.3vw,48px);flex:none;color:var(--texto)}
+.tempo-icone svg{width:100%;height:100%;display:block}
+.tempo-icone .sol{color:#ffc14d}
+.tempo-icone .gota{color:var(--azul-claro)}
+.tempo-icone .raio{color:#ffc14d}
+.tempo-txt strong{display:block;font-size:clamp(18px,1.7vw,36px);font-weight:700;font-variant-numeric:tabular-nums}
+.tempo-txt span{color:var(--texto-2);white-space:nowrap;font-variant-numeric:tabular-nums}
 /* engrenagem das configurações, discreta ao lado do relógio */
 .engrenagem{
   flex:none;background:none;border:0;padding:0;color:var(--texto);opacity:.5;cursor:pointer;
@@ -199,6 +209,16 @@ body.idle{cursor:none}
 .config .volume input{flex:0 1 16em;accent-color:var(--laranja)}
 .config .volume output{min-width:3em;font-variant-numeric:tabular-nums;color:var(--texto)}
 .radio-cfg-campos .dep:has(input:disabled){opacity:.45;cursor:default}
+.ru-cfg{margin-top:.7em;padding-left:1.75em;display:grid;gap:.9em}
+.ru-cfg[hidden]{display:none}
+.ru-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(15em,1fr));gap:.5em}
+.ru-lista label{display:flex;align-items:flex-start;gap:.6em;padding:.55em .75em;border-radius:10px;cursor:pointer;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)}
+.ru-lista label:has(input:checked){background:rgba(231,100,10,.12);border-color:rgba(231,100,10,.6)}
+.ru-lista input{width:1.15em;height:1.15em;accent-color:var(--laranja);flex:none;margin-top:.1em}
+.ru-lista b{display:block;font-weight:600}
+.ru-lista small{display:block;color:var(--texto-3);font-size:.85em;margin-top:.1em}
+.ru-tempos .campo{flex:1 1 260px}
 .fonte{display:flex;align-items:center;gap:.7em;padding:.45em .7em;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid transparent}
 .fonte.ativa{background:rgba(95,163,214,.14);border-color:rgba(95,163,214,.45)}
 .fonte label{flex:1;display:flex;align-items:center;gap:.6em;cursor:pointer;min-width:0}
@@ -440,6 +460,87 @@ body.idle .trilho{opacity:.25}
 body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
 @keyframes enche{to{transform:scaleX(1)}}
 
+/* ---------- card do cardápio do Restaurante Universitário ----------
+   Cores da marca do RU (vinho, framboesa, verde e laranja): o card de serviço
+   se distingue das notícias à primeira vista. */
+.card.cardapio{
+  --ru-vinho:#67122c; --ru-framboesa:#a81351; --ru-rosa:#f27aa0; --ru-verde:#a3d477; --ru-laranja:#ff9d33; --ru-creme:#f7e3c8;
+  --ru-etiqueta:var(--ru-verde); --ru-etiqueta-txt:#2c0b1d; --ru-legenda:rgba(44,11,29,.92);
+  --ru-barra:linear-gradient(90deg,#ca406a,#f27aa0);
+  background:#2a0b1c;border-color:rgba(242,122,160,.35);
+}
+/* cada refeição tem a sua cor, todas da marca do RU:
+   café = âmbar (laranja dos pingos do "ü"), almoço = vinho/framboesa, jantar = verde-noite */
+.card.cardapio[data-refeicao="1"]{
+  --ru-laranja:#ffd2a1; --ru-etiqueta:var(--ru-creme); --ru-etiqueta-txt:#5a2606; --ru-legenda:rgba(46,20,6,.92);
+  --ru-barra:linear-gradient(90deg,#ee7d03,#ffb347);
+  background:#2e1406;border-color:rgba(255,157,51,.4);
+}
+.card.cardapio[data-refeicao="3"]{
+  --ru-verde:#d9f2c2; --ru-etiqueta:#ff9d33; --ru-etiqueta-txt:#3a1a02; --ru-legenda:rgba(13,26,10,.92);
+  --ru-barra:linear-gradient(90deg,#589231,#a3d477);
+  background:#0d1a0a;border-color:rgba(163,212,119,.35);
+}
+.card.cardapio .sem-foto{background:
+    radial-gradient(60% 45% at 100% 100%, rgba(131,188,85,.34), transparent 70%),
+    radial-gradient(45% 35% at 92% 0%, rgba(238,125,3,.22), transparent 70%),
+    radial-gradient(70% 55% at 0% 0%, rgba(202,64,106,.55), transparent 70%),
+    linear-gradient(165deg, #8e1446 0%, #5c1031 40%, #2c0b1d 100%)}
+.card.cardapio[data-refeicao="1"] .sem-foto{background:
+    radial-gradient(60% 45% at 100% 100%, rgba(202,64,106,.26), transparent 70%),
+    radial-gradient(45% 35% at 92% 0%, rgba(255,214,120,.24), transparent 70%),
+    radial-gradient(70% 55% at 0% 0%, rgba(255,157,51,.5), transparent 70%),
+    linear-gradient(165deg, #c4610a 0%, #8a3f08 40%, #2e1406 100%)}
+.card.cardapio[data-refeicao="3"] .sem-foto{background:
+    radial-gradient(60% 45% at 100% 100%, rgba(238,125,3,.22), transparent 70%),
+    radial-gradient(70% 55% at 0% 0%, rgba(131,188,85,.38), transparent 70%),
+    linear-gradient(165deg, #3f6b2a 0%, #1e3816 42%, #0d1a0a 100%)}
+.card.cardapio .legenda{background:linear-gradient(180deg, transparent, var(--ru-legenda) 60%)}
+.card.cardapio .midia.simbolo{height:60%}
+.card.cardapio .midia.simbolo img{width:auto;height:30%;max-height:22vmin}
+.card.cardapio[data-off="0"] .midia.simbolo{opacity:0;transition:opacity .4s}
+.card.cardapio .progresso i{background:var(--ru-barra)}
+.cardapio-corpo{
+  position:absolute;inset:0;z-index:3;padding:5% 6.5% 5%;
+  display:flex;flex-direction:column;
+  font-size:clamp(13.8px,1.035vw,23px);
+  opacity:0;transform:translateY(16px);
+  transition:opacity .55s ease, transform .7s cubic-bezier(.2,.75,.15,1);
+}
+.card[data-off="0"] .cardapio-corpo{opacity:1;transform:none;transition-delay:.3s}
+.cardapio-corpo .topo-ru{display:flex;align-items:flex-start;gap:1em;margin-bottom:.9em}
+.cardapio-corpo .ru-marca{height:4.2em;width:auto;flex:none;display:block}
+.cardapio-corpo .quando{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:.3em;text-align:right;color:var(--texto-2)}
+.cardapio-corpo .estado{display:flex;align-items:center;gap:.45em;font-weight:700;font-size:1.1em;white-space:nowrap}
+.cardapio-corpo .estado::before{content:"";width:.62em;height:.62em;border-radius:50%;background:currentColor}
+.cardapio-corpo .estado.agora{color:var(--ru-verde)}
+.cardapio-corpo .estado.depois{color:var(--ru-laranja)}
+.cardapio-corpo .ru-nome{align-self:flex-start;margin-bottom:.45em;padding:.22em .7em;border-radius:.45em;
+  font-size:1.6em;font-weight:800;line-height:1.15;letter-spacing:.01em;color:var(--ru-etiqueta-txt);background:var(--ru-etiqueta);
+  box-shadow:0 .25em .9em rgba(0,0,0,.25)}
+.cardapio-corpo h2{font-size:clamp(27.6px,2.688vw,63.48px);font-weight:800;line-height:1.05;letter-spacing:-.01em}
+.cardapio-corpo .sub{margin-top:.3em;font-size:1.2em;color:var(--texto-2)}
+.cardapio-corpo .pratos{
+  list-style:none;margin-top:1em;padding-top:1em;border-top:1px solid rgba(255,255,255,.16);
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75em 2em;align-content:center;
+  flex:1;min-height:0;overflow:hidden;
+}
+.cardapio-corpo .pratos li{font-size:1.3em;font-weight:600;line-height:1.18;display:flex;align-items:center;gap:.6em;min-width:0}
+.cardapio-corpo .pratos .icone{flex:none;width:2.1em;height:2.1em;border-radius:.6em;display:grid;place-items:center;
+  color:var(--cor-cat);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
+  background:color-mix(in srgb, var(--cor-cat) 16%, transparent);border:1px solid color-mix(in srgb, var(--cor-cat) 42%, transparent)}
+.cardapio-corpo .pratos .icone svg{width:62%;height:62%}
+.cardapio-corpo .pratos .texto{min-width:0;display:flex;flex-direction:column;gap:.1em}
+.cardapio-corpo .pratos small{font-size:.52em;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cor-cat)}
+.cardapio-corpo .pratos li.principal{grid-column:1 / -1;font-size:1.6em;font-weight:700}
+.cardapio-corpo .rodape-card{margin-top:1em;align-items:flex-end}
+.cardapio-corpo .info{flex:1;display:flex;flex-direction:column;gap:.7em;min-width:0}
+.cardapio-corpo .outras{display:flex;flex-wrap:wrap;gap:.5em}
+.cardapio-corpo .outras span{padding:.35em .75em;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:var(--texto-2);white-space:nowrap}
+.cardapio-corpo .outras b{color:var(--texto);font-weight:700}
+.cardapio-corpo .nota{color:var(--texto-3);font-size:.92em;line-height:1.4}
+.cardapio-corpo .qr .caixa{width:clamp(84px,6.4vw,160px)}
+
 /* ---------- pílula inferior ---------- */
 .pilula{
   position:fixed;z-index:20;left:50%;bottom:3.4vh;transform:translateX(-50%);
@@ -505,6 +606,9 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
 .vertical .endereco>svg,.vertical .endereco>span:not(.status){display:none}   /* sem a "barra de navegador" */
 .vertical .relogio strong{font-size:5vw}
 .vertical .relogio span{font-size:2.2vw}
+.vertical .tempo{font-size:2.2vw}
+.vertical .tempo-icone{width:5.4vw;height:5.4vw}
+.vertical .tempo-txt strong{font-size:5vw}
 .vertical .trilho,.vertical .pontos{display:none}
 
 /* o card ocupa a tela; os outros ficam fora dela e entram deslizando */
@@ -527,6 +631,14 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
 .vertical .q-totem{display:inline}
 .vertical .q-tv{display:none}
 .vertical .progresso{height:8px}
+.vertical .cardapio-corpo{font-size:2.6vw;padding:6% 6% 6%}
+.vertical .cardapio-corpo .ru-marca{height:4em}
+.vertical .cardapio-corpo h2{font-size:6.4vw}
+.vertical .cardapio-corpo .pratos{grid-template-columns:minmax(0,1fr);gap:.9em}
+.vertical .cardapio-corpo .pratos li{font-size:1.6em}
+.vertical .cardapio-corpo .pratos li.principal{font-size:1.85em}
+.vertical .cardapio-corpo .qr .caixa{width:20vw}
+.vertical .cardapio-corpo .rodape-card{justify-content:space-between}
 
 .vertical .pilula{bottom:2vh;height:11vw;min-width:84vw;gap:2.4vw;padding:0 1.6vw}
 .vertical .pilula button{width:9vw;height:9vw}
@@ -571,6 +683,8 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
     <span class="status carregando" id="status"><i></i><span id="statusTxt">conectando…</span></span>
   </div>
   <span class="sep"></span>
+  <div class="tempo" id="tempo" hidden><span class="tempo-icone" id="tempoIcone"></span><div class="tempo-txt"><strong id="tempoTemp">--°</strong><span id="tempoMaxMin"></span></div></div>
+  <span class="sep" id="tempoSep" hidden></span>
   <div class="relogio"><strong id="hora">--:--</strong><span id="data"></span></div>
   <button class="engrenagem" id="btnConfig" title="Configurações (C)" aria-label="Configurações">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -596,9 +710,13 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
             <select id="cfgMonitor"></select>
             <span class="ajuda">Também dá para trocar com as teclas 1, 2 e 3.</span>
           </label>
+          <label class="campo">Cidade desta TV
+            <select id="cfgCidade"></select>
+            <span class="ajuda">Mostra a previsão do tempo ao lado do relógio. Dados: Open-Meteo (CC BY 4.0).</span>
+          </label>
           <label class="campo campo-tempo">Tempo de cada notícia na tela
             <span class="com-unidade"><input type="number" id="cfgIntervalo" min="4" max="60" step="1" inputmode="numeric"><span>segundos</span></span>
-            <span class="ajuda" id="cfgIntervaloAjuda">De 4 a 60 segundos. O padrão é 7.</span>
+            <span class="ajuda" id="cfgIntervaloAjuda">De 4 a 60 segundos. O padrão é 10.</span>
           </label>
         </div>
       </section>
@@ -710,6 +828,26 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
         </div>
       </section>
       <section>
+        <h3>Cardápio do Restaurante Universitário</h3>
+        <label class="opcao"><input type="checkbox" id="cfgRu"> Mostrar o cardápio do RU entre as notícias</label>
+        <div class="ru-cfg" id="cfgRuCampos">
+          <p class="ajuda" style="margin:.2em 0 .5em">De quais RUs? Com mais de um, os cards entram juntos, um depois do outro.</p>
+          <div class="ru-lista" id="cfgRuLista"></div>
+          <div class="campos ru-tempos">
+            <label class="campo">Tempo do cardápio na tela
+              <span class="com-unidade"><input type="number" id="cfgRuTempo" min="4" max="60" step="1" inputmode="numeric"><span>segundos</span></span>
+              <span class="ajuda">Separado do tempo das notícias. O padrão é 10.</span>
+            </label>
+            <label class="campo">Mostrar o cardápio
+              <span class="com-unidade"><span>a cada</span><input type="number" id="cfgRuCada" min="2" max="30" step="1" inputmode="numeric"><span>notícias</span></span>
+              <span class="ajuda">O padrão é a cada 7 notícias.</span>
+            </label>
+          </div>
+          <label class="opcao"><input type="checkbox" id="cfgRuAmanha"> Depois da última refeição do dia, mostrar o cardápio do dia seguinte</label>
+          <p class="ajuda" id="cfgRuAjuda" style="margin:.5em 0 0">O cardápio vem do Portal do RU (portal.ufsm.br/ru). O card mostra a refeição do momento; em dia sem refeição, não aparece.</p>
+        </div>
+      </section>
+      <section>
         <h3>De onde vêm as notícias</h3>
         <p class="ajuda" style="margin:0 0 .9em">Marque os sites e quantas matérias com foto de cada um entram no carrossel. As notícias dos sites se alternam ao longo da rotação. Só entram matérias publicadas nos últimos 30 dias.</p>
         <div id="cfgFontes"></div>
@@ -795,7 +933,7 @@ body.pausado .card[data-off="0"] .progresso i{animation-play-state:paused}
 /* ==================================================================
    CONFIGURAÇÃO — o painel roda só no navegador (HTML + JS), sem servidor.
    Tudo aqui pode ser sobrescrito pela URL, ex.:
-   destaques-ufsm.html?intervalo=8&atualizacao=10&max=12
+   destaques-ufsm.html?intervalo=12&atualizacao=10&max=12
    ================================================================== */
 const params = new URLSearchParams(location.search);
 const CONFIG = {
@@ -808,7 +946,7 @@ const CONFIG = {
   SECOES:  params.get('secoes')  ? params.get('secoes').split(',')  : null,
   IGNORAR: params.get('ignorar') ? params.get('ignorar').split(',') : [],
   NOME_CARROSSEL: 'Em destaque',   // nome usado para o carrossel de banners do topo
-  INTERVALO_MS:   (parseFloat(params.get('intervalo'))   || 7)  * 1000,       // troca de notícia: 7 s
+  INTERVALO_MS:   (parseFloat(params.get('intervalo'))   || 10) * 1000,       // troca de notícia: 10 s
   ATUALIZACAO_MS: (parseFloat(params.get('atualizacao')) || 15) * 60 * 1000,  // releitura da página: 15 min
   MAX_ITENS:      parseInt(params.get('max')) || 30,   // limite da leitura da página principal
   BUSCAR_IMAGEM_DESTACADA: true,  // destaque sem foto: busca a imagem destacada da matéria
@@ -1231,10 +1369,17 @@ function montaCards(){
   palco.querySelectorAll('.card').forEach(c => c.remove());
   itens.forEach((it, i) => {
     const c = document.createElement('article');
-    c.className = 'card teleporte';
+    c.className = 'card teleporte' + (it.cardapio ? ' cardapio' : '');
     c.dataset.i = i;
     c.style.setProperty('--cor', CONFIG.CORES[i % CONFIG.CORES.length]);
-    c.innerHTML = htmlCard(it, i, itens.length);
+    if (it.cardapio){
+      const m = refeicaoDoMomento(it.ruId);
+      c.dataset.ru = it.ruId;
+      if (m) c.dataset.refeicao = m.refeicao.tipo;
+      c.innerHTML = m ? htmlCardapio(m) : '';
+      c.dataset.chave = chaveDoCardapio(m);
+      c.style.setProperty('--rot', duracaoDoItem(it) + 'ms');   // barra de progresso no tempo do cardápio
+    } else c.innerHTML = htmlCard(it, i, itens.length);
     c.classList.toggle('larga', (proporcaoImg.get(it.imagem) || 0) > 2.1);   // banners: imagem inteira
     c.addEventListener('click', () => { if (!acabouDeDeslizar && i !== atual) vaiPara(i); });
     palco.appendChild(c);
@@ -1242,6 +1387,7 @@ function montaCards(){
   $('#pontos').innerHTML = itens.map((_, i) => `<i data-i="${i}"></i>`).join('');
   $('#pontos').querySelectorAll('i').forEach(p => p.addEventListener('click', () => vaiPara(+p.dataset.i)));
   ajustaAreasDeImagem();
+  palco.querySelectorAll('.card.cardapio').forEach(encaixaCardapio);
   posiciona(true);
   requestAnimationFrame(() => requestAnimationFrame(() =>
     palco.querySelectorAll('.card').forEach(c => c.classList.remove('teleporte'))));
@@ -1260,7 +1406,7 @@ function ajustaAreaDeImagem(card){
 }
 function ajustaAreasDeImagem(){ palco.querySelectorAll('.card').forEach(ajustaAreaDeImagem); }
 addEventListener('resize', () => requestAnimationFrame(() => { aplicaOrientacao(); ajustaAreasDeImagem(); reiniciaBanner(); }));
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajustaAreasDeImagem);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { ajustaAreasDeImagem(); palco.querySelectorAll('.card.cardapio').forEach(encaixaCardapio); });
 
 function deslocamento(i){
   const n = itens.length;
@@ -1272,6 +1418,7 @@ function deslocamento(i){
 }
 
 function posiciona(inicial){
+  atualizaCardsDoCardapio();
   palco.querySelectorAll('.card').forEach(c => {
     const novo = deslocamento(+c.dataset.i);
     const antigo = c.dataset.off;
@@ -1418,7 +1565,7 @@ const anterior = () => vaiPara(atual - 1);
 function agendaRotacao(){
   clearTimeout(timerRot);
   if (pausado || dormindo || itens.length < 2) return;
-  timerRot = setTimeout(proxima, CONFIG.INTERVALO_MS);
+  timerRot = setTimeout(proxima, duracaoDoItem(itens[atual]));
 }
 function alternaPausa(){
   pausado = !pausado;
@@ -1498,31 +1645,41 @@ function idDoYoutube(html){
   return m ? m[1] : '';
 }
 // título do vídeo pelo oEmbed do YouTube (sem chave de API); noembed.com como reserva
-async function tituloDoYoutube(id){
-  const alvo = encodeURIComponent(`https://www.youtube.com/watch?v=${id}`);
-  for (const url of [`https://www.youtube.com/oembed?url=${alvo}&format=json`, `https://noembed.com/embed?url=${alvo}`]){
-    try{
-      const d = await comTempoLimite(fetch(url, { credentials: 'omit' }).then(r => r.ok ? r.json() : null), 8000);
-      if (d && d.title) return limpa(d.title);
-    }catch(e){}
-  }
-  return '';
+// título e canal do vídeo (oEmbed do YouTube; noembed.com de reserva). Guardado: não muda.
+const cacheYoutube = new Map();
+function infoDoYoutube(id){
+  if (cacheYoutube.has(id)) return cacheYoutube.get(id);
+  const p = (async () => {
+    const alvo = encodeURIComponent(`https://www.youtube.com/watch?v=${id}`);
+    for (const url of [`https://www.youtube.com/oembed?url=${alvo}&format=json`, `https://noembed.com/embed?url=${alvo}`]){
+      try{
+        const d = await comTempoLimite(fetch(url, { credentials: 'omit' }).then(r => r.ok ? r.json() : null), 8000);
+        if (d && d.title) return { titulo: limpa(d.title), canal: limpa(d.author_name || '') };
+      }catch(e){}
+    }
+    cacheYoutube.delete(id);           // falhou: tenta de novo na próxima leitura
+    return null;
+  })();
+  cacheYoutube.set(id, p);
+  return p;
 }
-// vídeos do YouTube incorporados numa página do site (ex.: página inicial da TV Campus), na ordem
-// em que aparecem; o título de seção (h2/h3…) logo acima de cada vídeo vira a editoria do card
-async function videosDaPagina(site, paginaId){
-  const pg = await api(`wp/v2/pages/${paginaId}?_fields=content`, site);
-  const html = (pg && pg.content && pg.content.rendered) || '';
+async function tituloDoYoutube(id){ const i = await infoDoYoutube(id); return i ? i.titulo : ''; }
+
+/* Vídeos do YouTube incorporados numa página (Elementor), cada um com o título da seção onde
+   está (o h2 de cima, ex.: "TV Campus"). Viram itens do carrossel: título do YouTube,
+   capa na maior resolução que o vídeo tiver e, como origem, o nome do canal. */
+async function videosDoHtml(html){
   const re = /<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>|(?:youtube(?:-nocookie)?\.com\\?\/(?:embed\\?\/|watch\?v=|shorts\\?\/|live\\?\/)|youtu\.be\\?\/)([\w-]{11})/g;
   const achados = [], vistos = new Set();
   let secao = '', m;
-  while ((m = re.exec(html))){
+  while ((m = re.exec(html || ''))){
     if (m[1] !== undefined){ secao = limpa(decodifica(m[1].replace(/<[^>]+>/g, ' '))); continue; }
     if (!vistos.has(m[2])){ vistos.add(m[2]); achados.push({ id: m[2], secao }); }
   }
   const lista = await Promise.all(achados.map(async v => {
-    let titulo = await tituloDoYoutube(v.id);
-    if (!titulo) return null;
+    const info = await infoDoYoutube(v.id);
+    if (!info) return null;
+    let titulo = info.titulo;
     // "Geração Ansiosa | TV Campus Entrevista" → "Geração Ansiosa" (o programa já vai na editoria)
     const partes = titulo.split(/\s+[|–-]\s+/);
     if (partes.length > 1 && /tv\s*campus|tvc\b/i.test(partes[partes.length - 1])) titulo = partes.slice(0, -1).join(' | ');
@@ -1530,13 +1687,19 @@ async function videosDaPagina(site, paginaId){
       titulo, link: `https://www.youtube.com/watch?v=${v.id}`, guid: v.id,
       secao: v.secao && v.secao.length <= 40 ? v.secao : 'Vídeo',
       resumo: '', data: null, descricaoImagem: titulo, tituloProvisorio: false, video: true,
+      origem: info.canal || 'YouTube', canal: info.canal,
+      // capa: a maior que existir (1280 px; senão 640; senão 480)
       imagens: ['maxresdefault', 'sddefault', 'hqdefault'].map(t => `https://i.ytimg.com/vi/${v.id}/${t}.jpg`),
       imagem: null,
     };
   }));
   return lista.filter(Boolean);
 }
-async function noticiasDaApi(site = CONFIG.SITE, quantos = 60){
+async function videosDaPagina(site, paginaId){
+  const pg = await api(`wp/v2/pages/${paginaId}?_fields=content`, site);
+  return videosDoHtml((pg && pg.content && pg.content.rendered) || '');
+}
+async function noticiasDaApi(site = CONFIG.SITE, quantos = 60, aceitaSemFoto = false){
   const posts = await api(`wp/v2/posts?per_page=${quantos}&_embed=wp:featuredmedia&_fields=link,date,title,excerpt,content,_links,_embedded`, site);
   const lista = [];
   for (const p of posts || []){
@@ -1556,7 +1719,7 @@ async function noticiasDaApi(site = CONFIG.SITE, quantos = 60){
         if (yt) imagens = [`https://i.ytimg.com/vi/${yt}/maxresdefault.jpg`, `https://i.ytimg.com/vi/${yt}/hqdefault.jpg`];
       }
     }
-    if (!imagens.length) continue;
+    if (!imagens.length && !aceitaSemFoto) continue;
     const tmp = document.createElement('div');
     tmp.innerHTML = (p.excerpt && p.excerpt.rendered) || '';
     let resumo = limpa(tmp.textContent).replace(/\s*\[(…|&hellip;|\.\.\.)\]\s*$/, '…');
@@ -1633,6 +1796,7 @@ async function origemDaMateria(link){
 const MARCAS_ORIGEM = new Set(__MARCAS_ORIGEM_IDS__);
 function marcaDaOrigem(it){
   if (!it.origem) return '';
+  if (it.video) return MARCAS_ORIGEM.has('video') ? 'video' : '';   // canal do YouTube
   if (it.origem === ORIGEM_PORTAL) return 'agencia';
   const c = it.caminhoFonte ?? caminhoDoSite(it.link);   // vídeo do YouTube: o site de onde veio
   if (c === null) return '';                       // fora da UFSM
@@ -1654,7 +1818,7 @@ async function completaOrigens(lista, ms){
 // as que não ficaram prontas a tempo entram no card depois
 async function completaOrigensAtrasadas(){
   for (const [i, it] of itens.entries()){
-    if (it.origem || it.video) continue;
+    if (it.origem || it.video || it.cardapio) continue;
     try{
       it.origem = await origemDaMateria(it.link);
       const el = palco.querySelector(`.card[data-i="${i}"] .origem`);
@@ -1699,17 +1863,425 @@ const CATALOGO = [
   { grupo: 'Campi', id: 'cachoeira-do-sul', caminho: 'unidades-universitarias/cachoeira-do-sul', sigla: 'UFSM-CS', nome: 'Campus Cachoeira do Sul' },
   { grupo: 'Campi', id: 'frederico-westphalen', caminho: 'unidades-universitarias/frederico-westphalen', sigla: 'UFSM-FW', nome: 'Campus Frederico Westphalen' },
   { grupo: 'Campi', id: 'palmeira-das-missoes', caminho: 'unidades-universitarias/palmeira-das-missoes', sigla: 'UFSM-PM', nome: 'Campus Palmeira das Missões' },
+  // avisos do RU (RU fechado, horários, pesquisas) quase nunca têm foto: entram com o símbolo da UFSM
+  { grupo: 'Órgãos suplementares', id: 'ru', caminho: 'orgaos-suplementares/ru', marca: 'ru', sigla: 'RU', nome: 'Restaurante Universitário', semFoto: true },
   // mídias da UFSM (sem símbolo próprio na identidade institucional: brasão da UFSM em linhas)
   { grupo: 'Mídias da UFSM', id: 'radios', caminho: 'orgaos-suplementares/radio', nome: 'Rádios da UFSM' },
   // TV Campus: além das matérias, os vídeos do YouTube incorporados na página inicial (página 5 do site)
   { grupo: 'Mídias da UFSM', id: 'tvcampus', caminho: 'midias/tvcampus', nome: 'TV Campus', paginaVideos: 5 },
   { grupo: 'Mídias da UFSM', id: 'revistatxt', caminho: 'midias/experimental/revistatxt', nome: 'Revista .TXT' },
 ];
+/* ==================================================================
+   CARDÁPIO DO RESTAURANTE UNIVERSITÁRIO
+   Vem do Portal do RU (o mesmo calendário de portal.ufsm.br/ru/cardapio.html):
+   /ru/publico/buscarCardapio.json → uma entrada por dia e refeição
+   (1 café da manhã, 2 almoço, 3 jantar), com a lista de preparações.
+   O card entra no carrossel a cada N notícias e mostra a refeição do momento.
+   ================================================================== */
+const RU_API = 'https://portal.ufsm.br/ru/publico/buscarCardapio.json';
+const RU_LINK = 'https://portal.ufsm.br/ru/cardapio.html';
+const CHAVE_CARDAPIO = 'noticiasUFSM:cardapio';
+const NOME_REFEICAO = { 1: 'Café da manhã', 2: 'Almoço', 3: 'Jantar' };
+// horários (página "Horários" do site do RU). Onde não há horário publicado, o painel usa
+// janelas aproximadas só para escolher a refeição do momento, sem mostrar a hora na tela.
+const HORARIO_CAMPUS_I = {
+  semana:      { 1: ['06:50', '08:45'], 2: ['10:45', '13:45'], 3: ['17:45', '19:45'] },
+  fimDeSemana: { 1: ['08:00', '09:30'], 2: ['11:30', '13:30'], 3: ['18:00', '19:30'] },
+};
+const JANELA_APROXIMADA = { 1: ['06:30', '09:30'], 2: ['10:45', '14:00'], 3: ['17:30', '20:00'] };
+// marca do RU (identidade institucional da UFSM), branca, com o nome do campus
+const MARCAS_RU = { sm: '__RU_SM__', fw: '__RU_FW__', pm: '__RU_PM__', cs: '__RU_CS__' };
+const SIMBOLO_RU = '__RU_SIMBOLO__';
+const RESTAURANTES = [
+  { id: 1,  nome: 'RU Campus I',             local: 'Santa Maria · Prédio 31',  marca: 'sm', horario: HORARIO_CAMPUS_I },
+  { id: 41, nome: 'RU Campus II',            local: 'Santa Maria · Prédio 31A', marca: 'sm', horario: { semana: { 2: ['10:45', '13:45'] } } },
+  { id: 21, nome: 'RU HUSM',                 local: 'Hospital Universitário de Santa Maria', marca: 'sm' },
+  { id: 82, nome: 'RU Ipê Amarelo',          local: 'Santa Maria', marca: 'sm' },
+  { id: 4,  nome: 'RU Frederico Westphalen', local: 'Campus Frederico Westphalen', marca: 'fw' },
+  { id: 3,  nome: 'RU Palmeira das Missões', local: 'Campus Palmeira das Missões', marca: 'pm' },
+  { id: 42, nome: 'RU Cachoeira do Sul',     local: 'Campus Cachoeira do Sul', marca: 'cs' },
+];
+const restaurante = id => RESTAURANTES.find(r => r.id === id) || RESTAURANTES[0];
+
+// dia (AAAA-MM-DD) e minuto do dia no fuso do painel
+const partesFuso = d => Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo',
+  year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', weekday: 'short' })
+  .formatToParts(d).map(p => [p.type, p.value]));
+const diaDe = d => { const p = partesFuso(d); return `${p.year}-${p.month}-${p.day}`; };
+const minutoDe = d => { const p = partesFuso(d); return +p.hour * 60 + +p.minute; };
+const minutos = hhmm => { const [h, m] = hhmm.split(':').map(Number); return h * 60 + m; };
+const fmtHHMM = hhmm => hhmm.replace(':', 'h');
+const diaDaSemana = dia => new Date(dia + 'T12:00:00Z').getUTCDay();   // 0 = domingo
+function somaDias(dia, n){ const d = new Date(dia + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+const fmtDiaLongo = dia => new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
+  .format(new Date(dia + 'T12:00:00Z')).replace(/^./, c => c.toUpperCase());
+
+// horário publicado da refeição (ou null) e a janela usada para decidir o que mostrar
+function horarioDaRefeicao(ru, dia, tipo){
+  const fds = [0, 6].includes(diaDaSemana(dia));
+  const h = ru.horario && ((fds ? ru.horario.fimDeSemana : ru.horario.semana) || null);
+  const publicado = h && h[tipo] ? h[tipo] : null;
+  return { publicado, janela: publicado || JANELA_APROXIMADA[tipo] };
+}
+
+// nome da preparação como aparece na TV: sem caixa alta, sem porções nem observações
+function nomeDoPrato(t){
+  t = limpa(String(t || '')).replace(/\s*-\s*\d.*$/, '').replace(/\s+(blister|sach[êe])\b/gi, '').replace(/\s+/g, ' ').trim();
+  if (t && t === t.toUpperCase()){
+    t = t.toLowerCase().replace(/\buht\b/g, 'UHT');
+    t = t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  return t;
+}
+const PRATO_IGNORADO = /^(temperos?\b|água|agua\b|açúcar|acucar|adoçante|adocante)/i;
+
+function leCardapio(json, id){
+  if (!Array.isArray(json)) throw new Error('resposta do cardápio em formato inesperado');
+  const refeicoes = [];
+  for (const e of json){
+    const o = e && e.object;
+    if (!o || !NOME_REFEICAO[o.tipoRefeicao] || !Array.isArray(o.preparos)) continue;
+    const pratos = [];
+    for (const p of o.preparos){
+      const nome = nomeDoPrato(p.nomePreparo);
+      if (!nome || PRATO_IGNORADO.test(nome) || pratos.some(x => x.nome === nome)) continue;
+      pratos.push({ nome, vegetal: !!p.isOrigemVegetal, animal: !!p.isOrigemAnimal });
+    }
+    if (pratos.length) refeicoes.push({ dia: diaDe(new Date(e.start)), tipo: o.tipoRefeicao, pratos });
+  }
+  refeicoes.sort((a, b) => a.dia.localeCompare(b.dia) || a.tipo - b.tipo);
+  return { id, refeicoes, lido: Date.now() };
+}
+
+let cardapios = {};           // por RU: { id, refeicoes: [{dia, tipo, pratos}], lido }
+let cardapioNoCarrossel = '';  // chave do que está no carrossel agora ('' = sem card)
+function cardapiosGuardados(){
+  try{
+    const c = JSON.parse(localStorage.getItem(CHAVE_CARDAPIO) || 'null');
+    if (c && typeof c === 'object'){
+      if (Array.isArray(c.refeicoes)) return { [c.id]: c };     // formato antigo: um RU só
+      return Object.fromEntries(Object.entries(c).filter(([, v]) => v && Array.isArray(v.refeicoes)));
+    }
+  }catch(e){}
+  return {};
+}
+async function leCardapioDoRu(id){
+  const hoje = diaDe(new Date());
+  const ini = Math.floor(new Date(hoje + 'T00:00:00-03:00').getTime() / 1000);
+  const url = `${RU_API}?inicio=${ini}&fim=${ini + 4 * 86400}&idRestaurante=${id}` +
+              '&tiposRefeicao%5B%5D=1&tiposRefeicao%5B%5D=2&tiposRefeicao%5B%5D=3';
+  const r = await comTempoLimite(fetch(url, { cache: 'no-store', credentials: 'omit' }), 20000);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return leCardapio(await r.json(), id);
+}
+async function carregaCardapio(){
+  const ru = PAINEL.ru;
+  if (!ru.ativo || !ru.ids.length){ verificaCardapio(); return; }
+  if (!Object.keys(cardapios).length) cardapios = cardapiosGuardados();
+  await Promise.all(ru.ids.map(async id => {
+    try{ cardapios[id] = await leCardapioDoRu(id); }
+    // sem resposta (ou o portal pediu verificação de acesso): segue com o último cardápio lido
+    catch(e){ console.warn(`[Destaques] não foi possível ler o cardápio do RU ${id}:`, e); }
+  }));
+  // guarda só os RUs escolhidos
+  const guardar = Object.fromEntries(PAINEL.ru.ids.filter(id => cardapios[id]).map(id => [id, cardapios[id]]));
+  try{ localStorage.setItem(CHAVE_CARDAPIO, JSON.stringify(guardar)); }catch(e){}
+  verificaCardapio();
+}
+
+/* A refeição que o card mostra agora:
+   1. a de hoje que ainda não terminou (servindo agora, ou a próxima do dia);
+   2. depois da última do dia (ou em dia sem refeição), a primeira do próximo dia com cardápio,
+      se a opção estiver marcada. Sem cardápio: o card não aparece. */
+function refeicaoDoMomento(id, agora = new Date()){
+  const cfg = PAINEL.ru, cardapio = cardapios[id];
+  if (!cfg.ativo || !cfg.ids.includes(id) || !cardapio) return null;
+  const ru = restaurante(id), hoje = diaDe(agora), min = minutoDe(agora);
+  const doDia = dia => cardapio.refeicoes.filter(r => r.dia === dia);
+  let escolhida = null, estado = '';
+  for (const r of doDia(hoje)){
+    const { janela } = horarioDaRefeicao(ru, hoje, r.tipo);
+    if (min < minutos(janela[1])){ escolhida = r; estado = min >= minutos(janela[0]) ? 'agora' : 'hoje'; break; }
+  }
+  if (!escolhida && cfg.amanha){
+    for (let n = 1; n <= 3 && !escolhida; n++){
+      const r = doDia(somaDias(hoje, n))[0];
+      if (r){ escolhida = r; estado = n === 1 ? 'amanha' : 'depois'; }
+    }
+  }
+  if (!escolhida) return null;
+  const outras = doDia(escolhida.dia).filter(r => r.tipo !== escolhida.tipo &&
+    (escolhida.dia !== hoje || r.tipo > escolhida.tipo));    // hoje: só as que ainda vêm
+  return { ru, refeicao: escolhida, estado, outras, lido: cardapio.lido };
+}
+const chaveDoCardapio = m => m ? [m.ru.id, m.refeicao.dia, m.refeicao.tipo, m.estado, m.refeicao.pratos.length, m.lido].join('|') : '';
+// os RUs escolhidos que têm card agora, cada um com a sua refeição do momento
+const cardapiosDoMomento = () => PAINEL.ru.ids.map(id => refeicaoDoMomento(id)).filter(Boolean);
+
+
+/* Categorias das preparações, com ícone: o portal não diz a categoria de cada prato,
+   então o painel deduz pelo nome (e pelas marcações de origem animal/vegetal do portal).
+   Os pratos da mesma categoria ficam juntos numa linha (ex.: "Arroz branco, arroz integral"). */
+const ICONE = (corpo) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${corpo}</svg>`;
+const CATEGORIAS = {
+  principal:  { nome: 'Prato principal', cor: 'var(--ru-laranja)', svg: ICONE('<path d=\"M12 5.5v2.2\"/><circle cx=\"12\" cy=\"4.6\" r=\"1.1\"/><path d=\"M4 16.5a8 8 0 0 1 16 0\"/><path d=\"M2.5 16.5h19\"/><path d=\"M4 19.5h16\"/><path d=\"M8.2 12.2a4.6 4.6 0 0 1 2.6-2\"/>') },
+  vegetal:    { nome: 'Opção vegetal', cor: 'var(--ru-verde)', svg: ICONE('<path d="M12 21v-8.5"/><path d="M12 13C12 8.8 9.2 6 4.5 6c0 4.2 2.8 7 7.5 7z"/><path d="M12 11c0-4.4 2.9-7.3 7.5-7.3 0 4.4-2.9 7.3-7.5 7.3z"/>') },
+  salada:     { nome: 'Saladas', cor: 'var(--ru-verde)', svg: ICONE('<path d="M3 12.5h18a9 9 0 0 1-18 0z"/><path d="M7.5 12.5c-.3-2.6.8-4.6 3-5.6"/><path d="M12 12.5c0-3.2 1.8-5.6 5.2-6.6.4 3-.9 5.4-3.4 6.6"/><path d="M7.7 9.6C5.6 9.1 4.4 7.6 4.3 5.3c2.2 0 3.9 1.2 4.6 3.2"/>') },
+  arroz:      { nome: 'Arroz', cor: 'var(--ru-creme)', svg: ICONE('<path d="M3 13h18a9 9 0 0 1-18 0z"/><path d="M5.6 13a6.4 5.2 0 0 1 12.8 0"/><path d="M9.5 9.6l.6.9M12.6 8.6l-.3 1M15 10.4l-.8.6M11 11.6l.7.4" stroke-width="1.6"/>') },
+  feijao:     { nome: 'Feijão e grãos', cor: 'var(--ru-rosa)', svg: ICONE('<path d="M8.2 3.6c3 .2 4.9 2.8 4.1 5.4-.5 1.6-.1 2.6 1.1 3.5 1.9 1.4 1.4 4.6-1.4 5.3-3.3.8-6.9-1.8-7.8-6C3.4 7.4 5 3.4 8.2 3.6z"/><path d="M16.6 10.4c2.6.6 4.2 2.9 3.6 5.4s-3 4.2-5.6 3.8"/>') },
+  guarnicao:  { nome: 'Acompanhamentos', cor: 'var(--ru-creme)', svg: ICONE('<path d="M4 10.5h16v5.5a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M2.5 10.5h19"/><path d="M9 3.5c-.9.9.9 1.9 0 3.4M13 3.5c-.9.9.9 1.9 0 3.4M17 4.5c-.6.7.6 1.4 0 2.4"/>') },
+  sobremesa:  { nome: 'Sobremesa', cor: 'var(--ru-rosa)', svg: ICONE('<path d="M4 20.5V13l16-5.5v13z"/><path d="M4 16.2l16-4.6"/><circle cx="15.5" cy="5.2" r="1.7"/><path d="M16.6 3.8c.5-.9 1.4-1.4 2.4-1.3"/>') },
+  fruta:      { nome: 'Fruta', cor: 'var(--ru-laranja)', svg: ICONE('<path d="M12 7.3c-1.6-1.3-4.2-1.6-5.9-.2-2.4 1.9-2.2 6.5-.3 10 1.5 2.8 3.6 4.2 5.1 3.5a2.6 2.6 0 0 1 2.2 0c1.5.7 3.6-.7 5.1-3.5 1.9-3.5 2.1-8.1-.3-10-1.7-1.4-4.3-1.1-5.9.2z"/><path d="M12 7.3c0-2.2 1.1-3.8 3.3-4.6"/>') },
+  bebida:     { nome: 'Bebidas', cor: 'var(--ru-creme)', svg: ICONE('<path d="M4 9.5h13v4.5a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6z"/><path d="M17 11.5h1.3a2.6 2.6 0 0 1 0 5.2H17"/><path d="M8 3.5c-.8.9.8 1.8 0 3M12.5 3.5c-.8.9.8 1.8 0 3"/>') },
+  pao:        { nome: 'Pães', cor: 'var(--ru-laranja)', svg: ICONE('<path d="M6 20.5h12v-9.4a3.6 3.6 0 0 0-1.6-7H7.6A3.6 3.6 0 0 0 6 11.1z"/><path d="M10.3 8.2 9.4 11M14.6 8.2l-.9 2.8"/>') },
+  acompanhar: { nome: 'Para acompanhar', cor: 'var(--ru-rosa)', svg: ICONE('<rect x="6" y="3.5" width="12" height="3.5" rx="1"/><path d="M7 7h10v11.5a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z"/><path d="M7 12.5h10"/>') },
+};
+const ORDEM_ALMOCO = ['principal', 'vegetal', 'salada', 'arroz', 'feijao', 'guarnicao', 'sobremesa', 'fruta'];
+const ORDEM_CAFE = ['bebida', 'pao', 'acompanhar', 'fruta', 'sobremesa'];
+// palavras inteiras, com acentos (o \b do JavaScript não entende letras acentuadas)
+const palavras = (lista, noInicio) => { const re = new RegExp((noInicio ? '^' : '(?<!\\p{L})') + '(' + lista + ')(?!\\p{L})', 'iu'); return n => re.test(n); };
+const E_FRUTA = palavras('fruta|banana|laranja|ma[çc][ãa]|mel[ãa]o|melancia|mam[ãa]o|p[êe]ra|p[êe]ssego|abacaxi|uva|tangerina|bergamota|kiwi|manga|ameixa|goiaba|caqui|morango', true);
+const E_SOBREMESA = palavras('sobremesa|doce|rapadura|torrone|pa[çc]oca|pa[çc]oquinha|p[ée] de moleque|mousse|pudim|gelatina|bombom|bananinha|sagu|brigadeiro|ambrosia|cocada|wafer|bolo de pote|cuca doce');
+const E_BEBIDA = palavras('caf[ée]|leite|ch[áa]|chocolate|achocolatado|suco|bebida|iogurte', true);
+const E_PAO = palavras('p[ãa]o|p[ãa]es|cuca|bolo|torrada|biscoito|bolacha|rosca', true);
+const E_ACOMPANHAR = palavras('margarina|manteiga|gel[ée]ia|doce de leite|mel|requeij[ãa]o|queijo|presunto|creme|nata', true);
+const E_ARROZ = palavras('arroz', true);
+const E_FEIJAO = palavras('feij[ãa]o|lentilha|lentilhada', true);
+const E_SALADA = palavras('salada|alface|tomate|cenoura ralada|repolho|pepino|beterraba ralada|r[úu]cula|agri[ãa]o|couve|mix de folhas|mix de repolho|abobrinha ralada|acelga|chic[óo]ria|vinagrete|br[óo]colis|salpic[ãa]o de legumes|rabanete|palmito|almeir[ãa]o', true);
+const E_VEGETAL = palavras('soja|tofu|gr[ãa]o de bico|gr[ãa]o-de-bico|lentilha|ervilha ao molho|de legumes|vegetariano|vegetariana|vegano|vegana|omelete');
+const E_CARNE = palavras('carne|frango|peixe|su[íi]no|su[íi]na|bife|fil[ée]|guisado|iscas|pernil|lingui[çc]a|sobrecoxa|coxa|sassami|chuleta|bovino|bovina|costela|lombo|picadinho|galinhada|f[íi]gado|cox[ãa]o|alcatra|ac[ée]m|patinho|atum|sardinha|til[áa]pia|merluza|fricass[êe]|tropeiro|feijoada');
+
+function categoriaDoPrato(p, tipo){
+  const n = p.nome;
+  if (tipo === 1){
+    if (E_BEBIDA(n)) return 'bebida';
+    if (E_PAO(n)) return 'pao';
+    if (E_FRUTA(n)) return 'fruta';
+    if (E_ACOMPANHAR(n)) return 'acompanhar';
+    if (E_SOBREMESA(n)) return 'sobremesa';
+    return 'acompanhar';
+  }
+  if (E_ARROZ(n)) return 'arroz';
+  if (E_FEIJAO(n)) return 'feijao';
+  if (E_FRUTA(n)) return 'fruta';
+  if (E_SOBREMESA(n)) return 'sobremesa';
+  if (E_SALADA(n)) return 'salada';
+  if (E_VEGETAL(n) && !E_CARNE(n)) return 'vegetal';
+  if (E_CARNE(n) || p.animal) return 'principal';
+  if (p.vegetal) return 'vegetal';
+  return 'guarnicao';
+}
+// [{cat, pratos: ['Arroz branco', 'arroz integral']}] na ordem de leitura de uma refeição
+function gruposDoCardapio(r){
+  const ordem = r.tipo === 1 ? ORDEM_CAFE : ORDEM_ALMOCO;
+  const grupos = new Map();
+  for (const p of r.pratos){
+    const c = categoriaDoPrato(p, r.tipo);
+    if (!grupos.has(c)) grupos.set(c, []);
+    grupos.get(c).push(p.nome);
+  }
+  return [...grupos.entries()].sort((a, b) => ordem.indexOf(a[0]) - ordem.indexOf(b[0]))
+    .map(([cat, pratos]) => ({ cat, pratos: pratos.map((t, i) => i ? t.charAt(0).toLowerCase() + t.slice(1) : t) }));
+}
+
+function htmlCardapio(m){
+  const { ru, refeicao: r, estado, outras } = m;
+  const nome = NOME_REFEICAO[r.tipo];
+  const titulo = estado === 'amanha' ? `${nome} de amanhã` : estado === 'depois' ? nome : `${nome} de hoje`;
+  const estadoTxt = { agora: 'Servindo agora', hoje: 'Próxima refeição', amanha: 'Amanhã', depois: fmtDiaLongo(r.dia).split(',')[0] }[estado];
+  const h = horarioDaRefeicao(ru, r.dia, r.tipo).publicado;
+  const sub = [h ? `${fmtHHMM(h[0])} às ${fmtHHMM(h[1])}` : '', ru.local].filter(Boolean).join(' · ');
+  // uma linha por categoria, com o ícone; o prato principal ganha a linha inteira
+  const pratos = gruposDoCardapio(r).map(g => {
+    const c = CATEGORIAS[g.cat];
+    return `<li class="cat-${g.cat}${g.cat === 'principal' ? ' principal' : ''}" style="--cor-cat:${c.cor}">
+      <span class="icone">${c.svg}</span><span class="texto"><small>${esc(c.nome)}</small>${esc(g.pratos.join(', '))}</span></li>`;
+  }).join('');
+  const outrasTxt = outras.map(o => {
+    const ho = horarioDaRefeicao(ru, o.dia, o.tipo).publicado;
+    return `<span><b>${esc(NOME_REFEICAO[o.tipo])}</b>${ho ? ` ${fmtHHMM(ho[0])} às ${fmtHHMM(ho[1])}` : ''}</span>`;
+  }).join('');
+  const qr = qrDataURL(RU_LINK);
+  return `
+    <div class="sem-foto"></div><div class="midia simbolo"><img src="${SIMBOLO_RU}" alt=""></div>
+    <div class="legenda"><h3>Cardápio do RU</h3><span>${esc(estado === 'amanha' ? nome + ' de amanhã' : nome)} · ${esc(ru.nome)}</span></div>
+    <div class="cardapio-corpo">
+      <div class="topo-ru">
+        <img class="ru-marca" src="${MARCAS_RU[ru.marca] || MARCAS_RU.sm}" alt="Restaurante Universitário UFSM">
+        <div class="quando">
+          <span class="estado ${estado === 'agora' ? 'agora' : 'depois'}">${esc(estadoTxt)}</span>
+          <time>${esc(fmtDiaLongo(r.dia))}</time>
+        </div>
+      </div>
+      <p class="ru-nome">${esc(ru.nome)}</p>
+      <h2>${esc(titulo)}</h2>
+      ${sub ? `<p class="sub">${esc(sub)}</p>` : ''}
+      <ul class="pratos">${pratos}</ul>
+      <div class="rodape-card">
+        <div class="info">
+          ${outrasTxt ? `<div class="outras">${outrasTxt}</div>` : ''}
+          <p class="nota">Cardápio sujeito a alterações sem aviso prévio.</p>
+        </div>
+        ${qr ? `<div class="qr"><div class="caixa"><img src="${qr}" alt="QR code do cardápio do RU"></div><small><span class="q-tv">Cardápio completo</span><span class="q-totem">Cardápio no celular</span></small></div>` : ''}
+      </div>
+    </div>
+    <div class="sombra"></div>
+    <div class="progresso"><i></i></div>`;
+}
+
+// item do carrossel que representa o cardápio (o card é desenhado na hora, com a refeição do momento)
+// item do carrossel de cada RU (o card é desenhado na hora, com a refeição do momento)
+const itensCardapio = new Map();
+const itemCardapio = id => {
+  if (!itensCardapio.has(id)) itensCardapio.set(id, { cardapio: true, ruId: id, link: `${RU_LINK}#ru-${id}`, titulo: 'Cardápio do RU' });
+  return itensCardapio.get(id);
+};
+/* As notícias com o cardápio intercalado: depois de cada N notícias (com menos de N, no fim).
+   Com mais de um RU, os cards entram juntos, um depois do outro, na ordem da lista de RUs. */
+function comCardapio(lista){
+  const ms = cardapiosDoMomento();
+  cardapioNoCarrossel = ms.map(chaveDoCardapio).join('§');
+  if (!ms.length || !lista.length) return lista;
+  const cada = PAINEL.ru.cada, saida = [];
+  const grupo = () => ms.map(m => itemCardapio(m.ru.id));
+  lista.forEach((it, i) => { saida.push(it); if ((i + 1) % cada === 0) saida.push(...grupo()); });
+  if (lista.length < cada) saida.push(...grupo());
+  return saida;
+}
+// tempo do card na tela: o cardápio tem o seu
+const duracaoDoItem = it => it && it.cardapio ? PAINEL.ru.tempo * 1000 : CONFIG.INTERVALO_MS;
+
+// redesenha os cards do cardápio que ficaram desatualizados (a refeição mudou com a hora)
+// a lista de pratos varia de tamanho: se não couber, a letra da lista diminui um pouco
+function encaixaCardapio(card){
+  const ul = card.querySelector('.pratos');
+  if (!ul) return;
+  let escala = 1;
+  ul.style.fontSize = '';
+  while (ul.scrollHeight > ul.clientHeight + 2 && escala > .66){ escala -= .04; ul.style.fontSize = escala + 'em'; }
+}
+addEventListener('resize', () => requestAnimationFrame(() => palco.querySelectorAll('.card.cardapio').forEach(encaixaCardapio)));
+function atualizaCardsDoCardapio(){
+  palco.querySelectorAll('.card.cardapio').forEach(c => {
+    c.style.setProperty('--rot', PAINEL.ru.tempo * 1000 + 'ms');
+    const m = refeicaoDoMomento(+c.dataset.ru), chave = chaveDoCardapio(m);
+    if (!m || c.dataset.chave === chave) return;
+    const off = c.dataset.off;
+    c.innerHTML = htmlCardapio(m);
+    c.dataset.chave = chave;
+    c.dataset.refeicao = m.refeicao.tipo;
+    if (off !== undefined) c.dataset.off = off;
+    encaixaCardapio(c);
+  });
+}
+// a cada minuto (e depois de cada leitura): um card entra, sai ou muda de refeição
+const rusNaChave = chave => chave.split('§').filter(Boolean).map(c => c.split('|')[0]).join(',');
+function verificaCardapio(){
+  const chave = cardapiosDoMomento().map(chaveDoCardapio).join('§');
+  if (rusNaChave(chave) !== rusNaChave(cardapioNoCarrossel)) recompoe();
+  else if (chave !== cardapioNoCarrossel){
+    cardapioNoCarrossel = chave;
+    // o card em foco não muda no meio da exibição: os outros já, e ele na próxima vez que entrar
+    const foco = palco.querySelector('.card.cardapio[data-off="0"]');
+    palco.querySelectorAll('.card.cardapio').forEach(c => { if (c !== foco) delete c.dataset.chave; });
+    atualizaCardsDoCardapio();
+  }
+}
+function preencheRu(r){
+  r = limpaRu(r);
+  $('#cfgRu').checked = r.ativo;
+  $('#cfgRuLista').innerHTML = RESTAURANTES.map(x => `
+    <label><input type="checkbox" value="${x.id}"${r.ids.includes(x.id) ? ' checked' : ''}>
+      <span><b>${esc(x.nome)}</b><small>${esc(x.local)}</small></span></label>`).join('');
+  $('#cfgRuTempo').value = r.tempo;
+  $('#cfgRuCada').value = r.cada;
+  $('#cfgRuAmanha').checked = r.amanha;
+  $('#cfgRuLista').querySelectorAll('input').forEach(i => i.addEventListener('change', totalConfig));
+  atualizaCamposRu();
+}
+function atualizaCamposRu(){ $('#cfgRuCampos').hidden = !$('#cfgRu').checked; totalConfig(); }
+
+/* ==================================================================
+   PREVISÃO DO TEMPO — cidade da TV (campi da UFSM), ao lado do relógio.
+   Open-Meteo: gratuito para uso não comercial, sem chave; dados CC BY 4.0.
+   ================================================================== */
+const CIDADES = [
+  { id: 'santa-maria',          nome: 'Santa Maria',            lat: -29.7196, lon: -53.7159 },
+  { id: 'frederico-westphalen', nome: 'Frederico Westphalen',   lat: -27.3594, lon: -53.3942 },
+  { id: 'palmeira-das-missoes', nome: 'Palmeira das Missões',   lat: -27.8995, lon: -53.3134 },
+  { id: 'cachoeira-do-sul',     nome: 'Cachoeira do Sul',       lat: -30.0392, lon: -52.8939 },
+];
+const CHAVE_TEMPO = 'noticiasUFSM:tempo';
+const TEMPO_A_CADA_MS = 30 * 60 * 1000;
+const limpaCidade = c => CIDADES.some(x => x.id === c) ? c : '';
+// ícones (traço na cor do texto; sol, gotas e raio coloridos)
+const IC = corpo => `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${corpo}</svg>`;
+const P_SOL = (cx, cy, r) => `<g class="sol"><circle cx="${cx}" cy="${cy}" r="${r}"/>${[0,45,90,135,180,225,270,315].map(a => { const t = a * Math.PI / 180, r1 = r + 2.6, r2 = r + 5; return `<path d="M${(cx + r1 * Math.cos(t)).toFixed(1)} ${(cy + r1 * Math.sin(t)).toFixed(1)}L${(cx + r2 * Math.cos(t)).toFixed(1)} ${(cy + r2 * Math.sin(t)).toFixed(1)}"/>`; }).join('')}</g>`;
+const P_LUA = (cx, cy) => `<path class="sol" d="M${cx + 5} ${cy + 4.5}A7.5 7.5 0 0 1 ${cx - 2.5} ${cy - 7.5}a7.5 7.5 0 1 0 ${7.5} ${12}z"/>`;
+const P_NUVEM = 'M9.5 25h14a5.5 5.5 0 0 0 .7-10.96A8 8 0 0 0 8.9 15.6 4.8 4.8 0 0 0 9.5 25z';
+const ICONES_TEMPO = {
+  sol:         IC(P_SOL(16, 16, 6)),
+  lua:         IC(P_LUA(17, 16)),
+  'sol-nuvem': IC(`<g transform="translate(-3 -4) scale(.75)">${P_SOL(16, 16, 6)}</g><path d="M11 27h12a4.6 4.6 0 0 0 .6-9.16A6.7 6.7 0 0 0 10.5 19a4 4 0 0 0 .5 8z"/>`),
+  'lua-nuvem': IC(`<g transform="translate(-2 -4) scale(.75)">${P_LUA(17, 16)}</g><path d="M11 27h12a4.6 4.6 0 0 0 .6-9.16A6.7 6.7 0 0 0 10.5 19a4 4 0 0 0 .5 8z"/>`),
+  nuvem:       IC(`<path d="${P_NUVEM}"/>`),
+  nevoeiro:    IC('<path d="M9 13.5h14a5 5 0 0 0 .6-9.96A7.3 7.3 0 0 0 9.4 5 4.3 4.3 0 0 0 9 13.5z" transform="translate(0 3)"/><path d="M6 21.5h20M9 26h14"/>'),
+  garoa:       IC(`<path d="${P_NUVEM}" transform="translate(0 -4)"/><g class="gota"><path d="M12 25.5v.5M16 27v.5M20 25.5v.5"/></g>`),
+  chuva:       IC(`<path d="${P_NUVEM}" transform="translate(0 -5)"/><g class="gota"><path d="M11.5 23.5l-1.5 4M16.5 23.5l-1.5 4M21.5 23.5l-1.5 4"/></g>`),
+  temporal:    IC(`<path d="${P_NUVEM}" transform="translate(0 -5)"/><path class="raio" d="M17 21l-3.5 5h4l-2.5 4.5"/>`),
+  neve:        IC(`<path d="${P_NUVEM}" transform="translate(0 -5)"/><g class="gota"><path d="M12 24.5v3M10.7 26h2.6M20 24.5v3M18.7 26h2.6"/></g>`),
+};
+// código do tempo (WMO) → ícone e descrição
+function tipoDoTempo(cod, dia){
+  if (cod === 0) return [dia ? 'sol' : 'lua', 'Céu limpo'];
+  if (cod <= 2) return [dia ? 'sol-nuvem' : 'lua-nuvem', 'Parcialmente nublado'];
+  if (cod === 3) return ['nuvem', 'Nublado'];
+  if (cod === 45 || cod === 48) return ['nevoeiro', 'Nevoeiro'];
+  if (cod >= 51 && cod <= 57) return ['garoa', 'Garoa'];
+  if ((cod >= 61 && cod <= 67) || (cod >= 80 && cod <= 82)) return ['chuva', 'Chuva'];
+  if ((cod >= 71 && cod <= 77) || cod === 85 || cod === 86) return ['neve', 'Neve'];
+  if (cod >= 95) return ['temporal', 'Temporal'];
+  return ['nuvem', 'Nublado'];
+}
+let previsao = null;    // { cidade, temp, max, min, cod, dia, lido }
+function mostraTempo(){
+  const ok = previsao && previsao.cidade === PAINEL.cidade && Date.now() - previsao.lido < 3 * 3600 * 1000;
+  $('#tempo').hidden = $('#tempoSep').hidden = !ok;
+  if (!ok) return;
+  const [icone, descricao] = tipoDoTempo(previsao.cod, previsao.dia);
+  const cidade = CIDADES.find(c => c.id === previsao.cidade);
+  $('#tempoIcone').innerHTML = ICONES_TEMPO[icone];
+  $('#tempoTemp').textContent = `${Math.round(previsao.temp)}°`;
+  $('#tempoMaxMin').textContent = isFinite(previsao.max) ? `${Math.round(previsao.max)}° / ${Math.round(previsao.min)}°` : '';
+  $('#tempo').title = `${cidade ? cidade.nome + ': ' : ''}${descricao}, ${Math.round(previsao.temp)} °C` +
+    (isFinite(previsao.max) ? ` (máxima ${Math.round(previsao.max)} °C, mínima ${Math.round(previsao.min)} °C)` : '') + ' · Open-Meteo';
+}
+async function carregaTempo(){
+  const cidade = CIDADES.find(c => c.id === PAINEL.cidade);
+  if (!cidade){ mostraTempo(); return; }
+  if (!previsao || previsao.cidade !== cidade.id){
+    try{ const c = JSON.parse(localStorage.getItem(CHAVE_TEMPO) || 'null'); if (c && c.cidade === cidade.id) previsao = c; }catch(e){}
+  }
+  try{
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${cidade.lat}&longitude=${cidade.lon}` +
+      '&current=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FSao_Paulo&forecast_days=1';
+    const r = await comTempoLimite(fetch(url, { cache: 'no-store', credentials: 'omit' }), 20000);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json(), at = j.current || {}, d = j.daily || {};
+    if (!isFinite(at.temperature_2m)) throw new Error('resposta sem temperatura');
+    if (PAINEL.cidade !== cidade.id) return;
+    previsao = { cidade: cidade.id, temp: at.temperature_2m, cod: at.weather_code, dia: at.is_day !== 0,
+                 max: (d.temperature_2m_max || [])[0], min: (d.temperature_2m_min || [])[0], lido: Date.now() };
+    try{ localStorage.setItem(CHAVE_TEMPO, JSON.stringify(previsao)); }catch(e){}
+  }catch(e){ console.warn('[Destaques] não foi possível ler a previsão do tempo:', e); }
+  mostraTempo();
+}
+
 const rotuloDaFonte = f => f.sigla ? `${f.sigla} - ${f.nome}` : f.nome;
 const QTD_PADRAO_PORTAL = 12, QTD_PADRAO_SITE = 5, QTD_MAXIMA = 30;
 const CHAVE_CONFIG = 'noticiasUFSM:config';
 
-const INTERVALO_PADRAO = 7, INTERVALO_MIN = 4, INTERVALO_MAX = 60;   // segundos de cada notícia
+const INTERVALO_PADRAO = 10, INTERVALO_MIN = 4, INTERVALO_MAX = 60;   // segundos de cada notícia
 const limitaIntervalo = v => Math.max(INTERVALO_MIN, Math.min(INTERVALO_MAX, Math.round(Number(v)) || INTERVALO_PADRAO));
 const RADIO_PADRAO = { ativo: false, auto: true, volume: 70 };      // rádio UNIFM: desligada por padrão
 function limpaRadio(r){
@@ -1717,12 +2289,29 @@ function limpaRadio(r){
   const v = Number(r.volume);
   return { ativo: r.ativo === true, auto: r.auto !== false, volume: isFinite(v) ? Math.max(0, Math.min(100, Math.round(v))) : RADIO_PADRAO.volume };
 }
-function configPadrao(){ return { tv: '', intervalo: INTERVALO_PADRAO, radio: { ...RADIO_PADRAO }, fontes: { portal: { ativo: true, qtd: QTD_PADRAO_PORTAL } } }; }
+// cardápio do RU: ligado por padrão, RU Campus I, 10 s na tela, a cada 7 notícias.
+// Mais de um RU na mesma TV: os cards se revezam (um RU em cada vez que o cardápio entra).
+const RU_PADRAO = { ativo: true, ids: [1], tempo: 10, cada: 7, amanha: true };
+const RU_TEMPO_MIN = 4, RU_TEMPO_MAX = 60, RU_CADA_MIN = 2, RU_CADA_MAX = 30;
+function limpaRu(r){
+  r = r && typeof r === 'object' ? r : {};
+  const n = (v, min, max, pad) => { v = Math.round(Number(v)); return isFinite(v) && v ? Math.max(min, Math.min(max, v)) : pad; };
+  return {
+    ativo: r.ativo !== undefined ? r.ativo === true : RU_PADRAO.ativo,
+    // 'id' (um RU só) é o formato das primeiras versões
+    ids: (Array.isArray(r.ids) ? r.ids : r.id !== undefined ? [r.id] : RU_PADRAO.ids).map(Number)
+      .filter((id, i, l) => RESTAURANTES.some(x => x.id === id) && l.indexOf(id) === i),
+    tempo: n(r.tempo, RU_TEMPO_MIN, RU_TEMPO_MAX, RU_PADRAO.tempo),
+    cada: n(r.cada, RU_CADA_MIN, RU_CADA_MAX, RU_PADRAO.cada),
+    amanha: r.amanha !== false,
+  };
+}
+function configPadrao(){ return { tv: '', cidade: '', intervalo: INTERVALO_PADRAO, radio: { ...RADIO_PADRAO }, ru: { ...RU_PADRAO }, fontes: { portal: { ativo: true, qtd: QTD_PADRAO_PORTAL } } }; }
 function configSalva(){
   try{
     const c = JSON.parse(localStorage.getItem(CHAVE_CONFIG) || 'null');
     if (c && c.fontes && typeof c.fontes === 'object')
-      return { tv: String(c.tv || ''), intervalo: limitaIntervalo(c.intervalo), radio: limpaRadio(c.radio), fontes: c.fontes };
+      return { tv: String(c.tv || ''), cidade: limpaCidade(c.cidade), intervalo: limitaIntervalo(c.intervalo), radio: limpaRadio(c.radio), ru: limpaRu(c.ru), fontes: c.fontes };
   }catch(e){}
   return configPadrao();
 }
@@ -1739,6 +2328,7 @@ function configEfetiva(){
     }
   }
   if (params.get('local')) c.tv = params.get('local');
+  if (params.get('cidade')) c.cidade = limpaCidade(params.get('cidade'));
   if (parseFloat(params.get('intervalo')) > 0) c.intervalo = parseFloat(params.get('intervalo'));
   return c;
 }
@@ -1796,8 +2386,13 @@ let contagemFontes = {};
 // portal: a página principal (Agência de Notícias); se tiver menos que a quantidade,
 // completa com as últimas matérias publicadas — e é o plano B se a página mudar de layout
 async function noticiasDoPortal(qtd){
-  let lista = [], falhouPagina = false, falhouApi = false;
-  try{ lista = extraiNoticias(await htmlDaPaginaPrincipal(), CONFIG.SITE + '/').filter(recente); }
+  let lista = [], videos = [], falhouPagina = false, falhouApi = false;
+  try{
+    const html = await htmlDaPaginaPrincipal();
+    lista = extraiNoticias(html, CONFIG.SITE + '/').filter(recente);
+    // vídeos incorporados na página principal (ex.: seção TV Campus)
+    videos = await comTempoLimite(videosDoHtml(html), 12000).catch(e => { console.warn('[Destaques] vídeos da página principal:', e); return []; });
+  }
   catch(e){ falhouPagina = true; console.warn('[Destaques] leitura da página principal falhou:', e); }
   const daPagina = lista.length;
   if (lista.length < qtd){
@@ -1809,7 +2404,11 @@ async function noticiasDoPortal(qtd){
         console.warn(`[Destaques] página principal trouxe poucas notícias; ${extras.length} vieram da API (plano B)`);
     }catch(e){ falhouApi = true; console.warn('[Destaques] não foi possível completar pela API:', e); }
   }
-  return { lista: lista.slice(0, qtd), daPagina, falhou: falhouPagina && (falhouApi || !lista.length) };
+  // os vídeos entram além das notícias, espalhados ao longo da volta
+  lista = lista.slice(0, qtd);
+  const passo = Math.max(1, Math.floor(lista.length / (videos.length + 1)));
+  videos.forEach((v, k) => lista.splice(Math.min(lista.length, (k + 1) * passo + k), 0, v));
+  return { lista, daPagina, falhou: falhouPagina && (falhouApi || !lista.length) };
 }
 async function carrega(){
   if (carregando) return;
@@ -1833,14 +2432,14 @@ async function carrega(){
       try{
         const [videos, materias] = await Promise.all([
           f.paginaVideos ? videosDaPagina(f.url, f.paginaVideos).catch(e => { console.warn('[Destaques] vídeos de', f.url, e); return []; }) : [],
-          noticiasDaApi(f.url, Math.min(100, Math.max(20, f.qtd * 6))),
+          noticiasDaApi(f.url, Math.min(100, Math.max(20, f.qtd * 6)), !!f.semFoto),
         ]);
         // vídeos em destaque na página inicial primeiro (sem data: a própria página diz o que é atual);
         // depois as matérias recentes, sem repetir o mesmo vídeo
         const ids = new Set(videos.map(v => v.guid));
         const lista = videos.concat(materias.filter(recente).filter(it => !it.imagens.some(u => [...ids].some(id => u.includes(id))))).slice(0, f.qtd);
         lista.forEach(it => { it.caminhoFonte = f.caminho; });
-        if (f.nome) lista.forEach(it => { it.origem = rotuloDaFonte(f); });
+        if (f.nome) lista.forEach(it => { if (!it.video) it.origem = rotuloDaFonte(f); });
         contagem[f.id] = lista.length;
         return lista;
       }catch(e){ console.warn('[Destaques] não foi possível ler as matérias de', f.url, e); falhas++; contagem[f.id] = -1; return []; }
@@ -1899,16 +2498,25 @@ async function carrega(){
   }
 }
 
+let noticias = [];        // as notícias, sem o cardápio do RU
 function aplica(novos){
-  const nova = novos.map(i => i.link + '|' + i.titulo + '|' + (i.imagem || '')).join('§');
+  noticias = novos;
+  recompoe();
+}
+// monta o carrossel: as notícias com o card do cardápio intercalado
+function recompoe(){
+  if (!noticias.length) return;
+  const lista = comCardapio(noticias);
+  const nova = lista.map(i => i.cardapio ? 'RU' + i.ruId : i.link + '|' + i.titulo + '|' + (i.imagem || '')).join('§');
   if (nova === assinatura) return;           // nada mudou
-  const linkAtual = itens[atual]?.link;
+  const itemAtual = itens[atual];
+  const linkAtual = itemAtual && !itemAtual.cardapio ? itemAtual.link : null;
   const primeira = !itens.length;
   assinatura = nova;
 
   const troca = () => {
-    itens = novos;
-    const idx = itens.findIndex(i => i.link === linkAtual);
+    itens = lista;
+    const idx = itemAtual && itemAtual.cardapio ? itens.indexOf(itemAtual) : itens.findIndex(i => i.link === linkAtual);
     atual = idx >= 0 ? idx : 0;
     montaCards();
     aviso(false);
@@ -1922,7 +2530,7 @@ function aplica(novos){
 /* Destaque sem foto: usa a imagem destacada da matéria (pela API) */
 async function completaImagensFaltantes(){
   if (!CONFIG.BUSCAR_IMAGEM_DESTACADA) return;
-  for (const it of itens.filter(i => !i.imagem).slice(0, 6)){
+  for (const it of itens.filter(i => !i.imagem && !i.cardapio && !i.semFoto).slice(0, 6)){
     try{
       const src = await resolveImagem(await imagemDestacada(it.link));
       if (!src) continue;
@@ -2322,8 +2930,10 @@ function desenhaFontes(c){
 function leFormulario(){
   // com --intervalo no atalho, o campo fica travado e o valor salvo continua o de antes
   const intervalo = $('#cfgIntervalo').disabled ? configSalva().intervalo : limitaIntervalo($('#cfgIntervalo').value);
-  const c = { tv: $('#cfgTv').value.trim(), intervalo, fontes: {},
-    radio: limpaRadio({ ativo: $('#cfgRadio').checked, auto: $('#cfgRadioAuto').checked, volume: $('#cfgRadioVolume').value }) };
+  const c = { tv: $('#cfgTv').value.trim(), cidade: limpaCidade($('#cfgCidade').value), intervalo, fontes: {},
+    radio: limpaRadio({ ativo: $('#cfgRadio').checked, auto: $('#cfgRadioAuto').checked, volume: $('#cfgRadioVolume').value }),
+    ru: limpaRu({ ativo: $('#cfgRu').checked, ids: $$('#cfgRuLista input:checked').map(i => i.value), tempo: $('#cfgRuTempo').value,
+                  cada: $('#cfgRuCada').value, amanha: $('#cfgRuAmanha').checked }) };
   $('#cfgFontes').querySelectorAll('.fonte').forEach(el => {
     const ativo = el.querySelector('input[type=checkbox]').checked;
     const qtd = Math.max(1, Math.min(QTD_MAXIMA, parseInt(el.querySelector('input[type=number]').value) || 1));
@@ -2336,9 +2946,14 @@ function totalConfig(){
   const ativas = Object.values(c.fontes).filter(v => v.ativo);
   const total = ativas.reduce((t, v) => t + v.qtd, 0);
   const seg = $('#cfgIntervalo').disabled ? PAINEL.intervalo : c.intervalo;
+  const ru = c.ru, comRu = ru.ativo && ru.ids.length;
+  const nRu = comRu ? Math.max(1, Math.floor(total / ru.cada)) * ru.ids.length : 0;
+  const nomes = ru.ids.map(id => restaurante(id).nome);
+  const nomeRu = nomes.length > 1 ? nomes.slice(0, -1).join(', ') + ' e ' + nomes[nomes.length - 1] : nomes[0];
   $('#cfgTotal').innerHTML = ativas.length
     ? `<b>${ativas.length}</b> ${ativas.length === 1 ? 'site' : 'sites'} · até <b>${total}</b> notícias no carrossel` +
-      `<small>${seg} s por notícia · uma volta completa leva cerca de ${Math.max(1, Math.round(total * seg / 60))} min.</small>`
+      (comRu ? ` · cardápio do ${esc(nomeRu)}` : ru.ativo ? ' · <b>marque pelo menos um RU</b>' : '') +
+      `<small>${seg} s por notícia${comRu ? ` · cardápio ${ru.tempo} s a cada ${ru.cada} notícias${ru.ids.length > 1 ? ` (os ${ru.ids.length} RUs juntos)` : ''}` : ''} · uma volta completa leva cerca de ${Math.max(1, Math.round((total * seg + nRu * ru.tempo) / 60))} min.</small>`
     : '<b>Marque pelo menos um site.</b>';
   return ativas.length;
 }
@@ -2350,7 +2965,10 @@ async function abreConfig(){
   const c = configSalva();
   if (params.get('local') && !c.tv) c.tv = params.get('local');
   $('#cfgTv').value = c.tv;
+  $('#cfgCidade').innerHTML = '<option value="">Não mostrar a previsão do tempo</option>' +
+    CIDADES.map(x => `<option value="${x.id}"${x.id === c.cidade ? ' selected' : ''}>${esc(x.nome)}</option>`).join('');
   preencheRadio(c.radio);
+  preencheRu(c.ru);
   preparaSistema();
   // --intervalo na linha de comando vale por cima da tela de configurações
   const porOpcao = parseFloat(params.get('intervalo')) > 0;
@@ -2397,8 +3015,11 @@ async function salvaConfig(){
     const n = parseInt($('#cfgMonitor').value);
     try{ await appDesktop.usarMonitor(n); }catch(e){}
   }
+  const ruAntes = JSON.stringify(PAINEL.ru), cidadeAntes = PAINEL.cidade;
   PAINEL = configEfetiva();
+  if (PAINEL.cidade !== cidadeAntes) carregaTempo();
   aplicaIntervalo();
+  if (JSON.stringify(PAINEL.ru) !== ruAntes) carregaCardapio();
   fechaConfig();
   aplicaRadio(true);
   try{ localStorage.removeItem('noticiasUFSM:v3'); }catch(e){}
@@ -2410,12 +3031,20 @@ $('#cfgFechar').addEventListener('click', fechaConfig);
 $('#cfgCancelar').addEventListener('click', fechaConfig);
 $('#cfgPadrao').addEventListener('click', () => {
   $('#cfgTv').value = '';
+  $('#cfgCidade').value = '';
   preencheRadio(RADIO_PADRAO);
+  preencheRu(RU_PADRAO);
   if (!$('#cfgIntervalo').disabled) $('#cfgIntervalo').value = INTERVALO_PADRAO;
   desenhaFontes(configPadrao());
 });
 $('#cfgIntervalo').addEventListener('input', totalConfig);
 $('#cfgIntervalo').addEventListener('change', () => { $('#cfgIntervalo').value = limitaIntervalo($('#cfgIntervalo').value); totalConfig(); });
+$('#cfgRu').addEventListener('change', atualizaCamposRu);
+$('#cfgRuAmanha').addEventListener('change', totalConfig);
+for (const [sel, min, max] of [['#cfgRuTempo', RU_TEMPO_MIN, RU_TEMPO_MAX], ['#cfgRuCada', RU_CADA_MIN, RU_CADA_MAX]]){
+  $(sel).addEventListener('input', totalConfig);
+  $(sel).addEventListener('change', () => { $(sel).value = Math.max(min, Math.min(max, Math.round(Number($(sel).value)) || min)); totalConfig(); });
+}
 $('#configForm').addEventListener('submit', e => { e.preventDefault(); salvaConfig(); });
 
 /* ---------- rádio UNIFM 107,9 ---------- */
@@ -2622,9 +3251,13 @@ aplicaRadio();
 mantemTelaAcesa();
 agendaRecargaDiaria();
 document.body.classList.add('idle');
+setInterval(verificaCardapio, 60000);           // a refeição do momento muda com a hora
+carregaTempo(); setInterval(carregaTempo, TEMPO_A_CADA_MS);   // previsão do tempo: a cada 30 min
 window.addEventListener('load', () => {
+  carregaCardapio();
   carrega();
   setInterval(carrega, CONFIG.ATUALIZACAO_MS);   // relê a página principal a cada 15 minutos
+  setInterval(carregaCardapio, CONFIG.ATUALIZACAO_MS);
 });
 </script>
 

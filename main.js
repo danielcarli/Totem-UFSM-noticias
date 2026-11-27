@@ -17,7 +17,9 @@
 
    Opções de linha de comando (no atalho do Windows ou no terminal do Linux)
      --monitor=2            abre no segundo monitor só desta vez (as teclas 1, 2, 3 guardam a escolha)
-     --intervalo=10         segundos por notícia (padrão 7)
+     --intervalo=12         segundos por notícia (padrão 10)
+     --cidade=santa-maria   previsão do tempo ao lado do relógio (santa-maria, frederico-westphalen,
+                            palmeira-das-missoes, cachoeira-do-sul)
      --atualizacao=15       minutos entre as leituras do portal (padrão 15)
      --quantidade=12        notícias do portal (padrão 12; também na tela de configurações)
      --sites=unidades-universitarias/ct,pro-reitorias/prograd
@@ -73,9 +75,9 @@ const RECARREGA_A_CADA_HORAS = 24;   // recarga preventiva para longos períodos
 let janela = null;
 let configurando = false;   // tela de configurações do painel aberta
 
-/* --- a página lê www.ufsm.br sem bloqueio de CORS ---------------- */
+/* --- a página lê www.ufsm.br (e o cardápio do RU em portal.ufsm.br) sem bloqueio de CORS --- */
 function liberaPortalUFSM(){
-  const filtro = { urls: ['https://www.ufsm.br/*', 'https://ufsm.br/*'] };
+  const filtro = { urls: ['https://www.ufsm.br/*', 'https://ufsm.br/*', 'https://portal.ufsm.br/ru/publico/*'] };
   session.defaultSession.webRequest.onHeadersReceived(filtro, (det, responder) => {
     const h = det.responseHeaders || {};
     for (const k of Object.keys(h)) if (k.toLowerCase().startsWith('access-control-allow-')) delete h[k];
@@ -167,7 +169,7 @@ function trocaMonitor(numero){
 
 function parametrosDoPainel(){
   const q = {};
-  for (const nome of ['intervalo', 'atualizacao', 'max', 'quantidade', 'sites', 'porsite', 'secoes', 'ignorar', 'orientacao', 'leve', 'noite', 'recarga', 'local', 'utm', 'dias']){
+  for (const nome of ['intervalo', 'cidade', 'atualizacao', 'max', 'quantidade', 'sites', 'porsite', 'secoes', 'ignorar', 'orientacao', 'leve', 'noite', 'recarga', 'local', 'utm', 'dias']){
     const v = arg(nome);
     if (v && v !== true) q[nome] = String(v);
   }

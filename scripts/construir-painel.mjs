@@ -20,6 +20,12 @@ const MARCAS = {
   __AGENCIA_H__: 'agencia.png',                   // rodapé
   __SIMBOLO__: 'coordenadoria-simbolo.png',       // card de notícia sem foto
   __UNIFM__: 'unifm.svg',                        // player da rádio UNIFM (negativo branco)
+  // card do cardápio: marca do RU (identidade institucional), branca, uma por campus, e o símbolo
+  __RU_SM__: 'ru-santa-maria.png',
+  __RU_FW__: 'ru-frederico-westphalen.png',
+  __RU_PM__: 'ru-palmeira-das-missoes.png',
+  __RU_CS__: 'ru-cachoeira-do-sul.png',
+  __RU_SIMBOLO__: 'ru-simbolo.png',          // símbolo "Rü" no card do cardápio quando ele está de lado
 };
 // marcas ao lado do site de origem (painel/marcas/origens/<id>.png, branco sobre transparente):
 // viram máscaras CSS pintadas na cor do texto. Tamanho: 1,5em de altura, no máximo 2,4em de largura.

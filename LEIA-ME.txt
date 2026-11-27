@@ -6,7 +6,7 @@ O QUE É
   Solução para totens e TVs que mostra, em tela cheia, as notícias e
   informações do site da Universidade Federal de Santa Maria (www.ufsm.br).
   Todas as notícias com foto da página principal aparecem em carrossel, uma a
-  cada 7 segundos (ajustável), e o conteúdo é relido do portal a cada 15 minutos.
+  cada 10 segundos (ajustável), e o conteúdo é relido do portal a cada 15 minutos.
   Precisa apenas de internet; não depende de navegador instalado.
 
   Idealizado por Daniel Michelon De Carli, com a finalidade de trazer uma
@@ -49,7 +49,15 @@ CONFIGURAÇÕES
   - o nome ou local desta TV (para as estatísticas do QR code);
   - o monitor em que o painel aparece, quando há mais de um (o número do
     monitor atual aparece no topo da tela de configurações);
-  - o tempo de cada notícia na tela, de 4 a 60 segundos (padrão 7);
+  - a cidade desta TV (Santa Maria, Frederico Westphalen, Palmeira das Missões
+    ou Cachoeira do Sul): mostra a previsão do tempo (ícone e temperatura) ao
+    lado do relógio. Dados do Open-Meteo (CC BY 4.0). Em branco, não aparece;
+  - o tempo de cada notícia na tela, de 4 a 60 segundos (padrão 10);
+  - o cardápio do Restaurante Universitário (ligado, RU Campus I): escolha um ou
+    mais RUs (Campus I, Campus II, HUSM, Ipê Amarelo, Frederico Westphalen,
+    Palmeira das Missões, Cachoeira do Sul; com mais de um, os cards entram juntos), o tempo do card na tela (padrão 10 segundos) e
+    de quantas em quantas notícias ele aparece (padrão 7). O card mostra a
+    refeição do momento, com a marca do RU e um ícone por categoria de alimento;
   - a rádio UNIFM 107,9 ao vivo (desligada por padrão): o player fica na lateral
     direita (no totem, no topo), pode começar a tocar sozinho e tem volume próprio.
     Se a transmissão cair, tenta de novo sozinho;
@@ -82,8 +90,10 @@ OPÇÕES
 
   --monitor=2              abre no segundo monitor só desta vez (para fixar,
                            use as teclas 1, 2, 3 com o painel aberto)
-  --intervalo=10           segundos por notícia (padrão 7; também na tela de
+  --intervalo=12           segundos por notícia (padrão 10; também na tela de
                            configurações)
+  --cidade=santa-maria     previsão do tempo ao lado do relógio (santa-maria,
+                           frederico-westphalen, palmeira-das-missoes, cachoeira-do-sul)
   --atualizacao=10         minutos entre as leituras do portal (padrão 15)
   --quantidade=12          notícias do portal (padrão 12): se a página principal
                            tiver menos, completa com as últimas matérias do portal
@@ -106,7 +116,7 @@ OPÇÕES
   --nao-iniciar-com-sistema  desfaz a opção acima
 
   Exemplo no Windows (campo "Destino" do atalho):
-  "%LOCALAPPDATA%\Programs\DestaquesUFSM\DestaquesUFSM.exe" --monitor=2 --intervalo=8
+  "%LOCALAPPDATA%\Programs\DestaquesUFSM\DestaquesUFSM.exe" --monitor=2 --intervalo=12
   Exemplo no Linux:
   destaques-ufsm --iniciar-com-sistema --password-store=basic --monitor=2
 
