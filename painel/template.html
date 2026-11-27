@@ -956,7 +956,7 @@ const CONFIG = {
   // notícias publicadas há mais que isto não entram no carrossel (?dias=N muda; banners sem data entram)
   MAX_DIAS: parseInt(params.get('dias')) || 30,
   // QR code: identifica de onde veio a leitura no Google Analytics do portal
-  //   utm_source=painel-destaques  utm_medium=qrcode  utm_campaign=<nome desta TV>
+  //   utm_source=tv  utm_medium=qr  utm_campaign=<nome desta TV>   (valores curtos: QR mais simples)
   //   (nome definido na tela de configurações, ou ?local=…) — ?utm=0 desliga a marcação
   UTM: params.get('utm') !== '0',
   CORES: ['var(--laranja)', 'var(--verde)', 'var(--lilas)', 'var(--azul)'],
@@ -1314,23 +1314,52 @@ function resolveImagem(cands){
 /* ---------------- desenho dos cards ---------------- */
 const SIMBOLO = '__SIMBOLO__';
 
-// endereço do QR com a origem da leitura (só links do portal da UFSM)
-function linkDoQR(link){
-  if (!CONFIG.UTM) return link;
+/* Endereço do QR: quanto mais curto, menos quadradinhos. Matéria do WordPress vira o link curto
+   do próprio site (www.ufsm.br/?p=74889 abre a mesma matéria), e a marcação de origem da
+   leitura no Google Analytics usa valores curtos (utm_source=tv, utm_medium=qr). */
+function linkDoQR(it){
+  const link = typeof it === 'string' ? it : it.link;
   try{
     const u = new URL(link);
     if (!/(^|\.)ufsm\.br$/.test(u.hostname)) return link;
-    u.searchParams.set('utm_source', 'painel-destaques');
-    u.searchParams.set('utm_medium', 'qrcode');
-    u.searchParams.set('utm_campaign', slugDaTv());
-    return u.href;
+    const id = typeof it === 'object' && (it.wpId || idsDasMaterias.get(link));
+    const curto = id && baseDaMateria(link);
+    const qr = new URL(curto ? `${curto}/?p=${id}` : link);
+    if (CONFIG.UTM){
+      qr.searchParams.set('utm_source', 'tv');
+      qr.searchParams.set('utm_medium', 'qr');
+      qr.searchParams.set('utm_campaign', slugDaTv());
+    }
+    return qr.href;
   }catch(e){ return link; }
 }
+// matéria do WordPress (…/AAAA/MM/DD/slug): endereço do site e slug; senão null
+function baseDaMateria(link){
+  const m = /^(https:\/\/(?:www\.)?ufsm\.br(?:\/[^?#]*?)?)\/\d{4}\/\d{2}\/\d{2}\/([^/?#]+)\/?$/.exec(link || '');
+  return m ? m[1] : null;
+}
+// número (ID) de cada matéria no WordPress, para o link curto. Guardado no computador.
+const CHAVE_IDS = 'noticiasUFSM:ids';
+const idsDasMaterias = new Map((() => { try{ return JSON.parse(localStorage.getItem(CHAVE_IDS) || '[]'); }catch(e){ return []; } })());
+function guardaIds(){
+  try{ localStorage.setItem(CHAVE_IDS, JSON.stringify([...idsDasMaterias].slice(-300))); }catch(e){}
+}
+async function completaIds(lista, ms){
+  for (const it of lista) if (it.wpId) idsDasMaterias.set(it.link, it.wpId);
+  const faltam = lista.filter(it => !it.wpId && !idsDasMaterias.has(it.link) && baseDaMateria(it.link));
+  await comTempoLimite(Promise.all(faltam.map(async it => {
+    const base = baseDaMateria(it.link), slug = decodeURIComponent(it.link.replace(/\/$/, '').split('/').pop());
+    const r = await api(`wp/v2/posts?slug=${encodeURIComponent(slug)}&_fields=id`, base);
+    if (Array.isArray(r) && r[0] && r[0].id) idsDasMaterias.set(it.link, r[0].id);
+  })), ms).catch(() => {});
+  guardaIds();
+}
 
+// correção de erro baixa (L): na tela o código não se suja nem se dobra, e fica menos denso
 function qrDataURL(texto){
   try{
     if (typeof qrcode !== 'function') return '';
-    const q = qrcode(0, 'M'); q.addData(texto); q.make();
+    const q = qrcode(0, 'L'); q.addData(texto); q.make();
     return q.createDataURL(6, 0);
   }catch(e){ return ''; }
 }
@@ -1339,7 +1368,7 @@ function qrDataURL(texto){
 const ehGif = src => /\.gif(\?|#|$)/i.test(src || '');
 
 function htmlCard(it, i, total){
-  const qr = qrDataURL(linkDoQR(it.link));
+  const qr = qrDataURL(linkDoQR(it));
   const alt = esc(it.descricaoImagem || '');
   const midia = it.imagem
     ? `${ehGif(it.imagem) ? '' : `<img class="fundo-desfocado" src="${esc(it.imagem)}" alt="" referrerpolicy="no-referrer">`}
@@ -1700,7 +1729,7 @@ async function videosDaPagina(site, paginaId){
   return videosDoHtml((pg && pg.content && pg.content.rendered) || '');
 }
 async function noticiasDaApi(site = CONFIG.SITE, quantos = 60, aceitaSemFoto = false){
-  const posts = await api(`wp/v2/posts?per_page=${quantos}&_embed=wp:featuredmedia&_fields=link,date,title,excerpt,content,_links,_embedded`, site);
+  const posts = await api(`wp/v2/posts?per_page=${quantos}&_embed=wp:featuredmedia&_fields=id,link,date,title,excerpt,content,_links,_embedded`, site);
   const lista = [];
   for (const p of posts || []){
     const m = p._embedded && p._embedded['wp:featuredmedia'] && p._embedded['wp:featuredmedia'][0];
@@ -1727,7 +1756,7 @@ async function noticiasDaApi(site = CONFIG.SITE, quantos = 60, aceitaSemFoto = f
     lista.push({
       titulo: limpa(decodifica((p.title && p.title.rendered) || '')),
       link: (p.link || '').replace(/[?#].*$/, '').replace(/\/$/, ''),
-      guid: p.link,
+      guid: p.link, wpId: p.id,
       secao: 'Notícias',
       resumo,
       data: p.date ? new Date(p.date) : null,
@@ -2476,7 +2505,7 @@ async function carrega(){
     }
     if (!novos.length) throw new SemNoticiasRecentes();
     fonteNoticias = fonte;
-    await Promise.all([preparaImagens(novos, 12000), completaTitulos(novos, 8000), completaOrigens(novos, 8000)]);
+    await Promise.all([preparaImagens(novos, 12000), completaTitulos(novos, 8000), completaOrigens(novos, 8000), completaIds(novos, 8000)]);
 
     try{ localStorage.setItem('noticiasUFSM:v3', JSON.stringify(novos)); }catch(e){}
     aplica(novos);
