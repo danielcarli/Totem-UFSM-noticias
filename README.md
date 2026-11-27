@@ -4,7 +4,7 @@
 
 **Painel de notícias para TVs e totens da Universidade Federal de Santa Maria**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.9.4-0b5394)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.9.5-0b5394)
 ![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-e7640a)
 ![Plataformas](https://img.shields.io/badge/plataformas-Windows%20%7C%20Linux-1ab2af)
 ![Electron](https://img.shields.io/badge/Electron-45-47848f)
@@ -97,7 +97,7 @@ inteira, com textos e QR code maiores ("Leia no celular").
 
 **Identidade institucional.** A marca da UFSM fica no topo; a Coordenadoria de Comunicação e a
 Agência de Notícias, que desenvolve o painel, assinam no rodapé, com a hora da última atualização
-e, bem discreta embaixo dela, a versão do painel (ex.: `v1.9.4`) — útil para saber se uma TV já
+e, bem discreta embaixo dela, a versão do painel (ex.: `v1.9.5`) — útil para saber se uma TV já
 recebeu a atualização.
 Abaixo do título de cada matéria aparece o **site de onde ela vem**: o portal da UFSM é formado por
 muitos subsites (pró-reitorias, centros, cursos), e as matérias da página principal são da
@@ -596,7 +596,7 @@ O GitHub Actions gera os dois `.deb` e a ISO a cada versão publicada (job `sist
 2. Rode o script de publicação, na pasta do projeto:
 
    ```bash
-   npm run publicar -- 1.9.5     # ou: patch (1.9.4 → 1.9.5), minor (→ 1.10.0), major (→ 2.0.0)
+   npm run publicar -- 1.9.6     # ou: patch (1.9.5 → 1.9.6), minor (→ 1.10.0), major (→ 2.0.0)
    ```
 
    No Windows também dá para dar dois cliques em **`publicar.cmd`** (publica a versão que está
@@ -625,6 +625,7 @@ de `dist/` e o `navegador/destaques-ufsm.html`, com os mesmos nomes.
 
 | Versão | Novidades |
 |---|---|
+| **1.9.5** | Sistema próprio: a engrenagem lia errado as placas de rede desconectadas ("Cabo (null)" e Wi-Fi sem conexão dado como inexistente) — agora mostra cada placa com o nome e deixa conectar no Wi-Fi. |
 | **1.9.4** | Sistema próprio: **Wi-Fi Broadcom** que o Linux não liga sozinho (BCM4312, BCM4313, BCM43224/43225/43227/43228, BCM4331 — comuns em notebooks de 2008 a 2014, como o Lenovo IdeaPad Z460) passa a funcionar com o driver wl, já na ISO; ao ligar (e no "Tentar de novo"), a placa Broadcom sem rede passa sozinha para esse driver. |
 | **1.9.3** | Sistema próprio: quando o Wi-Fi não aparece, a engrenagem diz o motivo (chave do notebook desligada, placa sem driver ou nenhuma placa) e tem o botão "Tentar de novo", que tira os bloqueios de rádio (ex.: Fn+F5) e procura a placa de novo; o rádio do Wi-Fi é liberado ao ligar; o diagnóstico da recuperação mostra as placas de rede, os bloqueios e as mensagens de firmware. |
 | **1.9.2** | QR code mais simples: link curto das matérias (`www.ufsm.br/?p=ID`), marcação do Google Analytics com valores curtos (`utm_source=tv`, `utm_medium=qr`) e correção de erro baixa — cerca de metade dos quadradinhos. |

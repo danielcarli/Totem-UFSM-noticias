@@ -76,7 +76,11 @@ case "$acao" in
     disp=$(nm_registros DEVICE,TYPE,STATE,CONNECTION device status)
     saida='[]'
     for d in $(echo "$disp" | jq -r '.[] | select(.TYPE=="ethernet" or .TYPE=="wifi") | .DEVICE'); do
-      det=$(nm_registros GENERAL.DEVICE,GENERAL.TYPE,GENERAL.STATE,GENERAL.CONNECTION,IP4.ADDRESS,IP4.GATEWAY,IP4.DNS device show "$d" | jq '.[0] // {}')
+      # um campo por vez: placa desconectada não tem IP4.* na saída do nmcli, e a leitura em bloco se perdia
+      campo(){ nmcli -g "$1" device show "$d" 2>/dev/null | head -n 1 | sed 's/\\:/:/g'; }
+      det=$(jq -cn --arg dev "$d" --arg tipo "$(campo GENERAL.TYPE)" --arg est "$(campo GENERAL.STATE)" \
+        --arg con "$(campo GENERAL.CONNECTION)" --arg ip "$(campo IP4.ADDRESS)" --arg gw "$(campo IP4.GATEWAY)" --arg dns "$(campo IP4.DNS)" \
+        '{"GENERAL.DEVICE":$dev, "GENERAL.TYPE":$tipo, "GENERAL.STATE":$est, "GENERAL.CONNECTION":$con, "IP4.ADDRESS":$ip, "IP4.GATEWAY":$gw, "IP4.DNS":$dns}')
       con=$(echo "$det" | jq -r '."GENERAL.CONNECTION" // ""')
       metodo=""; [ -n "$con" ] && [ "$con" != "--" ] && metodo=$(nmcli -g ipv4.method connection show "$con" 2>/dev/null || true)
       saida=$(jq -c --argjson det "$det" --arg metodo "$metodo" '. + [{
