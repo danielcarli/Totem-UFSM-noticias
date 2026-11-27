@@ -2728,14 +2728,16 @@ async function atualizaRede(){
   if (!r.ok){ $('#redeStatus').textContent = 'Não foi possível ler a rede.'; return; }
   $('#wifiLigado').checked = !!r.wifiLigado;
   const conectado = d => parseInt(d.estado, 10) === 100;
+  const nCabos = r.dispositivos.filter(d => d.tipo !== 'wifi').length;
   const partes = r.dispositivos.map(d => {
-    const tipo = d.tipo === 'wifi' ? 'Wi-Fi' : 'Cabo';
+    const tipo = d.tipo === 'wifi' ? 'Wi-Fi' : nCabos > 1 ? `Cabo (${d.dispositivo})` : 'Cabo';
     return conectado(d) ? `${tipo}: conectado${d.tipo === 'wifi' && d.conexao ? ' em ' + d.conexao : ''} · ${String(d.ip).split('/')[0]}` : `${tipo}: desconectado`;
   });
   $('#redeStatus').textContent = partes.join('   ·   ') || 'Nenhuma placa de rede encontrada.';
   const temWifi = r.dispositivos.some(d => d.tipo === 'wifi');
   $('#wifiLigado').disabled = $('#wifiProcurar').disabled = !temWifi;
-  if (!temWifi){ $('#wifiLigado').checked = false; $('#wifiLista').innerHTML = '<li class="sis-vazio">Este computador não tem Wi-Fi (um adaptador USB de Wi-Fi resolve).</li>'; }
+  if (!temWifi){ $('#wifiLigado').checked = false; $('#wifiLista').innerHTML = htmlSemWifi(r); }
+  else if (r.bloqueioWifi === 'chave') $('#wifiLista').innerHTML = htmlSemWifi(r);
   const cabo = r.dispositivos.find(d => d.tipo === 'ethernet');
   $('#caboBloco').hidden = !cabo;
   sis.cabo = cabo || null;
@@ -2746,6 +2748,21 @@ async function atualizaRede(){
     $('#caboManual').hidden = !manual;
     if (manual){ $('#caboIp').value = cabo.ip; $('#caboGw').value = cabo.gateway; $('#caboDns').value = cabo.dns; }
   }
+}
+// por que não há Wi-Fi: chave do notebook desligada, placa sem driver ou nenhuma placa
+function htmlSemWifi(r){
+  const placas = r.placasWifi || [];
+  const semDriver = placas.find(p => !p.driver);
+  let txt;
+  if (r.bloqueioWifi === 'chave')
+    txt = 'O Wi-Fi está desligado na chave do notebook (uma chavinha na lateral ou na frente, com o símbolo de antena). Ligue a chave e clique em "Tentar de novo".';
+  else if (semDriver)
+    txt = `Placa de Wi-Fi encontrada (${esc(semDriver.nome)} · ${esc(semDriver.id)}), mas o sistema não tem o driver dela. Use o cabo de rede ou um adaptador USB de Wi-Fi, e informe esse código à equipe do painel.`;
+  else if (placas.length)
+    txt = `A placa de Wi-Fi (${esc(placas[0].nome)}) está no computador, mas não ligou. Clique em "Tentar de novo".`;
+  else
+    txt = 'Nenhuma placa de Wi-Fi apareceu. Em notebooks, o Wi-Fi pode estar desligado por uma chave ou pela tecla Fn + F5 (ou a tecla com o símbolo de antena): ligue e clique em "Tentar de novo". Sem placa, um adaptador USB de Wi-Fi resolve.';
+  return `<li class="sis-vazio">${txt}</li><li><span class="nome"><small>Liga o rádio do Wi-Fi e procura a placa de novo</small></span><button type="button" class="sec" data-reativar="1">Tentar de novo</button></li>`;
 }
 async function procuraWifi(){
   $('#wifiLista').innerHTML = '<li class="sis-vazio">Procurando redes…</li>';
@@ -2783,7 +2800,13 @@ async function conectaWifi(){
 $('#wifiProcurar').addEventListener('click', e => comBotao(e.currentTarget, procuraWifi));
 $('#wifiLista').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
-  if (b.dataset.wifi) abreFormWifi(b.dataset.wifi === 'oculta' ? null : sis.redes[+b.dataset.wifi]);
+  if (b.dataset.reativar){
+    b.disabled = true; b.textContent = 'Procurando…';
+    await chamaSistema('wifi-reativar');
+    await atualizaRede();
+    if (!$('#wifiProcurar').disabled) procuraWifi();
+  }
+  else if (b.dataset.wifi) abreFormWifi(b.dataset.wifi === 'oculta' ? null : sis.redes[+b.dataset.wifi]);
   else if (b.dataset.esquecer){
     const w = sis.redes[+b.dataset.esquecer];
     const r = await chamaSistema('wifi-esquecer', w.ssid);

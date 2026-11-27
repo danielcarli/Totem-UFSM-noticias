@@ -40,6 +40,13 @@ diagnostico(){
     echo "Horário:     $(date '+%a %d/%m/%Y %H:%M')  —  $(cat "$RUN/energia" 2>/dev/null || echo aberto)"
     echo "Atualização: $(jq -r '"\(.estado) \(.nova) \(.erro) (\(.quando))"' "$ESTADO/atualizacao.json" 2>/dev/null || echo "nenhuma ainda")"
     echo
+    echo "Placas de rede:"
+    lspci -nnk 2>/dev/null | grep -iA3 -E 'network|ethernet|wireless' | grep -vE '^--$|Subsystem' | sed 's/^/  /'
+    echo "Bloqueios de rádio (rfkill):"
+    rfkill list 2>/dev/null | sed 's/^/  /'
+    echo "Mensagens de firmware/Wi-Fi do sistema:"
+    journalctl -k -b --no-pager 2>/dev/null | grep -iE 'firmware|wlan|wifi|iwl|ath9k|ath5k|b43|brcm|bcma|wl:|rtl8' | tail -n 8 | cut -c1-150 | sed 's/^/  /'
+    echo
     echo "Últimas linhas do registro do painel:"
     tail -n 12 "$(getent passwd "$PAINEL_USUARIO" | cut -d: -f6)/.local/state/destaques/painel.log" 2>/dev/null
   } > /tmp/destaques-diagnostico.txt

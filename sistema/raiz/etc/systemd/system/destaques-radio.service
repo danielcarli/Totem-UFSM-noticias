@@ -1,0 +1,11 @@
+[Unit]
+Description=Destaques UFSM: liga o radio do Wi-Fi ao iniciar (desfaz bloqueio por Fn+F5 ou programa)
+After=systemd-rfkill.service
+Before=NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=-/usr/sbin/rfkill unblock wifi
+
+[Install]
+WantedBy=multi-user.target

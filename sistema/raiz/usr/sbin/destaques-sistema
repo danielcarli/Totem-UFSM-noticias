@@ -4,7 +4,7 @@
 #
 #   destaques-sistema info
 #   destaques-sistema rede | wifi-lista | wifi-conectar SSID [SENHA] [USUARIO] | wifi-esquecer SSID
-#                     wifi-ligar on|off | cabo-config DISPOSITIVO auto|manual [IP/PREFIXO GATEWAY DNS]
+#                     wifi-ligar on|off | wifi-reativar | cabo-config DISPOSITIVO auto|manual [IP/PREFIXO GATEWAY DNS]
 #   destaques-sistema bt-estado | bt-ligar on|off | bt-buscar | bt-conectar MAC | bt-desconectar MAC | bt-remover MAC
 #   destaques-sistema som-estado | som-saida ID | som-volume 0-100 | som-testar
 #   destaques-sistema horario-ler | horario-gravar JSON
@@ -58,6 +58,19 @@ case "$acao" in
     ;;
 
   # ---------------- rede ----------------
+  wifi-reativar)
+    # Wi-Fi sumido: tira os bloqueios (Fn+F5 / bloqueio por software), religa a placa e procura de novo no barramento
+    rfkill unblock wifi 2>/dev/null || true
+    rfkill unblock all 2>/dev/null || true
+    for m in ideapad_laptop thinkpad_acpi asus_wmi hp_wmi dell_laptop acer_wmi; do modprobe "$m" 2>/dev/null || true; done
+    echo 1 > /sys/bus/pci/rescan 2>/dev/null || true
+    sleep 4
+    nmcli radio wifi on >/dev/null 2>&1 || true
+    sleep 2
+    registra "wifi-reativar"
+    ok '{}'
+    ;;
+
   rede)
     disp=$(nm_registros DEVICE,TYPE,STATE,CONNECTION device status)
     saida='[]'
@@ -72,7 +85,19 @@ case "$acao" in
         metodo: $metodo }]' <<<"$saida")
     done
     wifi=$(nmcli radio wifi 2>/dev/null || echo desconhecido)
-    ok "$(jq -cn --argjson d "$saida" --arg w "$wifi" '{dispositivos:$d, wifiLigado:($w=="enabled")}')"
+    # placas de Wi-Fi que o computador tem (PCI e USB), com o driver em uso (vazio = sem driver)
+    placas='[]'
+    for dev in /sys/bus/pci/devices/*; do
+      case "$(cat "$dev/class" 2>/dev/null)" in 0x0280*) ;; *) continue;; esac
+      slot=$(basename "$dev"); drv=$(basename "$(readlink "$dev/driver" 2>/dev/null)" 2>/dev/null || true)
+      nome=$(lspci -s "$slot" 2>/dev/null | sed 's/^[^:]*:[^:]*: //' || true)
+      [ -n "$nome" ] || nome="$(cat "$dev/vendor"):$(cat "$dev/device")"
+      placas=$(jq -c --arg n "$nome" --arg d "$drv" --arg id "$(cat "$dev/vendor" | sed 's/0x//'):$(cat "$dev/device" | sed 's/0x//')" '. + [{nome:$n, driver:$d, id:$id}]' <<<"$placas")
+    done
+    # bloqueios de rádio: "hard" = chave do notebook; "soft" = Fn+F5 ou programa
+    bloqueio=$(rfkill -rn -o TYPE,SOFT,HARD 2>/dev/null | awk '$1=="wlan"{ if($3=="blocked") h=1; if($2=="blocked") s=1 } END{ print (h?"chave":(s?"programa":"")) }')
+    ok "$(jq -cn --argjson d "$saida" --arg w "$wifi" --argjson p "$placas" --arg b "$bloqueio" \
+      '{dispositivos:$d, wifiLigado:($w=="enabled"), placasWifi:$p, bloqueioWifi:$b}')"
     ;;
 
   wifi-lista)

@@ -36,7 +36,7 @@ chmod 440 /etc/sudoers.d/destaques
 visudo -cf /etc/sudoers.d/destaques >/dev/null || { echo "sudoers inválido"; rm -f /etc/sudoers.d/destaques; }
 
 # serviços
-systemctl enable destaques-energia.timer destaques-atualiza.timer >/dev/null 2>&1 || true
+systemctl enable destaques-energia.timer destaques-atualiza.timer destaques-radio.service >/dev/null 2>&1 || true
 for s in NetworkManager bluetooth systemd-timesyncd; do systemctl enable "$s" >/dev/null 2>&1 || true; done
 if [ -d /run/systemd/system ]; then
   systemctl daemon-reload || true

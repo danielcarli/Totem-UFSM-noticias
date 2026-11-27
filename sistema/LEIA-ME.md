@@ -108,10 +108,24 @@ Para entrar à mão no **menu de recuperação** (pede o **PIN de manutenção**
 | Forçar atualização | baixa e reinstala a última versão, mesmo se for a mesma |
 | Voltar para a versão anterior | quando uma versão nova deu problema |
 | Configurar a rede | cabo e Wi-Fi em modo texto (`nmtui`), para o caso de a rede ter mudado |
-| Diagnóstico | versões, endereço, internet, disco, últimas mensagens do painel |
+| Diagnóstico | versões, endereço, internet, disco, placas de rede (com o driver), bloqueios de rádio, mensagens de firmware, últimas mensagens do painel |
 | Restaurar as configurações | volta o painel e o horário ao padrão de fábrica |
 | Trocar o PIN | **troque o PIN de fábrica** em painéis em lugares públicos |
 | Terminal | linha de comando de administrador (manutenção avançada) |
+
+### Wi-Fi não aparece
+
+A engrenagem diz o motivo e tem o botão **Tentar de novo** (libera o rádio e procura a placa de
+novo):
+
+- **Chave do notebook desligada** — muitos notebooks têm uma chavinha de Wi-Fi na lateral ou na
+  frente. Ligue e clique em *Tentar de novo*.
+- **Desligado pela tecla Fn** (ex.: Fn + F5 nos Lenovo) — o bloqueio fica guardado no notebook,
+  até de quando ele usava Windows. O sistema libera ao ligar e no *Tentar de novo*.
+- **Placa encontrada, mas sem driver** — aparece o nome e o código da placa (ex.: `14e4:4315`).
+  Use o cabo de rede ou um adaptador USB de Wi-Fi, e mande o código para quem mantém o painel.
+- **Nenhuma placa** — o computador não tem Wi-Fi (ou ela está desligada por chave): um adaptador
+  USB de Wi-Fi resolve.
 
 ## Para quem mantém
 

@@ -368,7 +368,7 @@ function configuraAtualizacao(){
 }
 
 /* --- ponte com o sistema próprio (Destaques UFSM – Sistema) ---------- */
-const ACOES_SISTEMA = new Set(['info', 'rede', 'wifi-lista', 'wifi-conectar', 'wifi-esquecer', 'wifi-ligar', 'cabo-config',
+const ACOES_SISTEMA = new Set(['info', 'rede', 'wifi-lista', 'wifi-conectar', 'wifi-esquecer', 'wifi-ligar', 'wifi-reativar', 'cabo-config',
   'bt-estado', 'bt-ligar', 'bt-buscar', 'bt-conectar', 'bt-desconectar', 'bt-remover',
   'som-estado', 'som-saida', 'som-volume', 'som-testar', 'horario-ler', 'horario-gravar', 'telas-modo',
   'atualizacao-estado', 'atualizacao-buscar', 'atualizacao-instalar', 'atualizacao-auto', 'reiniciar', 'desligar']);

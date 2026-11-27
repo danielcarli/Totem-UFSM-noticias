@@ -20,6 +20,8 @@ procps
 kbd
 util-linux
 rfkill
+pciutils
+usbutils
 systemd-timesyncd
 # rede
 network-manager
