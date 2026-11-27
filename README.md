@@ -4,7 +4,7 @@
 
 **Painel de notícias para TVs e totens da Universidade Federal de Santa Maria**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.9.0-0b5394)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.9.1-0b5394)
 ![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-e7640a)
 ![Plataformas](https://img.shields.io/badge/plataformas-Windows%20%7C%20Linux-1ab2af)
 ![Electron](https://img.shields.io/badge/Electron-45-47848f)
@@ -97,7 +97,7 @@ inteira, com textos e QR code maiores ("Leia no celular").
 
 **Identidade institucional.** A marca da UFSM fica no topo; a Coordenadoria de Comunicação e a
 Agência de Notícias, que desenvolve o painel, assinam no rodapé, com a hora da última atualização
-e, bem discreta embaixo dela, a versão do painel (ex.: `v1.9.0`) — útil para saber se uma TV já
+e, bem discreta embaixo dela, a versão do painel (ex.: `v1.9.1`) — útil para saber se uma TV já
 recebeu a atualização.
 Abaixo do título de cada matéria aparece o **site de onde ela vem**: o portal da UFSM é formado por
 muitos subsites (pró-reitorias, centros, cursos), e as matérias da página principal são da
@@ -592,7 +592,7 @@ O GitHub Actions gera os dois `.deb` e a ISO a cada versão publicada (job `sist
 2. Rode o script de publicação, na pasta do projeto:
 
    ```bash
-   npm run publicar -- 1.9.1     # ou: patch (1.9.0 → 1.9.1), minor (→ 1.10.0), major (→ 2.0.0)
+   npm run publicar -- 1.9.2     # ou: patch (1.9.1 → 1.9.2), minor (→ 1.10.0), major (→ 2.0.0)
    ```
 
    No Windows também dá para dar dois cliques em **`publicar.cmd`** (publica a versão que está
@@ -621,6 +621,7 @@ de `dist/` e o `navegador/destaques-ufsm.html`, com os mesmos nomes.
 
 | Versão | Novidades |
 |---|---|
+| **1.9.1** | "ufsm.br / Notícias" continua no centro da tela quando a previsão do tempo aparece no topo. |
 | **1.9.0** | Tempo padrão de cada notícia passa de 7 para 10 segundos. **Cardápio do RU** entre as notícias (a cada 7, 10 s na tela; um ou mais RUs, com os cards agrupados, e o nome do RU em destaque), com a marca e as cores do RU (âmbar no café, vinho no almoço, verde-noite no jantar) e ícones por categoria de alimento; avisos do site do RU como fonte de notícias. **Previsão do tempo** ao lado do relógio, pela cidade da TV (Open-Meteo, `--cidade`). Vídeos do YouTube incorporados na página principal entram no carrossel, com o nome do canal como autoria e a capa em alta resolução. |
 | **1.8.0** | **Destaques UFSM – Sistema**: imagem ISO de um Debian 13 enxuto que liga direto no painel (PCs e notebooks de 64 bits, BIOS ou UEFI, notebook + TV), com instalador; rede cabeada, Wi-Fi (inclusive com usuário e senha), Bluetooth, som, telas e horário de funcionamento (apaga a tela e suspende fora do expediente, liga sozinho na abertura) pela engrenagem do painel; atualização pela Release do GitHub com SHA-256 e versão anterior guardada; recuperação com PIN (Ctrl+Alt+F2 ou menu de inicialização) e atualização forçada automática se o painel travar. |
 | **1.7.1** | Botão **Buscar atualização** na tela de configurações, com a versão instalada, o andamento do download e **Instalar agora e reiniciar** quando a versão nova já foi baixada; teste diário fixo no Ubuntu 24.04; script de publicação tenta de novo quando a rede falha. |

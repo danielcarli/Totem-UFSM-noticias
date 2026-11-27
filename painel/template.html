@@ -2247,6 +2247,7 @@ let previsao = null;    // { cidade, temp, max, min, cod, dia, lido }
 function mostraTempo(){
   const ok = previsao && previsao.cidade === PAINEL.cidade && Date.now() - previsao.lido < 3 * 3600 * 1000;
   $('#tempo').hidden = $('#tempoSep').hidden = !ok;
+  requestAnimationFrame(centralizaEndereco);
   if (!ok) return;
   const [icone, descricao] = tipoDoTempo(previsao.cod, previsao.dia);
   const cidade = CIDADES.find(c => c.id === previsao.cidade);
@@ -2256,6 +2257,22 @@ function mostraTempo(){
   $('#tempo').title = `${cidade ? cidade.nome + ': ' : ''}${descricao}, ${Math.round(previsao.temp)} °C` +
     (isFinite(previsao.max) ? ` (máxima ${Math.round(previsao.max)} °C, mínima ${Math.round(previsao.min)} °C)` : '') + ' · Open-Meteo';
 }
+/* "ufsm.br / Notícias" fica no centro da tela, mesmo quando a previsão do tempo deixa o lado
+   direito do topo mais largo que o esquerdo: a barra continua ocupando o espaço, e o texto
+   ganha um recuo do lado mais curto. */
+function centralizaEndereco(){
+  const e = $('.endereco');
+  if (!e) return;
+  e.style.paddingLeft = e.style.paddingRight = '';
+  if (document.documentElement.classList.contains('vertical')) return;
+  const r = e.getBoundingClientRect();
+  const delta = innerWidth / 2 - (r.left + r.width / 2);
+  if (Math.abs(delta) < 1) return;
+  if (delta > 0) e.style.paddingLeft = Math.min(2 * delta, r.width * .6) + 'px';
+  else e.style.paddingRight = Math.min(-2 * delta, r.width * .6) + 'px';
+}
+addEventListener('resize', () => requestAnimationFrame(centralizaEndereco));
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(centralizaEndereco);
 async function carregaTempo(){
   const cidade = CIDADES.find(c => c.id === PAINEL.cidade);
   if (!cidade){ mostraTempo(); return; }
@@ -2551,6 +2568,7 @@ async function completaImagensFaltantes(){
 
 /* ---------------- relógio ---------------- */
 function relogio(){
+  requestAnimationFrame(centralizaEndereco);
   const d = new Date();
   $('#hora').textContent = fmtHora(d);
   $('#data').textContent = new Intl.DateTimeFormat('pt-BR', {weekday:'long', day:'2-digit', month:'short', timeZone:CONFIG.FUSO})
