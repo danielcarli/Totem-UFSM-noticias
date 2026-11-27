@@ -1,0 +1,5 @@
+# Wi-Fi Broadcom que o Linux não liga sozinho (sem firmware livre): driver wl (broadcom-sta),
+# compilado para o kernel da imagem. Ex.: BCM4312, BCM4313, BCM43224/43225/43227/43228, BCM4331,
+# comuns em notebooks de 2008 a 2014 (Lenovo IdeaPad, Dell, HP, Acer…).
+dkms
+broadcom-sta-dkms

@@ -1,0 +1,34 @@
+#!/bin/bash
+# Destaques UFSM – Sistema: placa de Wi-Fi Broadcom ligada mas sem interface de rede
+# (driver livre sem firmware, ex.: BCM4312, BCM43227, BCM4331) → passa a placa para o driver wl.
+. /usr/lib/destaques/comum.sh 2>/dev/null || registra(){ :; }
+
+modinfo wl >/dev/null 2>&1 || exit 0        # imagem sem o wl: nada a fazer
+udevadm settle -t 10 2>/dev/null || true
+sleep "${ESPERA:-3}"
+
+# a placa tem interface de rede? (a interface pode estar na própria placa ou num núcleo bcma/ssb dela)
+tem_rede(){
+  local alvo n; alvo=$(readlink -f "$1")
+  for n in /sys/class/net/*; do
+    case "$(readlink -f "$n/device" 2>/dev/null)" in "$alvo"|"$alvo"/*) return 0;; esac
+  done
+  return 1
+}
+
+for dev in /sys/bus/pci/devices/*; do
+  [ "$(cat "$dev/vendor" 2>/dev/null)" = 0x14e4 ] || continue
+  case "$(cat "$dev/class" 2>/dev/null)" in 0x0280*) ;; *) continue;; esac
+  tem_rede "$dev" && continue
+  slot=$(basename "$dev")
+  atual=$(basename "$(readlink "$dev/driver" 2>/dev/null)" 2>/dev/null || true)
+  [ "$atual" = wl ] && continue
+  modprobe wl 2>/dev/null || { registra "wifi: não foi possível carregar o wl para $slot"; continue; }
+  [ -n "$atual" ] && echo "$slot" > "$dev/driver/unbind" 2>/dev/null
+  echo wl > "$dev/driver_override" 2>/dev/null
+  echo "$slot" > /sys/bus/pci/drivers_probe 2>/dev/null
+  sleep 2
+  if tem_rede "$dev"; then registra "wifi: placa Broadcom $slot ($(cat "$dev/device")) agora com o driver wl (antes: ${atual:-nenhum})"
+  else registra "wifi: placa Broadcom $slot ($(cat "$dev/device")) continua sem rede mesmo com o wl"; fi
+done
+exit 0

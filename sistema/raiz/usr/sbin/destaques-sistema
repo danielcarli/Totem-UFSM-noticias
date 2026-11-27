@@ -65,6 +65,7 @@ case "$acao" in
     for m in ideapad_laptop thinkpad_acpi asus_wmi hp_wmi dell_laptop acer_wmi; do modprobe "$m" 2>/dev/null || true; done
     echo 1 > /sys/bus/pci/rescan 2>/dev/null || true
     sleep 4
+    ESPERA=0 /usr/lib/destaques/wifi-broadcom 2>/dev/null || true
     nmcli radio wifi on >/dev/null 2>&1 || true
     sleep 2
     registra "wifi-reativar"
@@ -92,7 +93,9 @@ case "$acao" in
       slot=$(basename "$dev"); drv=$(basename "$(readlink "$dev/driver" 2>/dev/null)" 2>/dev/null || true)
       nome=$(lspci -s "$slot" 2>/dev/null | sed 's/^[^:]*:[^:]*: //' || true)
       [ -n "$nome" ] || nome="$(cat "$dev/vendor"):$(cat "$dev/device")"
-      placas=$(jq -c --arg n "$nome" --arg d "$drv" --arg id "$(cat "$dev/vendor" | sed 's/0x//'):$(cat "$dev/device" | sed 's/0x//')" '. + [{nome:$n, driver:$d, id:$id}]' <<<"$placas")
+      alvo=$(readlink -f "$dev"); rede=false
+      for n in /sys/class/net/*; do case "$(readlink -f "$n/device" 2>/dev/null)" in "$alvo"|"$alvo"/*) rede=true;; esac; done
+      placas=$(jq -c --arg n "$nome" --arg d "$drv" --argjson r "$rede" --arg id "$(cat "$dev/vendor" | sed 's/0x//'):$(cat "$dev/device" | sed 's/0x//')" '. + [{nome:$n, driver:$d, id:$id, rede:$r}]' <<<"$placas")
     done
     # bloqueios de rádio: "hard" = chave do notebook; "soft" = Fn+F5 ou programa
     bloqueio=$(rfkill -rn -o TYPE,SOFT,HARD 2>/dev/null | awk '$1=="wlan"{ if($3=="blocked") h=1; if($2=="blocked") s=1 } END{ print (h?"chave":(s?"programa":"")) }')

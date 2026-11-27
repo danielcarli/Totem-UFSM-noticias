@@ -1,0 +1,25 @@
+#!/bin/sh
+# Destaques UFSM – Sistema: driver wl (Broadcom) pronto na imagem
+set -e
+
+for k in $(ls /lib/modules); do
+  [ -d "/lib/modules/$k/build" ] || continue
+  dkms autoinstall -k "$k" || true
+  if ! modinfo -k "$k" wl >/dev/null 2>&1; then
+    echo "ERRO: o driver wl (broadcom-sta) não foi compilado para o kernel $k" >&2
+    exit 1
+  fi
+  echo "wl pronto para o kernel $k"
+done
+
+# O pacote bloqueia b43, b44, bcma, ssb e brcmsmac de uma vez: isso derrubaria placas de rede
+# com fio Broadcom (b44) e Wi-Fi que funcionam com o driver livre. Aqui ficam bloqueados só os
+# que nunca funcionam nesta imagem (precisam de firmware que o Debian não distribui); quando uma
+# placa Broadcom fica sem rede, /usr/lib/destaques/wifi-broadcom passa ela para o wl.
+rm -f /etc/modprobe.d/broadcom-sta-dkms.conf
+cat > /etc/modprobe.d/destaques-wifi-broadcom.conf <<'CONF'
+# Destaques UFSM: b43 e b43legacy precisam de firmware que não vem no sistema; o wl assume essas placas
+blacklist b43
+blacklist b43legacy
+CONF
+update-initramfs -u -k all >/dev/null 2>&1 || true

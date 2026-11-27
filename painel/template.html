@@ -2752,12 +2752,12 @@ async function atualizaRede(){
 // por que não há Wi-Fi: chave do notebook desligada, placa sem driver ou nenhuma placa
 function htmlSemWifi(r){
   const placas = r.placasWifi || [];
-  const semDriver = placas.find(p => !p.driver);
+  const semDriver = placas.find(p => p.rede === false || !p.driver);   // placa sem interface de rede
   let txt;
   if (r.bloqueioWifi === 'chave')
     txt = 'O Wi-Fi está desligado na chave do notebook (uma chavinha na lateral ou na frente, com o símbolo de antena). Ligue a chave e clique em "Tentar de novo".';
   else if (semDriver)
-    txt = `Placa de Wi-Fi encontrada (${esc(semDriver.nome)} · ${esc(semDriver.id)}), mas o sistema não tem o driver dela. Use o cabo de rede ou um adaptador USB de Wi-Fi, e informe esse código à equipe do painel.`;
+    txt = `Placa de Wi-Fi encontrada (${esc(semDriver.nome)} · ${esc(semDriver.id)}), mas sem driver funcionando. Clique em "Tentar de novo"; se continuar assim, use um adaptador USB de Wi-Fi ou o cabo de rede e informe esse código à equipe do painel.`;
   else if (placas.length)
     txt = `A placa de Wi-Fi (${esc(placas[0].nome)}) está no computador, mas não ligou. Clique em "Tentar de novo".`;
   else

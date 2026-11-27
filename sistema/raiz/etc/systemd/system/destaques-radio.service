@@ -1,11 +1,11 @@
 [Unit]
-Description=Destaques UFSM: liga o radio do Wi-Fi ao iniciar (desfaz bloqueio por Fn+F5 ou programa)
-After=systemd-rfkill.service
-Before=NetworkManager.service
+Description=Destaques UFSM: liga o radio do Wi-Fi e acerta o driver de placas Broadcom
+After=systemd-rfkill.service systemd-udevd.service systemd-modules-load.service
 
 [Service]
 Type=oneshot
 ExecStart=-/usr/sbin/rfkill unblock wifi
+ExecStart=-/usr/lib/destaques/wifi-broadcom
 
 [Install]
 WantedBy=multi-user.target

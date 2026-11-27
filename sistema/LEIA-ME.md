@@ -122,6 +122,8 @@ novo):
   frente. Ligue e clique em *Tentar de novo*.
 - **Desligado pela tecla Fn** (ex.: Fn + F5 nos Lenovo) — o bloqueio fica guardado no notebook,
   até de quando ele usava Windows. O sistema libera ao ligar e no *Tentar de novo*.
+- **Placa Broadcom** (comum em notebooks de 2008 a 2014): a imagem traz o driver wl, e o sistema
+  passa a placa para ele sozinho ao ligar (e no *Tentar de novo*).
 - **Placa encontrada, mas sem driver** — aparece o nome e o código da placa (ex.: `14e4:4315`).
   Use o cabo de rede ou um adaptador USB de Wi-Fi, e mande o código para quem mantém o painel.
 - **Nenhuma placa** — o computador não tem Wi-Fi (ou ela está desligada por chave): um adaptador

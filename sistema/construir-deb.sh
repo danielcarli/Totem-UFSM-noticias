@@ -14,7 +14,7 @@ sed -i "s/@VERSAO@/$versao/" "$tmp/DEBIAN/control"
 (cd "$tmp" && find etc -type f | sed 's#^#/#' | sort) > "$tmp/DEBIAN/conffiles"
 # finais de linha e permissões corretos mesmo vindo do Windows
 find "$tmp" -type f ! -path '*/DEBIAN/conffiles' -exec sed -i 's/\r$//' {} +
-chmod 755 "$tmp"/usr/sbin/* "$tmp"/usr/lib/destaques/{sessao,xsessao,quiosque,telas,telas-root} \
+chmod 755 "$tmp"/usr/sbin/* "$tmp"/usr/lib/destaques/{sessao,xsessao,quiosque,telas,telas-root,wifi-broadcom} \
   "$tmp"/etc/grub.d/42_destaques-recuperacao "$tmp"/etc/kernel/postinst.d/zz-destaques-grub "$tmp"/DEBIAN/postinst "$tmp"/DEBIAN/prerm
 chmod 644 "$tmp"/usr/lib/destaques/comum.sh "$tmp"/usr/lib/destaques/openbox.xml
 chmod 440 "$tmp"/etc/sudoers.d/destaques

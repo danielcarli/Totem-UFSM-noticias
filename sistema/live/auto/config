@@ -9,7 +9,7 @@ lb config noauto \
   --debian-installer none \
   --apt-recommends false \
   --firmware-binary false --firmware-chroot false \
-  --linux-packages linux-image --linux-flavours amd64 \
+  --linux-packages "linux-image linux-headers" --linux-flavours amd64 \
   --memtest none \
   --security true --updates true \
   --iso-application "Destaques UFSM" \
